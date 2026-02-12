@@ -78,13 +78,14 @@ export async function syncSegmentToAllPlatforms(
   const hashedEmails = users
     .map((u: { emailHash: string | null }) => u.emailHash)
     .filter((email: string | null): email is string => email !== null);
+  const marketingConsentedUsers = users.filter((u) => u.consentMarketing === true);
   
   // Sync to each compatible platform
   const platformPromises: Promise<SyncResult>[] = [];
   
   if (segmentDef.platforms.includes('braze')) {
     platformPromises.push(
-      syncToBraze(users, segmentId).then(result => ({
+      syncToBraze(marketingConsentedUsers, segmentId).then(result => ({
         platform: 'braze' as SyncPlatform,
         success: result.success,
         usersProcessed: result.processed,

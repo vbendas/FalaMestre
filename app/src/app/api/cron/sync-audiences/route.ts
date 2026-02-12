@@ -9,15 +9,15 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { syncAllEligibleSegments } from '@/lib/audiences/sync-router';
+import { requireCronAuth } from '@/lib/cron-auth';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5 minutes timeout
 
 export async function GET(request: NextRequest) {
-  // Verify cron secret
-  const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const authError = requireCronAuth(request);
+  if (authError) {
+    return authError;
   }
   
   const startTime = Date.now();

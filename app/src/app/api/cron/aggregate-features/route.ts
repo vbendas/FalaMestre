@@ -19,6 +19,7 @@ import { assignClusterV2 } from '@/lib/clustering/cluster-engine';
 import { scoreHotLead } from '@/lib/clustering/lead-scoring';
 import { messageEmbeddings } from '@/db/schema';
 import { sql } from 'drizzle-orm';
+import { requireCronAuth } from '@/lib/cron-auth';
 
 // Configuration for batch processing
 const BATCH_SIZE = 50; // Process 50 users at a time
@@ -163,10 +164,9 @@ export async function GET(request: NextRequest) {
   const startTime = Date.now();
   
   try {
-    // 1. Verify cron secret (Vercel passes CRON_SECRET header)
-    const authHeader = request.headers.get('authorization');
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const authError = requireCronAuth(request);
+    if (authError) {
+      return authError;
     }
     
     // 2. Get all users with activity in last 25 hours (overlap for safety)

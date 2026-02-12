@@ -18,13 +18,13 @@ import {
   getUsersNeedingAssessment, 
   getUserMessages 
 } from '@/lib/clustering/personality-profiler';
+import { requireCronAuth } from '@/lib/cron-auth';
 
 export async function GET(request: NextRequest) {
   try {
-    // 1. Auth check (CRON_SECRET)
-    const authHeader = request.headers.get('authorization');
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const authError = requireCronAuth(request);
+    if (authError) {
+      return authError;
     }
 
     // 2. Get users needing assessment

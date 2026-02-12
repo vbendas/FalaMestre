@@ -8,6 +8,7 @@
 import { db } from '@/db';
 import { userProfiles } from '@/db/schema';
 import { and, or, eq, gte, gt, inArray, sql } from 'drizzle-orm';
+import crypto from 'crypto';
 
 export type SegmentId = 
   | 'token_ready_extroverts'
@@ -118,6 +119,7 @@ export async function getUsersForSegment(segmentId: SegmentId): Promise<Array<{
   userId: string;
   emailHash: string | null;
   walletAddressHash: string | null;
+  consentMarketing: boolean | null;
   primaryCluster: string | null;
   purchaseIntentScore: number | null;
   churnRiskScore: number | null;
@@ -177,10 +179,10 @@ export async function getUsersForSegment(segmentId: SegmentId): Promise<Array<{
       break;
     
     case 'fan_token_holders':
-      // fanTokenBalance > 0 (has any Fan Tokens)
+      // Has at least one fan token balance entry.
       segmentFilter = and(
         consentFilter,
-        gt(userProfiles.fanTokenBalance, 0)
+        sql`${userProfiles.fanTokenBalance} IS NOT NULL AND ${userProfiles.fanTokenBalance}::text <> '{}'`
       );
       break;
     
@@ -203,6 +205,7 @@ export async function getUsersForSegment(segmentId: SegmentId): Promise<Array<{
       userId: userProfiles.userId,
       emailHash: userProfiles.emailHash,
       walletAddress: userProfiles.walletAddress,
+      consentMarketing: userProfiles.consentMarketing,
       primaryCluster: userProfiles.primaryCluster,
       purchaseIntentScore: userProfiles.purchaseIntentScore,
       churnRiskScore: userProfiles.churnRiskScore,
@@ -210,7 +213,25 @@ export async function getUsersForSegment(segmentId: SegmentId): Promise<Array<{
     .from(userProfiles)
     .where(segmentFilter);
   
-  return results;
+  return results.map((row: {
+    userId: string;
+    emailHash: string | null;
+    walletAddress: string | null;
+    consentMarketing: boolean | null;
+    primaryCluster: string | null;
+    purchaseIntentScore: number | null;
+    churnRiskScore: number | null;
+  }) => ({
+    userId: row.userId,
+    emailHash: row.emailHash,
+    walletAddressHash: row.walletAddress
+      ? crypto.createHash('sha256').update(row.walletAddress.toLowerCase()).digest('hex')
+      : null,
+    consentMarketing: row.consentMarketing,
+    primaryCluster: row.primaryCluster,
+    purchaseIntentScore: row.purchaseIntentScore,
+    churnRiskScore: row.churnRiskScore,
+  }));
 }
 
 /**
