@@ -15,6 +15,11 @@ import { messageEmbeddings } from '@/db/schema';
 // Request timeout in milliseconds (30 seconds)
 const REQUEST_TIMEOUT = 30000;
 
+type GameStateRecordShape = {
+  currentState: GameState;
+  conversationHistory?: Message[];
+};
+
 /**
  * Wrapper for async operations with timeout and cleanup
  */
@@ -115,8 +120,8 @@ export async function POST(request: NextRequest) {
     // Determine if we should use mock AI
     // Priority: 1. Request param, 2. Env var, 3. Default to true if no API key
     const envMockMode = process.env.USE_MOCK_AI === 'true';
-    const hasApiKey = !!process.env.SYNTHETIC_API_KEY || !!process.env.OPENROUTER_API_KEY;
-    const useMock = requestUseMock ?? envMockMode ?? !hasApiKey;
+    const hasApiKey = !!process.env.SYNTHETIC_API_KEY;
+    const useMock = requestUseMock ?? (envMockMode || !hasApiKey);
 
     // Get or create game state with timeout
     let gameStateRecord;
@@ -164,15 +169,16 @@ export async function POST(request: NextRequest) {
         );
       }
     } else {
-      gameState = (gameStateRecord as any).currentState as GameState;
-      conversationHistory = ((gameStateRecord as any).conversationHistory as Message[]) || [];
+      const typedRecord = gameStateRecord as GameStateRecordShape;
+      gameState = typedRecord.currentState;
+      conversationHistory = typedRecord.conversationHistory || [];
     }
 
     // Call AI (mock or real) with timeout
     let aiResponse;
     const aiTimeout = 15000; // 15 second timeout for AI calls
     
-    if (useMock || !process.env.OPENROUTER_API_KEY) {
+    if (useMock || !process.env.SYNTHETIC_API_KEY) {
       try {
         aiResponse = await withTimeout(
           callAIMock(message, gameState, conversationHistory),
@@ -389,8 +395,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       exists: true,
-      gameState: (gameStateRecord as any).currentState,
-      conversationHistory: (gameStateRecord as any).conversationHistory,
+      gameState: (gameStateRecord as GameStateRecordShape).currentState,
+      conversationHistory: (gameStateRecord as GameStateRecordShape).conversationHistory,
     });
   } catch (error) {
     const duration = Date.now() - startTime;

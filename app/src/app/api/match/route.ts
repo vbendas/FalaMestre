@@ -11,6 +11,10 @@ import { ZodError } from 'zod';
 // Request timeout in milliseconds (30 seconds)
 const REQUEST_TIMEOUT = 30000;
 
+type GameStateRecordShape = {
+  currentState: GameState;
+};
+
 /**
  * Wrapper for async operations with timeout and cleanup
  */
@@ -102,7 +106,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const gameState = (gameStateRecord as any).currentState as GameState;
+    const gameState = (gameStateRecord as GameStateRecordShape).currentState;
     const match = gameState.season.nextMatch;
 
     // Simulate match

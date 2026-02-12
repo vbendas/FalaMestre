@@ -75,7 +75,6 @@ export async function POST(request: NextRequest) {
         email: `${userId}@falamestre.local`,
         onboardingCompleted: true,
         createdAt: new Date(),
-        updatedAt: new Date(),
       });
     } catch (userError) {
       console.warn('Failed to create user record, continuing anyway:', userError);

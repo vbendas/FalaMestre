@@ -50,7 +50,7 @@ export interface GameState {
   context: {
     lastAction: string;
     availableActions: string[];
-    pendingDecisions: any[];
+    pendingDecisions: string[];
     narrative: {
       lastEvent: string;
       momentum: 'home' | 'away' | 'neutral';

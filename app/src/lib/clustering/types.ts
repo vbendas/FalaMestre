@@ -103,7 +103,7 @@ export interface SegmentDefinition {
   id: string;
   name: string;
   description: string;
-  criteria: (profile: any) => boolean;
+  criteria: (profile: unknown) => boolean;
   platforms: ('google' | 'facebook' | 'tiktok' | 'braze')[];
   refreshFrequency: 'daily' | 'weekly';
 }

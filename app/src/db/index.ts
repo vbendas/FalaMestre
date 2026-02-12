@@ -37,6 +37,7 @@ function createMockDatabase() {
         where: async () => ({ rows: [] }),
       }),
     }),
+    execute: async () => [],
   };
 
   return mockDbInstance;

@@ -1,4 +1,5 @@
 import { pgTable, uuid, text, integer, jsonb, timestamp, boolean, real, customType } from 'drizzle-orm/pg-core';
+import type { GameState, Message } from '@/lib/types';
 
 // Custom vector type for pgvector (256 dimensions for embeddings)
 const vector = customType<{ data: number[]; driverData: string }>({
@@ -11,7 +12,7 @@ const vector = customType<{ data: number[]; driverData: string }>({
 
 // Users table
 export const users = pgTable('users', {
-  id: uuid('id').primaryKey().defaultRandom(),
+  id: text('id').primaryKey(),
   email: text('email').unique(),
   username: text('username'),
   createdAt: timestamp('created_at').defaultNow(),
@@ -23,8 +24,8 @@ export const users = pgTable('users', {
 export const gameStates = pgTable('game_states', {
   userId: text('user_id').primaryKey(),
   team: text('team').notNull(),
-  currentState: jsonb('current_state').$type<any>().notNull(),
-  conversationHistory: jsonb('conversation_history').$type<any[]>(),
+  currentState: jsonb('current_state').$type<GameState>().notNull(),
+  conversationHistory: jsonb('conversation_history').$type<Message[]>(),
   statistics: jsonb('statistics'),
   updatedAt: timestamp('updated_at').defaultNow(),
 });
