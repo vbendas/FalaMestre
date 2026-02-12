@@ -34,14 +34,15 @@ export default function Home() {
     showMatchModal,
     closeMatchModal,
     isNewUser,
+    hasCheckedUser,
   } = useGameState();
 
-  // Redirect to onboarding if new user
+  // Redirect to onboarding if new user (only after checking)
   useEffect(() => {
-    if (userId && isNewUser) {
+    if (hasCheckedUser && isNewUser) {
       router.push('/onboarding');
     }
-  }, [userId, isNewUser, router]);
+  }, [hasCheckedUser, isNewUser, router]);
 
   const handleActionClick = (action: string) => {
     if (action === 'play_match') {
@@ -51,7 +52,8 @@ export default function Home() {
     }
   };
 
-  if (!userId || isNewUser) {
+  // Show loading screen while checking user status
+  if (!userId || (hasCheckedUser && isNewUser)) {
     return <LoadingScreen />;
   }
 

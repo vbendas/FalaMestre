@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { GameState, Match } from '@/lib/types';
@@ -118,6 +118,11 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
   const { user, season, squad } = gameState;
   const { nextMatch } = season;
   
+  // Use refs to track interval and timeout for proper cleanup
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isMountedRef = useRef(true);
+  
   const homeTeamData = getTeamData(user.team);
   const awayTeamData = getTeamData(nextMatch.opponent);
   
@@ -147,7 +152,48 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
   const [matchResult, setMatchResult] = useState<MatchResult | null>(null);
   const [matchEvents, setMatchEvents] = useState<ParsedEvent[]>([]);
 
+  // Cleanup function for intervals and timeouts
+  const cleanupTimers = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  }, []);
+
+  // Set up mount/unmount tracking and cleanup
+  useEffect(() => {
+    isMountedRef.current = true;
+    
+    return () => {
+      isMountedRef.current = false;
+      cleanupTimers();
+    };
+  }, [cleanupTimers]);
+
+  // Cleanup on gameState change (navigation)
+  useEffect(() => {
+    // Reset state when gameState changes (user navigated to different view)
+    cleanupTimers();
+    setIsSimulating(false);
+    setIsCalculating(false);
+    setMatchMinute(0);
+    setHomeScore(0);
+    setAwayScore(0);
+    setCurrentEvent(null);
+    setMatchResult(null);
+    setMatchEvents([]);
+  }, [gameState, cleanupTimers]);
+
   const handlePlayMatch = async () => {
+    // Prevent multiple concurrent match starts
+    if (isCalculating || isSimulating) {
+      return;
+    }
+    
     setIsCalculating(true);
     
     try {
@@ -156,6 +202,8 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
       // If we have the new API, call it first to get real result
       if (onPlayMatchWithResult) {
         const data = await onPlayMatchWithResult();
+        if (!isMountedRef.current) return; // Component unmounted during API call
+        
         if (data) {
           result = data.result;
           setMatchResult(result);
@@ -167,10 +215,14 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
       
       // If API failed or we don't have the new prop, fall back to old behavior
       if (!result) {
-        setIsCalculating(false);
-        onPlayMatch();
+        if (isMountedRef.current) {
+          setIsCalculating(false);
+          onPlayMatch();
+        }
         return;
       }
+      
+      if (!isMountedRef.current) return; // Component unmounted
       
       // Start simulation with real data
       setIsCalculating(false);
@@ -183,8 +235,16 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
       let currentHomeScore = 0;
       let currentAwayScore = 0;
       
-      // Simulate match progression
-      const interval = setInterval(() => {
+      // Clear any existing interval
+      cleanupTimers();
+      
+      // Simulate match progression with slower interval (200ms instead of 100ms)
+      intervalRef.current = setInterval(() => {
+        if (!isMountedRef.current) {
+          cleanupTimers();
+          return;
+        }
+        
         setMatchMinute(prev => {
           const newMinute = prev + 1;
           
@@ -206,24 +266,35 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
           
           // End of match
           if (newMinute >= 90) {
-            clearInterval(interval);
-            setCurrentEvent('Apita o árbitro! Fim de jogo!');
-            setTimeout(() => {
-              setIsSimulating(false);
-              onPlayMatch(); // This will show the result modal
-            }, 2000);
+            if (intervalRef.current) {
+              clearInterval(intervalRef.current);
+              intervalRef.current = null;
+            }
+            
+            if (isMountedRef.current) {
+              setCurrentEvent('Apita o árbitro! Fim de jogo!');
+              
+              // Use ref to track timeout for cleanup
+              timeoutRef.current = setTimeout(() => {
+                if (isMountedRef.current) {
+                  setIsSimulating(false);
+                  onPlayMatch(); // This will show the result modal
+                }
+                timeoutRef.current = null;
+              }, 2000);
+            }
           }
           
           return newMinute;
         });
-      }, 100); // Fast simulation: 1 minute per 100ms
-
-      return () => clearInterval(interval);
+      }, 200); // Slower simulation: 1 minute per 200ms (was 100ms)
     } catch (error) {
       console.error('Failed to play match:', error);
-      setIsCalculating(false);
-      // Fall back to old behavior
-      onPlayMatch();
+      if (isMountedRef.current) {
+        setIsCalculating(false);
+        // Fall back to old behavior
+        onPlayMatch();
+      }
     }
   };
 

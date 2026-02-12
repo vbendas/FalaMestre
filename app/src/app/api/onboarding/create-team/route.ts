@@ -3,8 +3,8 @@ import { db } from '@/db';
 import { gameStates, users } from '@/db/schema';
 import { createInitialGameState } from '@/lib/game-engine';
 import { GameState } from '@/lib/types';
+import { generateUserId } from '@/lib/utils';
 import { z } from 'zod';
-import { v4 as uuidv4 } from 'uuid';
 
 // Validation schema for team creation
 const teamCreationSchema = z.object({
@@ -45,8 +45,8 @@ export async function POST(request: NextRequest) {
 
     const { teamName, primaryColor, secondaryColor, badgeStyle } = validatedData;
 
-    // Generate userId
-    const userId = `user_${uuidv4().substring(0, 9)}`;
+    // Generate userId using consistent format matching validation regex
+    const userId = generateUserId();
 
     // Create initial game state with custom team name
     const gameState: GameState = createInitialGameState(userId, teamName);

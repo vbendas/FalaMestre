@@ -12,15 +12,80 @@ import { wordCount, hasQuestion, countEmotionalWords, detectAssertiveness } from
 import { embedMessage } from '@/lib/clustering/embedding-service';
 import { messageEmbeddings } from '@/db/schema';
 
-export async function POST(request: NextRequest) {
+// Request timeout in milliseconds (30 seconds)
+const REQUEST_TIMEOUT = 30000;
+
+/**
+ * Wrapper for async operations with timeout and cleanup
+ */
+async function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  operationName: string
+): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      reject(new Error(`${operationName} timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
+
+    promise
+      .then((result) => {
+        clearTimeout(timeoutId);
+        resolve(result);
+      })
+      .catch((error) => {
+        clearTimeout(timeoutId);
+        reject(error);
+      });
+  });
+}
+
+/**
+ * Process embedding asynchronously with proper error handling
+ * This runs after the response is sent, so it shouldn't block
+ */
+async function processEmbedding(userId: string, message: string): Promise<void> {
+  const embeddingTimeout = 10000; // 10 second timeout for embeddings
+  
   try {
-    let requestBody;
+    const embedding = await withTimeout(
+      embedMessage(message),
+      embeddingTimeout,
+      'Embedding generation'
+    );
     
+    if (embedding) {
+      await withTimeout(
+        db.insert(messageEmbeddings).values({
+          userId,
+          content: message,
+          embedding,
+        }),
+        embeddingTimeout,
+        'Embedding insert'
+      );
+    }
+  } catch (error) {
+    // Log but don't throw - this is background processing
+    console.error('[Conversation] Embedding processing failed:', error);
+  }
+}
+
+export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  
+  try {
+    // Parse request body with timeout protection
+    let requestBody;
     try {
-      requestBody = await request.json();
+      requestBody = await withTimeout(
+        request.json(),
+        5000,
+        'Request body parsing'
+      );
     } catch {
       return NextResponse.json(
-        { error: 'Invalid JSON body' },
+        { error: 'Invalid JSON body or timeout' },
         { status: 400 }
       );
     }
@@ -53,42 +118,96 @@ export async function POST(request: NextRequest) {
     const hasApiKey = !!process.env.SYNTHETIC_API_KEY || !!process.env.OPENROUTER_API_KEY;
     const useMock = requestUseMock ?? envMockMode ?? !hasApiKey;
 
-    // Get or create game state
-    let gameStateRecord = await db.query.gameStates.findFirst({
-      where: eq(gameStates.userId, userId),
-    });
+    // Get or create game state with timeout
+    let gameStateRecord;
+    try {
+      gameStateRecord = await withTimeout(
+        db.query.gameStates.findFirst({
+          where: eq(gameStates.userId, userId),
+        }),
+        5000,
+        'Game state fetch'
+      );
+    } catch (error) {
+      console.error('[Conversation] Failed to fetch game state:', error);
+      return NextResponse.json(
+        { error: 'Failed to fetch game state' },
+        { status: 503 }
+      );
+    }
 
     let gameState: GameState;
     let conversationHistory: Message[] = [];
 
     if (!gameStateRecord) {
       // First time user - create default state with fictional team
-      // In production, this should trigger the team creation flow
       gameState = createInitialGameState(userId, 'Dragões do Cerrado');
       
       // Insert initial game state
-      await db.insert(gameStates).values({
-        userId,
-        team: gameState.user.team,
-        currentState: gameState,
-        conversationHistory: [],
-        statistics: {},
-      });
+      try {
+        await withTimeout(
+          db.insert(gameStates).values({
+            userId,
+            team: gameState.user.team,
+            currentState: gameState,
+            conversationHistory: [],
+            statistics: {},
+          }),
+          5000,
+          'Game state insert'
+        );
+      } catch (error) {
+        console.error('[Conversation] Failed to create game state:', error);
+        return NextResponse.json(
+          { error: 'Failed to create game state' },
+          { status: 503 }
+        );
+      }
     } else {
-      gameState = gameStateRecord.currentState as GameState;
-      conversationHistory = (gameStateRecord.conversationHistory as Message[]) || [];
+      gameState = (gameStateRecord as any).currentState as GameState;
+      conversationHistory = ((gameStateRecord as any).conversationHistory as Message[]) || [];
     }
 
-    // Call AI (mock or real)
+    // Call AI (mock or real) with timeout
     let aiResponse;
+    const aiTimeout = 15000; // 15 second timeout for AI calls
+    
     if (useMock || !process.env.OPENROUTER_API_KEY) {
-      aiResponse = await callAIMock(message, gameState, conversationHistory);
+      try {
+        aiResponse = await withTimeout(
+          callAIMock(message, gameState, conversationHistory),
+          aiTimeout,
+          'Mock AI call'
+        );
+      } catch (error) {
+        console.error('[Conversation] Mock AI call failed:', error);
+        return NextResponse.json(
+          { error: 'AI service temporarily unavailable' },
+          { status: 503 }
+        );
+      }
     } else {
       try {
-        aiResponse = await callAI(message, gameState, conversationHistory);
+        aiResponse = await withTimeout(
+          callAI(message, gameState, conversationHistory),
+          aiTimeout,
+          'AI call'
+        );
       } catch (error) {
-        console.warn('AI call failed, falling back to mock:', error);
-        aiResponse = await callAIMock(message, gameState, conversationHistory);
+        console.warn('[Conversation] AI call failed, falling back to mock:', error);
+        try {
+          aiResponse = await withTimeout(
+            callAIMock(message, gameState, conversationHistory),
+            aiTimeout,
+            'Fallback mock AI call'
+          );
+        } catch (fallbackError) {
+          console.error('[Conversation] Fallback AI call also failed:', fallbackError);
+          return NextResponse.json(
+            { error: 'AI service unavailable' },
+            { status: 503 }
+          );
+        }
       }
     }
 
@@ -110,70 +229,97 @@ export async function POST(request: NextRequest) {
 
     const updatedHistory = [...conversationHistory, newUserMessage, newAIMessage];
 
-    // Update game state in database
-    await db
-      .update(gameStates)
-      .set({
-        currentState: gameState,
-        conversationHistory: updatedHistory,
-        updatedAt: new Date(),
-      })
-      .where(eq(gameStates.userId, userId));
+    // Update game state in database with timeout
+    try {
+      await withTimeout(
+        db
+          .update(gameStates)
+          .set({
+            currentState: gameState,
+            conversationHistory: updatedHistory,
+            updatedAt: new Date(),
+          })
+          .where(eq(gameStates.userId, userId)),
+        5000,
+        'Game state update'
+      );
+    } catch (error) {
+      console.error('[Conversation] Failed to update game state:', error);
+      // Continue to return response even if update fails
+    }
 
-    // Log conversation for analytics
-    await db.insert(conversations).values({
-      userId,
-      messageType: 'user',
-      content: message,
-      intent: aiResponse.intent,
-      gameStateSnapshot: gameState,
-    });
-
-    await db.insert(conversations).values({
-      userId,
-      messageType: 'ai',
-      content: aiResponse.content,
-      intent: aiResponse.intent,
-      gameStateSnapshot: gameState,
-    });
+    // Log conversation for analytics with timeout
+    try {
+      await withTimeout(
+        Promise.all([
+          db.insert(conversations).values({
+            userId,
+            messageType: 'user',
+            content: message,
+            intent: aiResponse.intent,
+            gameStateSnapshot: gameState,
+          }),
+          db.insert(conversations).values({
+            userId,
+            messageType: 'ai',
+            content: aiResponse.content,
+            intent: aiResponse.intent,
+            gameStateSnapshot: gameState,
+          }),
+        ]),
+        5000,
+        'Conversation logging'
+      );
+    } catch (error) {
+      console.error('[Conversation] Failed to log conversation:', error);
+      // Continue even if logging fails
+    }
 
     // Log analytics event with enriched signals
     const emotionalWords = countEmotionalWords(message);
-    await db.insert(analyticsEvents).values({
-      userId,
-      eventType: 'conversation',
-      properties: {
-        intent: aiResponse.intent,
-        cost: aiResponse.cost,
-        latency: aiResponse.latency,
-        useMock,
-        // Enriched signals for clustering
-        messageLength: message.length,
-        wordCount: wordCount(message),
-        hasQuestion: hasQuestion(message),
-        emotionalWords: emotionalWords,
-        assertiveness: detectAssertiveness(message),
-        gameContext: {
-          points: gameState.user.sociosPoints,
-          matchesPlayed: gameState.season.week,
-          position: gameState.season.position,
-          wins: gameState.season.wins,
-          losses: gameState.season.losses,
-        },
-      },
-      sessionId: `session_${Date.now()}`,
+    try {
+      await withTimeout(
+        db.insert(analyticsEvents).values({
+          userId,
+          eventType: 'conversation',
+          properties: {
+            intent: aiResponse.intent,
+            cost: aiResponse.cost,
+            latency: aiResponse.latency,
+            useMock,
+            messageLength: message.length,
+            wordCount: wordCount(message),
+            hasQuestion: hasQuestion(message),
+            emotionalWords: emotionalWords,
+            assertiveness: detectAssertiveness(message),
+            gameContext: {
+              points: gameState.user.sociosPoints,
+              matchesPlayed: gameState.season.week,
+              position: gameState.season.position,
+              wins: gameState.season.wins,
+              losses: gameState.season.losses,
+            },
+          },
+          sessionId: `session_${Date.now()}`,
+        }),
+        3000,
+        'Analytics logging'
+      );
+    } catch (error) {
+      console.error('[Conversation] Failed to log analytics:', error);
+      // Continue even if analytics fails
+    }
+
+    // Schedule embedding processing after response (non-blocking)
+    // Use setImmediate equivalent for Node.js
+    setImmediate(() => {
+      processEmbedding(userId, message).catch(error => {
+        console.error('[Conversation] Background embedding failed:', error);
+      });
     });
 
-    // Fire-and-forget embedding (don't block the response)
-    embedMessage(message).then(embedding => {
-      if (embedding) {
-        db.insert(messageEmbeddings).values({
-          userId,
-          content: message,
-          embedding,
-        }).catch((err: Error) => console.error('Embedding insert failed:', err));
-      }
-    }).catch((err: Error) => console.error('Embedding generation failed:', err));
+    const duration = Date.now() - startTime;
+    console.log(`[Conversation] Request processed in ${duration}ms`);
 
     return NextResponse.json({
       response: aiResponse.content,
@@ -184,7 +330,8 @@ export async function POST(request: NextRequest) {
       gameState,
     });
   } catch (error) {
-    console.error('API error:', error);
+    const duration = Date.now() - startTime;
+    console.error(`[Conversation] API error after ${duration}ms:`, error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -193,41 +340,61 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const userId = searchParams.get('userId');
-
-  // Validate userId
-  if (!userId) {
-    return NextResponse.json(
-      { error: 'userId is required' },
-      { status: 400 }
-    );
-  }
-
-  const userIdRegex = /^user_[a-z0-9]{9}$/;
-  if (!userIdRegex.test(userId)) {
-    return NextResponse.json(
-      { error: 'Invalid userId format' },
-      { status: 400 }
-    );
-  }
-
+  const startTime = Date.now();
+  
   try {
-    const gameStateRecord = await db.query.gameStates.findFirst({
-      where: eq(gameStates.userId, userId),
-    });
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+
+    // Validate userId
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'userId is required' },
+        { status: 400 }
+      );
+    }
+
+    const userIdRegex = /^user_[a-z0-9]{9}$/;
+    if (!userIdRegex.test(userId)) {
+      return NextResponse.json(
+        { error: 'Invalid userId format' },
+        { status: 400 }
+      );
+    }
+
+    // Fetch game state with timeout
+    let gameStateRecord;
+    try {
+      gameStateRecord = await withTimeout(
+        db.query.gameStates.findFirst({
+          where: eq(gameStates.userId, userId),
+        }),
+        5000,
+        'Game state fetch'
+      );
+    } catch (error) {
+      console.error('[Conversation] Failed to fetch game state:', error);
+      return NextResponse.json(
+        { error: 'Failed to fetch game state' },
+        { status: 503 }
+      );
+    }
 
     if (!gameStateRecord) {
       return NextResponse.json({ exists: false });
     }
 
+    const duration = Date.now() - startTime;
+    console.log(`[Conversation] GET request processed in ${duration}ms`);
+
     return NextResponse.json({
       exists: true,
-      gameState: gameStateRecord.currentState,
-      conversationHistory: gameStateRecord.conversationHistory,
+      gameState: (gameStateRecord as any).currentState,
+      conversationHistory: (gameStateRecord as any).conversationHistory,
     });
   } catch (error) {
-    console.error('API error:', error);
+    const duration = Date.now() - startTime;
+    console.error(`[Conversation] GET API error after ${duration}ms:`, error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

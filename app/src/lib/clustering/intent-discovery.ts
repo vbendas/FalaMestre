@@ -9,15 +9,79 @@ import { sql } from 'drizzle-orm';
 import { embedBatch } from './embedding-service';
 import OpenAI from 'openai';
 
-// Lazy initialization of OpenAI client
-let openaiClient: OpenAI | null = null;
-function getOpenAIClient(): OpenAI | null {
-  if (!openaiClient && process.env.OPENAI_API_KEY) {
-    openaiClient = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
+// OpenAI Client Factory with proper resource management
+class OpenAIClientFactory {
+  private client: OpenAI | null = null;
+  private requestCount = 0;
+  private readonly maxRequestsPerClient = 100; // Recreate client after 100 requests to prevent memory buildup
+
+  /**
+   * Get or create OpenAI client
+   */
+  getClient(): OpenAI | null {
+    if (!process.env.OPENAI_API_KEY) {
+      return null;
+    }
+
+    // Recreate client if it has been used too many times
+    if (this.client && this.requestCount >= this.maxRequestsPerClient) {
+      this.cleanup();
+    }
+
+    if (!this.client) {
+      this.client = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+        timeout: 30000, // 30 second timeout
+        maxRetries: 3,
+      });
+      this.requestCount = 0;
+    }
+
+    return this.client;
   }
-  return openaiClient;
+
+  /**
+   * Increment request count
+   */
+  incrementRequest(): void {
+    this.requestCount++;
+  }
+
+  /**
+   * Clean up the client
+   */
+  cleanup(): void {
+    if (this.client) {
+      // OpenAI client doesn't have explicit cleanup, but we can help GC
+      this.client = null;
+      this.requestCount = 0;
+    }
+  }
+
+  /**
+   * Get current request count
+   */
+  getRequestCount(): number {
+    return this.requestCount;
+  }
+}
+
+// Create singleton factory instance
+const openAIFactory = new OpenAIClientFactory();
+
+/**
+ * Get OpenAI client (using factory pattern)
+ */
+function getOpenAIClient(): OpenAI | null {
+  return openAIFactory.getClient();
+}
+
+/**
+ * Cleanup OpenAI resources (call periodically or on shutdown)
+ */
+export function cleanupOpenAIClient(): void {
+  openAIFactory.cleanup();
+  console.log('[OpenAI] Client cleaned up');
 }
 
 /**
@@ -47,6 +111,8 @@ export async function discoverIntentClusters(): Promise<{
     };
   }
 
+  const startTime = Date.now();
+
   try {
     // 1. Fetch embeddings from last 7 days
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
@@ -67,13 +133,15 @@ export async function discoverIntentClusters(): Promise<{
     }>;
 
     if (embeddings.length < 50) {
-      console.log('Not enough embeddings for clustering, need at least 50');
+      console.log('[IntentDiscovery] Not enough embeddings for clustering, need at least 50');
       return {
         clustersFound: 0,
         messagesProcessed: embeddings.length,
         labels: [],
       };
     }
+
+    console.log(`[IntentDiscovery] Processing ${embeddings.length} embeddings`);
 
     // 2. Try different K values and pick best
     const kValues = [8, 10, 12, 15, 20];
@@ -104,6 +172,8 @@ export async function discoverIntentClusters(): Promise<{
       }
     }
 
+    console.log(`[IntentDiscovery] Best K: ${bestK}, Score: ${bestScore.toFixed(3)}`);
+
     // 3. Label clusters using GPT-4o-mini
     const clusterLabels: Array<{ id: string; label: string; description: string; descriptionPt: string; count: number }> = [];
 
@@ -116,50 +186,60 @@ export async function discoverIntentClusters(): Promise<{
 
       if (clusterMessages.length === 0) continue;
 
-      // Generate label
-      const label = await generateClusterLabel(clusterMessages);
-      
-      clusterLabels.push({
-        id: label.id,
-        label: label.label,
-        description: label.description,
-        descriptionPt: label.descriptionPt,
-        count: clusterMessages.length,
-      });
-
-      // 4. Upsert to intent_clusters table
-      await db.insert(intentClusters)
-        .values({
+      try {
+        // Generate label with timeout protection
+        const label = await generateClusterLabel(clusterMessages);
+        
+        clusterLabels.push({
           id: label.id,
           label: label.label,
           description: label.description,
           descriptionPt: label.descriptionPt,
-          centroid: bestCentroids[clusterIdx],
-          messageCount: clusterMessages.length,
-          discoveredAt: new Date(),
-          isActive: true,
-        })
-        .onConflictDoUpdate({
-          target: intentClusters.id,
-          set: {
+          count: clusterMessages.length,
+        });
+
+        // 4. Upsert to intent_clusters table
+        await db.insert(intentClusters)
+          .values({
+            id: label.id,
+            label: label.label,
+            description: label.description,
+            descriptionPt: label.descriptionPt,
             centroid: bestCentroids[clusterIdx],
             messageCount: clusterMessages.length,
             discoveredAt: new Date(),
             isActive: true,
-          },
-        });
+          })
+          .onConflictDoUpdate({
+            target: intentClusters.id,
+            set: {
+              centroid: bestCentroids[clusterIdx],
+              messageCount: clusterMessages.length,
+              discoveredAt: new Date(),
+              isActive: true,
+            },
+          });
 
-      // 5. Back-fill intentCluster on message_embeddings
-      const clusterEmbeddingIds = embeddings
-        .filter((_, i) => bestAssignments[i] === clusterIdx)
-        .map(e => e.id);
+        // 5. Back-fill intentCluster on message_embeddings (batch update)
+        const clusterEmbeddingIds = embeddings
+          .filter((_, i) => bestAssignments[i] === clusterIdx)
+          .map(e => e.id);
 
-      for (const id of clusterEmbeddingIds) {
-        await db.execute(sql`
-          UPDATE message_embeddings
-          SET intent_cluster = ${label.id}
-          WHERE id = ${id}
-        `);
+        // Process in batches to avoid memory issues
+        const batchSize = 100;
+        for (let i = 0; i < clusterEmbeddingIds.length; i += batchSize) {
+          const batch = clusterEmbeddingIds.slice(i, i + batchSize);
+          
+          // Update batch
+          await db.execute(sql`
+            UPDATE message_embeddings
+            SET intent_cluster = ${label.id}
+            WHERE id IN (${sql.join(batch)})
+          `);
+        }
+      } catch (error) {
+        console.error(`[IntentDiscovery] Error processing cluster ${clusterIdx}:`, error);
+        // Continue with next cluster
       }
     }
 
@@ -170,13 +250,24 @@ export async function discoverIntentClusters(): Promise<{
       WHERE discovered_at < ${sevenDaysAgo}
     `);
 
+    const duration = Date.now() - startTime;
+    console.log(`[IntentDiscovery] Completed in ${duration}ms, found ${clusterLabels.length} clusters`);
+
+    // Cleanup OpenAI client to free memory
+    cleanupOpenAIClient();
+
     return {
       clustersFound: clusterLabels.length,
       messagesProcessed: embeddings.length,
       labels: clusterLabels.map(c => ({ id: c.id, label: c.label, count: c.count })),
     };
   } catch (error) {
-    console.error('Error discovering intent clusters:', error);
+    const duration = Date.now() - startTime;
+    console.error(`[IntentDiscovery] Error after ${duration}ms:`, error);
+    
+    // Cleanup even on error
+    cleanupOpenAIClient();
+    
     return {
       clustersFound: 0,
       messagesProcessed: 0,
@@ -348,7 +439,7 @@ function calculateSilhouetteScore(
 }
 
 /**
- * Generate cluster label using GPT-4o-mini.
+ * Generate cluster label using GPT-4o-mini with timeout protection.
  */
 async function generateClusterLabel(
   messages: string[]
@@ -365,11 +456,17 @@ async function generateClusterLabel(
 
   const sample = messages.slice(0, 15).join('\n- ');
 
-  const response = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
-    messages: [{
-      role: 'user',
-      content: `These are user messages from a Brazilian football management game in Portuguese. What is the common intent or topic?
+  try {
+    // Add timeout protection for OpenAI call
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('OpenAI call timeout')), 30000);
+    });
+
+    const responsePromise = openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [{
+        role: 'user',
+        content: `These are user messages from a Brazilian football management game in Portuguese. What is the common intent or topic?
 
 Return a JSON object with exactly these keys:
 - "id": short snake_case identifier (e.g., "transfer_frustration", "match_excitement")
@@ -379,26 +476,38 @@ Return a JSON object with exactly these keys:
 
 Messages:
 - ${sample}`,
-    }],
-    response_format: { type: 'json_object' },
-    temperature: 0.3,
-  });
+      }],
+      response_format: { type: 'json_object' },
+      temperature: 0.3,
+    });
 
-  const content = response.choices[0].message.content;
-  if (!content) {
+    const response = await Promise.race([responsePromise, timeoutPromise]);
+    openAIFactory.incrementRequest();
+
+    const content = response.choices[0].message.content;
+    if (!content) {
+      return {
+        id: 'unknown_intent',
+        label: 'Unknown Intent',
+        description: 'Could not determine intent',
+        descriptionPt: 'Não foi possível determinar a intenção',
+      };
+    }
+
+    const parsed = JSON.parse(content);
+    return {
+      id: parsed.id || 'unknown_intent',
+      label: parsed.label || 'Unknown Intent',
+      description: parsed.description || 'Could not determine intent',
+      descriptionPt: parsed.description_pt || 'Não foi possível determinar a intenção',
+    };
+  } catch (error) {
+    console.error('[IntentDiscovery] OpenAI call failed:', error);
     return {
       id: 'unknown_intent',
       label: 'Unknown Intent',
-      description: 'Could not determine intent',
-      descriptionPt: 'Não foi possível determinar a intenção',
+      description: 'OpenAI call failed',
+      descriptionPt: 'Falha na chamada OpenAI',
     };
   }
-
-  const parsed = JSON.parse(content);
-  return {
-    id: parsed.id || 'unknown_intent',
-    label: parsed.label || 'Unknown Intent',
-    description: parsed.description || 'Could not determine intent',
-    descriptionPt: parsed.description_pt || 'Não foi possível determinar a intenção',
-  };
 }

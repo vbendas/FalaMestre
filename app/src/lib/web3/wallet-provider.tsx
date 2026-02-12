@@ -10,7 +10,7 @@
  * Both configured for Chiliz Chain (mainnet or testnet based on environment).
  */
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { PrivyProvider, usePrivy, useWallets } from '@privy-io/react-auth';
 import { createConfig, http, useAccount, useConnect, useDisconnect, useBalance, WagmiProvider } from 'wagmi';
 import { walletConnect, injected } from 'wagmi/connectors';
@@ -42,8 +42,16 @@ const wagmiConfig = createConfig({
   },
 });
 
-// Query client for React Query
-const queryClient = new QueryClient();
+// Query client for React Query with proper cleanup settings
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      staleTime: 30000,
+      gcTime: 60000, // Garbage collection time (replaces deprecated cacheTime)
+    },
+  },
+});
 
 // Wallet context
 interface WalletContextType {
@@ -81,6 +89,24 @@ function WalletProviderInner({ children }: { children: React.ReactNode }) {
   // State
   const [isConnecting, setIsConnecting] = useState(false);
   
+  // Refs for cleanup
+  const isMountedRef = useRef(true);
+  const connectionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Cleanup on unmount
+  useEffect(() => {
+    isMountedRef.current = true;
+    
+    return () => {
+      isMountedRef.current = false;
+      // Clear any pending timeouts
+      if (connectionTimeoutRef.current) {
+        clearTimeout(connectionTimeoutRef.current);
+        connectionTimeoutRef.current = null;
+      }
+    };
+  }, []);
+  
   // Active wallet info
   const isConnected = wagmiConnected || !!privyAddress;
   const address = wagmiAddress || privyAddress || null;
@@ -90,8 +116,14 @@ function WalletProviderInner({ children }: { children: React.ReactNode }) {
       ? 'external' 
       : null;
   
-  // Connect function
+  // Connect function with proper cleanup
   const connectWallet = useCallback(() => {
+    // Clear any existing timeout
+    if (connectionTimeoutRef.current) {
+      clearTimeout(connectionTimeoutRef.current);
+      connectionTimeoutRef.current = null;
+    }
+    
     setIsConnecting(true);
     
     // Try WalletConnect first (external wallets)
@@ -103,16 +135,47 @@ function WalletProviderInner({ children }: { children: React.ReactNode }) {
       login();
     }
     
-    setTimeout(() => setIsConnecting(false), 1000);
+    // Set timeout to reset connecting state
+    connectionTimeoutRef.current = setTimeout(() => {
+      if (isMountedRef.current) {
+        setIsConnecting(false);
+      }
+      connectionTimeoutRef.current = null;
+    }, 1000);
   }, [connect, connectors, login]);
   
-  // Disconnect function
+  // Effect to handle connection state changes
+  useEffect(() => {
+    // Reset isConnecting when actual connection state changes
+    if (isConnected || !isWagmiConnecting) {
+      if (connectionTimeoutRef.current) {
+        clearTimeout(connectionTimeoutRef.current);
+        connectionTimeoutRef.current = null;
+      }
+      if (isMountedRef.current) {
+        setIsConnecting(false);
+      }
+    }
+  }, [isConnected, isWagmiConnecting]);
+  
+  // Disconnect function with proper cleanup
   const disconnectWallet = useCallback(() => {
+    // Clear any pending timeouts
+    if (connectionTimeoutRef.current) {
+      clearTimeout(connectionTimeoutRef.current);
+      connectionTimeoutRef.current = null;
+    }
+    
     if (wagmiConnected) {
       wagmiDisconnect();
     }
     if (authenticated) {
       logout();
+    }
+    
+    // Reset connecting state
+    if (isMountedRef.current) {
+      setIsConnecting(false);
     }
   }, [wagmiConnected, wagmiDisconnect, authenticated, logout]);
   

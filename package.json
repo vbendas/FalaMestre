@@ -1,0 +1,13 @@
+{
+  "name": "fala-mestre",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "cd app && bun dev",
+    "build": "cd app && bun run build",
+    "start": "cd app && bun run start",
+    "lint": "cd app && bun run lint"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

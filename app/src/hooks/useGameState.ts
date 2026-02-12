@@ -34,6 +34,7 @@ interface UseGameStateReturn {
   isLoading: boolean;
   userId: string | null;
   isNewUser: boolean;
+  hasCheckedUser: boolean;
   view: ViewType;
   setView: (view: ViewType) => void;
   setInput: (input: string) => void;
@@ -46,6 +47,33 @@ interface UseGameStateReturn {
   closeMatchModal: () => void;
 }
 
+// Request timeout in milliseconds
+const REQUEST_TIMEOUT = 30000;
+
+/**
+ * Wrapper for fetch with timeout and abort controller
+ */
+async function fetchWithTimeout(
+  url: string,
+  options: RequestInit,
+  timeoutMs: number
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
+  }
+}
+
 export function useGameState(): UseGameStateReturn {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -53,14 +81,48 @@ export function useGameState(): UseGameStateReturn {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [isNewUser, setIsNewUser] = useState(true);
+  const [hasCheckedUser, setHasCheckedUser] = useState(false);
   const [view, setView] = useState<ViewType>('chat');
   const [lastMatchResult, setLastMatchResult] = useState<{ result: MatchResult; pointsEarned: number; pointsChange: number } | null>(null);
   const [showMatchModal, setShowMatchModal] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  
+  // Use refs to track mounted state and abort controllers
+  const isMountedRef = useRef(true);
+  const abortControllersRef = useRef<AbortController[]>([]);
+  const isLoadingGameStateRef = useRef(false);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const closeMatchModal = useCallback(() => {
     setShowMatchModal(false);
   }, []);
+
+  // Cleanup function for all resources
+  const cleanup = useCallback(() => {
+    // Abort all pending requests
+    abortControllersRef.current.forEach(controller => {
+      try {
+        controller.abort();
+      } catch (e) {
+        // Ignore abort errors
+      }
+    });
+    abortControllersRef.current = [];
+    
+    // Clear any pending timeouts
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+      scrollTimeoutRef.current = null;
+    }
+  }, []);
+
+  // Handle component unmount
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      cleanup();
+    };
+  }, [cleanup]);
 
   // Initialize user ID
   useEffect(() => {
@@ -72,29 +134,60 @@ export function useGameState(): UseGameStateReturn {
     setUserId(id);
   }, []);
 
-  // Load existing game state
+  // Load existing game state with proper cleanup and concurrency handling
   useEffect(() => {
-    if (userId) {
-      loadGameState();
-    }
-  }, [userId]);
-
-  const loadGameState = useCallback(async () => {
-    try {
-      const response = await fetch(`/api/conversation?userId=${userId}`);
-      const data = await response.json();
-      if (data.exists) {
-        setGameState(data.gameState);
-        setMessages(data.conversationHistory || []);
-        setIsNewUser(false); // User has game state, not new
-      } else {
-        // First time user - show onboarding
-        setIsNewUser(true);
+    if (!userId || isLoadingGameStateRef.current) return;
+    
+    const loadGameState = async () => {
+      isLoadingGameStateRef.current = true;
+      
+      // Create abort controller for this request
+      const controller = new AbortController();
+      abortControllersRef.current.push(controller);
+      
+      try {
+        const response = await fetchWithTimeout(
+          `/api/conversation?userId=${userId}`,
+          { signal: controller.signal },
+          10000 // 10 second timeout
+        );
+        
+        if (!isMountedRef.current) return;
+        
+        const data = await response.json();
+        
+        if (!isMountedRef.current) return;
+        
+        if (data.exists) {
+          setGameState(data.gameState);
+          setMessages(data.conversationHistory || []);
+          setIsNewUser(false);
+        } else {
+          setIsNewUser(true);
+        }
+      } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') {
+          console.log('[useGameState] Game state fetch aborted');
+          return;
+        }
+        console.error('[useGameState] Failed to load game state:', error);
+        if (isMountedRef.current) {
+          setIsNewUser(true);
+        }
+      } finally {
+        isLoadingGameStateRef.current = false;
+        // Remove this controller from the list
+        const index = abortControllersRef.current.indexOf(controller);
+        if (index > -1) {
+          abortControllersRef.current.splice(index, 1);
+        }
+        if (isMountedRef.current) {
+          setHasCheckedUser(true);
+        }
       }
-    } catch (error) {
-      console.error('Failed to load game state:', error);
-      setIsNewUser(true); // On error, treat as new user
-    }
+    };
+
+    loadGameState();
   }, [userId]);
 
   const sendMessage = useCallback(async (messageText?: string) => {
@@ -113,14 +206,27 @@ export function useGameState(): UseGameStateReturn {
     };
     setMessages(prev => [...prev, userMessage]);
 
+    // Create abort controller for this request
+    const controller = new AbortController();
+    abortControllersRef.current.push(controller);
+
     try {
-      const response = await fetch('/api/conversation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, message }),
-      });
+      const response = await fetchWithTimeout(
+        '/api/conversation',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, message }),
+          signal: controller.signal,
+        },
+        REQUEST_TIMEOUT
+      );
+
+      if (!isMountedRef.current) return;
 
       const data = await response.json();
+      
+      if (!isMountedRef.current) return;
 
       // Add AI response
       const aiMessage: Message = {
@@ -133,16 +239,29 @@ export function useGameState(): UseGameStateReturn {
       setMessages(prev => [...prev, aiMessage]);
       setGameState(data.gameState);
     } catch (error) {
-      console.error('Failed to send message:', error);
-      const errorMessage: Message = {
-        id: generateMessageId(),
-        role: 'ai',
-        content: '❌ Desculpe, ocorreu um erro. Tente novamente.',
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, errorMessage]);
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.log('[useGameState] Send message aborted');
+        return;
+      }
+      console.error('[useGameState] Failed to send message:', error);
+      if (isMountedRef.current) {
+        const errorMessage: Message = {
+          id: generateMessageId(),
+          role: 'ai',
+          content: '❌ Desculpe, ocorreu um erro. Tente novamente.',
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, errorMessage]);
+      }
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
+      // Remove this controller from the list
+      const index = abortControllersRef.current.indexOf(controller);
+      if (index > -1) {
+        abortControllersRef.current.splice(index, 1);
+      }
     }
   }, [input, userId]);
 
@@ -151,31 +270,53 @@ export function useGameState(): UseGameStateReturn {
     if (!userId) return null;
     setIsLoading(true);
 
+    // Create abort controller for this request
+    const controller = new AbortController();
+    abortControllersRef.current.push(controller);
+
     try {
-      const response = await fetch('/api/match', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId }),
-      });
+      const response = await fetchWithTimeout(
+        '/api/match',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId }),
+          signal: controller.signal,
+        },
+        REQUEST_TIMEOUT
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
+      if (!isMountedRef.current) return null;
+
       const data = await response.json();
       return data as MatchAPIResult;
     } catch (error) {
-      console.error('Failed to play match:', error);
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.log('[useGameState] Play match aborted');
+        return null;
+      }
+      console.error('[useGameState] Failed to play match:', error);
       return null;
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
+      // Remove this controller from the list
+      const index = abortControllersRef.current.indexOf(controller);
+      if (index > -1) {
+        abortControllersRef.current.splice(index, 1);
+      }
     }
   }, [userId]);
 
   // Wrapper that handles UI updates after match
   const playMatch = useCallback(async () => {
     const data = await playMatchAndGetResult();
-    if (!data) return;
+    if (!data || !isMountedRef.current) return;
 
     // Store match result for modal
     setLastMatchResult({
@@ -197,11 +338,27 @@ export function useGameState(): UseGameStateReturn {
     setView('chat');
   }, [playMatchAndGetResult]);
 
-  // Auto-scroll to bottom when messages change
+  // Auto-scroll to bottom when messages change (with debouncing)
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    // Clear any existing scroll timeout
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
     }
+
+    // Debounce scroll to prevent excessive updates
+    scrollTimeoutRef.current = setTimeout(() => {
+      if (scrollRef.current && isMountedRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
+      scrollTimeoutRef.current = null;
+    }, 50); // 50ms debounce
+
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+        scrollTimeoutRef.current = null;
+      }
+    };
   }, [messages]);
 
    return {
@@ -211,6 +368,7 @@ export function useGameState(): UseGameStateReturn {
     isLoading,
     userId,
     isNewUser,
+    hasCheckedUser,
     view,
     setView,
     setInput,

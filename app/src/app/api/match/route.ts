@@ -8,15 +8,49 @@ import { GameState, Message } from '@/lib/types';
 import { matchRequestSchema } from '@/lib/validations';
 import { ZodError } from 'zod';
 
+// Request timeout in milliseconds (30 seconds)
+const REQUEST_TIMEOUT = 30000;
+
+/**
+ * Wrapper for async operations with timeout and cleanup
+ */
+async function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  operationName: string
+): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      reject(new Error(`${operationName} timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
+
+    promise
+      .then((result) => {
+        clearTimeout(timeoutId);
+        resolve(result);
+      })
+      .catch((error) => {
+        clearTimeout(timeoutId);
+        reject(error);
+      });
+  });
+}
+
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  
   try {
+    // Parse request body with timeout protection
     let requestBody;
-    
     try {
-      requestBody = await request.json();
+      requestBody = await withTimeout(
+        request.json(),
+        5000,
+        'Request body parsing'
+      );
     } catch {
       return NextResponse.json(
-        { error: 'Invalid JSON body' },
+        { error: 'Invalid JSON body or timeout' },
         { status: 400 }
       );
     }
@@ -43,10 +77,23 @@ export async function POST(request: NextRequest) {
     
     const { userId } = validatedData;
 
-    // Get game state
-    const gameStateRecord = await db.query.gameStates.findFirst({
-      where: eq(gameStates.userId, userId),
-    });
+    // Get game state with timeout
+    let gameStateRecord;
+    try {
+      gameStateRecord = await withTimeout(
+        db.query.gameStates.findFirst({
+          where: eq(gameStates.userId, userId),
+        }),
+        5000,
+        'Game state fetch'
+      );
+    } catch (error) {
+      console.error('[Match] Failed to fetch game state:', error);
+      return NextResponse.json(
+        { error: 'Failed to fetch game state' },
+        { status: 503 }
+      );
+    }
 
     if (!gameStateRecord) {
       return NextResponse.json(
@@ -55,7 +102,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const gameState = gameStateRecord.currentState as GameState;
+    const gameState = (gameStateRecord as any).currentState as GameState;
     const match = gameState.season.nextMatch;
 
     // Simulate match
@@ -151,26 +198,69 @@ export async function POST(request: NextRequest) {
     const hasApiKey = !!process.env.SYNTHETIC_API_KEY;
     const useMock = envMockMode || !hasApiKey;
 
+    // Call AI with timeout
     let aiResponse;
+    const aiTimeout = 15000; // 15 second timeout for AI calls
+    
     if (useMock) {
-      aiResponse = await callAIMock(matchSummary, gameState, []);
+      try {
+        aiResponse = await withTimeout(
+          callAIMock(matchSummary, gameState, []),
+          aiTimeout,
+          'Mock AI call'
+        );
+      } catch (error) {
+        console.error('[Match] Mock AI call failed:', error);
+        return NextResponse.json(
+          { error: 'AI service temporarily unavailable' },
+          { status: 503 }
+        );
+      }
     } else {
       try {
-        aiResponse = await callAI(matchSummary, gameState, []);
+        aiResponse = await withTimeout(
+          callAI(matchSummary, gameState, []),
+          aiTimeout,
+          'AI call'
+        );
       } catch (error) {
-        console.warn('AI narration failed, using mock fallback:', error);
-        aiResponse = await callAIMock(matchSummary, gameState, []);
+        console.warn('[Match] AI call failed, falling back to mock:', error);
+        try {
+          aiResponse = await withTimeout(
+            callAIMock(matchSummary, gameState, []),
+            aiTimeout,
+            'Fallback mock AI call'
+          );
+        } catch (fallbackError) {
+          console.error('[Match] Fallback AI call also failed:', fallbackError);
+          return NextResponse.json(
+            { error: 'AI service unavailable' },
+            { status: 503 }
+          );
+        }
       }
     }
 
-    // Update database
-    await db
-      .update(gameStates)
-      .set({
-        currentState: gameState,
-        updatedAt: new Date(),
-      })
-      .where(eq(gameStates.userId, userId));
+    // Update database with timeout
+    try {
+      await withTimeout(
+        db
+          .update(gameStates)
+          .set({
+            currentState: gameState,
+            updatedAt: new Date(),
+          })
+          .where(eq(gameStates.userId, userId)),
+        5000,
+        'Game state update'
+      );
+    } catch (error) {
+      console.error('[Match] Failed to update game state:', error);
+      // Continue to return response even if update fails
+    }
+
+    const duration = Date.now() - startTime;
+    console.log(`[Match] Request processed in ${duration}ms`);
 
     return NextResponse.json({
       result: {
@@ -186,7 +276,8 @@ export async function POST(request: NextRequest) {
       updatedGameState: gameState,
     });
   } catch (error) {
-    console.error('Match API error:', error);
+    const duration = Date.now() - startTime;
+    console.error(`[Match] API error after ${duration}ms:`, error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
