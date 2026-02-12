@@ -2,14 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { gameStates } from '@/db/schema';
 import { eq } from 'drizzle-orm';
-import { simulateMatch, calculateTeamPower, BRAZILIAN_TEAMS, generateSquad } from '@/lib/game-engine';
+import { simulateMatch, BRAZILIAN_TEAMS, generateSquad } from '@/lib/game-engine';
 import { callAIMock, callAI } from '@/lib/ai-service';
-import { GameState, Message } from '@/lib/types';
+import { GameState } from '@/lib/types';
 import { matchRequestSchema } from '@/lib/validations';
 import { ZodError } from 'zod';
-
-// Request timeout in milliseconds (30 seconds)
-const REQUEST_TIMEOUT = 30000;
+import { checkRateLimit } from '@/lib/rate-limit';
 
 type GameStateRecordShape = {
   currentState: GameState;
@@ -44,6 +42,14 @@ export async function POST(request: NextRequest) {
   const startTime = Date.now();
   
   try {
+    const rateLimit = checkRateLimit(request, 'match', 30, 60_000);
+    if (!rateLimit.ok) {
+      return NextResponse.json(
+        { error: 'Too many requests', retryAfter: rateLimit.retryAfterSeconds },
+        { status: 429, headers: { 'Retry-After': String(rateLimit.retryAfterSeconds) } }
+      );
+    }
+
     // Parse request body with timeout protection
     let requestBody;
     try {

@@ -198,6 +198,7 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
     
     try {
       let result: MatchResult | null = null;
+      let parsedEvents: ParsedEvent[] = [];
       
       // If we have the new API, call it first to get real result
       if (onPlayMatchWithResult) {
@@ -208,8 +209,8 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
           result = data.result;
           setMatchResult(result);
           // Parse events for animation
-          const parsed = parseMatchEvents(result.events, user.team, nextMatch.opponent);
-          setMatchEvents(parsed);
+          parsedEvents = parseMatchEvents(result.events, user.team, nextMatch.opponent);
+          setMatchEvents(parsedEvents);
         }
       }
       
@@ -249,7 +250,7 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
           const newMinute = prev + 1;
           
           // Check for events at this minute
-          const eventAtMinute = matchEvents.find(e => e.minute === newMinute);
+          const eventAtMinute = parsedEvents.find(e => e.minute === newMinute);
           
           if (eventAtMinute) {
             setCurrentEvent(eventAtMinute.description);

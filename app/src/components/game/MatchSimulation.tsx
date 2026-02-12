@@ -23,7 +23,7 @@ export function MatchSimulation({
   awayScore, 
   minute, 
   currentEvent,
-  isPlaying,
+  isPlaying: _isPlaying,
   events = []
 }: MatchSimulationProps) {
   const { user, season } = gameState;
@@ -34,13 +34,14 @@ export function MatchSimulation({
   const progress = (minute / 90) * 100;
 
   // Stable possession stats based on minute - only update every 5 minutes
+  const possessionBucket = Math.floor(minute / 5);
   const possessionStats = useMemo(() => {
     const baseHome = 50;
-    const variation = (minute % 10) - 5; // Creates a swing between -5 and +4
+    const variation = (possessionBucket % 3 - 1) * 3; // -3, 0, +3 every 5 minutes
     const homePossession = baseHome + variation;
     const awayPossession = 100 - homePossession;
     return { homePossession, awayPossession };
-  }, [Math.floor(minute / 5)]); // Only recalculate every 5 minutes
+  }, [possessionBucket]); // Only recalculate every 5 minutes
 
   return (
     <div className="space-y-4">

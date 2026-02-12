@@ -11,9 +11,7 @@ import { ZodError } from 'zod';
 import { wordCount, hasQuestion, countEmotionalWords, detectAssertiveness } from '@/lib/clustering/linguistic-utils';
 import { embedMessage } from '@/lib/clustering/embedding-service';
 import { messageEmbeddings } from '@/db/schema';
-
-// Request timeout in milliseconds (30 seconds)
-const REQUEST_TIMEOUT = 30000;
+import { checkRateLimit } from '@/lib/rate-limit';
 
 type GameStateRecordShape = {
   currentState: GameState;
@@ -80,6 +78,14 @@ export async function POST(request: NextRequest) {
   const startTime = Date.now();
   
   try {
+    const rateLimit = checkRateLimit(request, 'conversation', 60, 60_000);
+    if (!rateLimit.ok) {
+      return NextResponse.json(
+        { error: 'Too many requests', retryAfter: rateLimit.retryAfterSeconds },
+        { status: 429, headers: { 'Retry-After': String(rateLimit.retryAfterSeconds) } }
+      );
+    }
+
     // Parse request body with timeout protection
     let requestBody;
     try {

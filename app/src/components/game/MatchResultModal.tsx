@@ -6,7 +6,7 @@ import { GameState } from '@/lib/types';
 import { getTeamData } from '@/lib/team-data';
 import Image from 'next/image';
 import { X, Trophy, Circle, AlertCircle, Sparkles } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 interface MatchResult {
   homeScore: number;
@@ -26,30 +26,41 @@ interface MatchResultModalProps {
 
 // Confetti component
 function Confetti() {
+  const pieces = useMemo(() => {
+    return [...Array(20)].map((_, i) => ({
+      id: i,
+      initialX: Math.random() * 400 - 200,
+      rotateEnd: Math.random() * 720 - 360,
+      duration: 2 + Math.random() * 2,
+      delay: Math.random() * 0.5,
+      color: ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4'][i % 5],
+    }));
+  }, []);
+
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {[...Array(20)].map((_, i) => (
+      {pieces.map((piece) => (
         <motion.div
-          key={i}
+          key={piece.id}
           initial={{
-            x: Math.random() * 400 - 200,
+            x: piece.initialX,
             y: -20,
             rotate: 0,
             opacity: 1
           }}
           animate={{
             y: 400,
-            rotate: Math.random() * 720 - 360,
+            rotate: piece.rotateEnd,
             opacity: 0
           }}
           transition={{
-            duration: 2 + Math.random() * 2,
+            duration: piece.duration,
             ease: "easeOut",
-            delay: Math.random() * 0.5
+            delay: piece.delay
           }}
           className="absolute left-1/2 top-0 w-3 h-3 rounded-full"
           style={{
-            backgroundColor: ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4'][i % 5]
+            backgroundColor: piece.color
           }}
         />
       ))}
