@@ -483,7 +483,7 @@ export function simulateMatchWithCommentary(
         player,
         description: `Cartão amarelo para ${player.name}`,
         intensity: calculateIntensity(minute, context),
-        highlight: false,
+        highlight: true, // Trigger highlight overlay for cards
         commentary,
         momentum: 0,
       });
