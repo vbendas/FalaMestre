@@ -10,6 +10,7 @@ import { getTeamData } from '@/lib/team-data';
 import Image from 'next/image';
 import { Home, Plane, Trophy, Swords, Glasses } from 'lucide-react';
 import { MatchSimulation } from './MatchSimulation';
+import { HighlightOverlay } from './HighlightOverlay';
 import { VRMatchView } from '@/components/vr';
 import { Formation } from '@/components/vr/formations';
 
@@ -111,6 +112,7 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = useRef(true);
   const intervalStartedRef = useRef(false);
+  const isHighlightModeRef = useRef(false);
   
   const homeTeamData = getTeamData(user.team);
   const awayTeamData = getTeamData(nextMatch.opponent);
@@ -142,6 +144,15 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
   const [matchEvents, setMatchEvents] = useState<MatchEvent[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isVRMode, setIsVRMode] = useState(false);
+  
+  // Highlight mode state for special moments
+  const [isHighlightMode, setIsHighlightMode] = useState(false);
+  const [highlightEvent, setHighlightEvent] = useState<MatchEvent | null>(null);
+  
+  // Refs for highlight mode
+  const highlightTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const pausedMinuteRef = useRef<number>(0);
+  const simulationEventsRef = useRef<MatchEvent[]>([]);
 
   // Cleanup function for intervals and timeouts
   const cleanupTimers = useCallback(() => {
@@ -153,7 +164,132 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
+    if (highlightTimeoutRef.current) {
+      clearTimeout(highlightTimeoutRef.current);
+      highlightTimeoutRef.current = null;
+    }
   }, []);
+
+  // Function to trigger highlight mode and pause simulation
+  const triggerHighlight = useCallback((event: MatchEvent) => {
+    if (isHighlightMode) return; // Already in highlight mode
+    
+    // Save current minute before pausing
+    pausedMinuteRef.current = matchMinute;
+    
+    // Pause the simulation by clearing the interval
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    intervalStartedRef.current = false;
+    
+    // Set highlight state
+    setHighlightEvent(event);
+    setIsHighlightMode(true);
+    
+    // Auto-exit after 8 seconds
+    highlightTimeoutRef.current = setTimeout(() => {
+      exitHighlight();
+    }, 8000);
+  }, [isHighlightMode, matchMinute]);
+
+  // Function to exit highlight mode and resume simulation
+  const exitHighlight = useCallback(() => {
+    // Clear timeout if exists
+    if (highlightTimeoutRef.current) {
+      clearTimeout(highlightTimeoutRef.current);
+      highlightTimeoutRef.current = null;
+    }
+    
+    // Clear highlight state
+    isHighlightModeRef.current = false;
+    setIsHighlightMode(false);
+    setHighlightEvent(null);
+    
+    // Resume simulation from paused minute
+    if (isMountedRef.current && simulationEventsRef.current.length > 0) {
+      const pausedMinute = pausedMinuteRef.current;
+      const narrationSpeed = gameState.user.matchSettings?.narrationSpeed || 'normal';
+      const msPerMinute = NARRATION_SPEED_CONFIG[narrationSpeed].msPerMinute;
+      
+      intervalStartedRef.current = true;
+      intervalRef.current = setInterval(() => {
+        if (!isMountedRef.current) {
+          cleanupTimers();
+          return;
+        }
+        
+        setMatchMinute(prev => {
+          const newMinute = prev + 1;
+          
+          // Get ALL events up to current minute to calculate live score correctly
+          const eventsSoFar = simulationEventsRef.current.filter(e => e.minute <= newMinute);
+          const liveHomeScore = eventsSoFar.filter(e => e.type === 'goal' && e.team === 'home').length;
+          const liveAwayScore = eventsSoFar.filter(e => e.type === 'goal' && e.team === 'away').length;
+          
+          // Update scores based on all events so far
+          setHomeScore(liveHomeScore);
+          setAwayScore(liveAwayScore);
+          
+          // Get the latest event to show as current event
+          const eventAtMinute = simulationEventsRef.current.find(e => e.minute === newMinute);
+          
+          if (eventAtMinute) {
+            setCurrentEvent(eventAtMinute.commentary || eventAtMinute.description);
+            
+            // Trigger highlight for highlight events (but not if already in highlight mode)
+            if (eventAtMinute.highlight && !isHighlightModeRef.current) {
+              // Use setTimeout to avoid calling setState during render
+              setTimeout(() => {
+                if (isMountedRef.current && !isHighlightModeRef.current) {
+                  isHighlightModeRef.current = true;
+                  setHighlightEvent(eventAtMinute);
+                  setIsHighlightMode(true);
+                  pausedMinuteRef.current = newMinute;
+                  
+                  // Clear interval to pause
+                  if (intervalRef.current) {
+                    clearInterval(intervalRef.current);
+                    intervalRef.current = null;
+                  }
+                  intervalStartedRef.current = false;
+                  
+                  // Auto-exit after 8 seconds
+                  highlightTimeoutRef.current = setTimeout(() => {
+                    exitHighlight();
+                  }, 8000);
+                }
+              }, 0);
+            }
+          }
+          
+          // End of match
+          if (newMinute >= 90) {
+            if (intervalRef.current) {
+              clearInterval(intervalRef.current);
+              intervalRef.current = null;
+            }
+            intervalStartedRef.current = false;
+            
+            if (isMountedRef.current) {
+              setCurrentEvent('Apita o árbitro! Fim de jogo!');
+              
+              timeoutRef.current = setTimeout(() => {
+                if (isMountedRef.current) {
+                  setIsSimulating(false);
+                  onPlayMatch();
+                }
+                timeoutRef.current = null;
+              }, 2000);
+            }
+          }
+          
+          return newMinute;
+        });
+      }, msPerMinute * 4);
+    }
+  }, [gameState.user.matchSettings, isHighlightMode, triggerHighlight, cleanupTimers, onPlayMatch]);
 
   // Set up mount/unmount tracking and cleanup
   useEffect(() => {
@@ -180,6 +316,8 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
     setMatchEvents([]);
     setError(null);
     setIsVRMode(false);
+    setIsHighlightMode(false);
+    setHighlightEvent(null);
   }, [gameState, cleanupTimers]);
 
   const handlePlayMatch = async () => {
@@ -244,6 +382,7 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
       
       // Get match events for this simulation
       const simulationEvents = result.events;
+      simulationEventsRef.current = simulationEvents;
       
       // Get narration speed from settings (default to normal if not set)
       const narrationSpeed = gameState.user.matchSettings?.narrationSpeed || 'normal';
@@ -253,6 +392,11 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
       intervalRef.current = setInterval(() => {
         if (!isMountedRef.current) {
           cleanupTimers();
+          return;
+        }
+        
+        // Skip if in highlight mode
+        if (isHighlightMode) {
           return;
         }
         
@@ -273,6 +417,31 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
           
           if (eventAtMinute) {
             setCurrentEvent(eventAtMinute.commentary || eventAtMinute.description);
+            
+            // Trigger highlight for highlight events (use ref to avoid state issues during render)
+            if (eventAtMinute.highlight && !isHighlightModeRef.current) {
+              // Defer to next tick to avoid setState during render
+              setTimeout(() => {
+                if (isMountedRef.current && !isHighlightModeRef.current) {
+                  isHighlightModeRef.current = true;
+                  setHighlightEvent(eventAtMinute);
+                  setIsHighlightMode(true);
+                  pausedMinuteRef.current = newMinute;
+                  
+                  // Clear interval to pause
+                  if (intervalRef.current) {
+                    clearInterval(intervalRef.current);
+                    intervalRef.current = null;
+                  }
+                  intervalStartedRef.current = false;
+                  
+                  // Auto-exit after 8 seconds
+                  highlightTimeoutRef.current = setTimeout(() => {
+                    exitHighlight();
+                  }, 8000);
+                }
+              }, 0);
+            }
           }
           
           // End of match
@@ -388,6 +557,18 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
           isPlaying={true}
           events={matchEvents}
         />
+        
+        {/* Highlight Overlay for special moments */}
+        {isHighlightMode && highlightEvent && (
+          <HighlightOverlay
+            event={highlightEvent}
+            homeTeam={user.team}
+            awayTeam={nextMatch.opponent}
+            homeColor={homeTeamData?.primaryColor || '#EF4444'}
+            awayColor={awayTeamData?.primaryColor || '#3B82F6'}
+            onSkip={exitHighlight}
+          />
+        )}
       </div>
     );
   }
