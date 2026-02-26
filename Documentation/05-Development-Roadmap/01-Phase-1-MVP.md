@@ -5,7 +5,7 @@ tags: #roadmap #mvp #phase-1 #development
 status: complete
 priority: critical
 phase: mvp
-last_updated: 2026-01-18
+last_updated: 2026-02-26
 timeline: Weeks 1-4
 budget: $10,000
 ---
@@ -299,6 +299,32 @@ Phase 1 is complete when:
 - [[01-MVP-Tasks]] - Detailed task list
 - [[00-Core-Concept]] - Game design
 - [[00-System-Overview]] - Technical architecture
+
+---
+
+## Post-MVP Bug Fixes & Improvements
+
+The following issues were identified and fixed after MVP launch:
+
+### Bug Fixes (2026-02-26)
+
+| Issue | Description | Status |
+|-------|-------------|--------|
+| Jogo tab not loading | After creating a team, Jogo tab showed no content until page refresh | ✅ Fixed |
+| Duplicate key errors | React warning in CommentaryFeed, MatchResultModal, ChatView, MatchSimulation | ✅ Fixed |
+| Image empty src | MatchSimulation had Image components with empty src | ✅ Fixed |
+| VRPlayerSprite syntax | Syntax error in VRPlayerSprite.tsx | ✅ Fixed |
+| Score consistency | Score discrepancies between live view, commentary, and result modal | ✅ Fixed |
+
+### Technical Fixes
+
+1. **Race condition fix** (`useGameState.ts`):
+   - Added retry logic when user just onboarded and gameState fetch returns empty
+   - Handles database commit timing after team creation
+
+2. **Loading states** (`page.tsx`, `MatchView.tsx`):
+   - Added loading spinner with "Carregando dados do jogo..." message
+   - Improved message when nextMatch is not ready
 
 ---
 
