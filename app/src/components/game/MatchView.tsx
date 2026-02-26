@@ -3,12 +3,15 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { GameState, Match } from '@/lib/types';
+import { GameState, Match, MatchEvent } from '@/lib/types';
+import { NARRATION_SPEED_CONFIG } from '@/lib/constants';
 import { motion } from 'framer-motion';
 import { getTeamData } from '@/lib/team-data';
 import Image from 'next/image';
-import { Home, Plane, Trophy, Swords } from 'lucide-react';
+import { Home, Plane, Trophy, Swords, Glasses } from 'lucide-react';
 import { MatchSimulation } from './MatchSimulation';
+import { VRMatchView } from '@/components/vr';
+import { Formation } from '@/components/vr/formations';
 
 interface MatchViewProps {
   gameState: GameState;
@@ -19,7 +22,7 @@ interface MatchViewProps {
       homeScore: number;
       awayScore: number;
       winner: string;
-      events: string[];
+      events: MatchEvent[];
     };
     pointsEarned: number;
     pointsChange: number;
@@ -29,17 +32,11 @@ interface MatchViewProps {
   } | null>;
 }
 
-interface ParsedEvent {
-  minute: number;
-  type: 'goal_home' | 'goal_away' | 'card' | 'other';
-  description: string;
-}
-
 interface MatchResult {
   homeScore: number;
   awayScore: number;
   winner: string;
-  events: string[];
+  events: MatchEvent[];
 }
 
 // Comparison Bar Component
@@ -86,42 +83,34 @@ function ComparisonBar({
   );
 }
 
-// Parse match events from strings to structured data
-function parseMatchEvents(events: string[], userTeam: string, opponent: string): ParsedEvent[] {
-  return events.map(event => {
-    // Extract minute from format like "⚽ 23' - Player Name"
-    const minuteMatch = event.match(/(\d+)'/);
-    const minute = minuteMatch ? parseInt(minuteMatch[1]) : 0;
-    
-    // Determine event type
-    let type: ParsedEvent['type'] = 'other';
-    if (event.includes('⚽')) {
-      // Check which team scored
-      if (event.includes(userTeam)) {
-        type = 'goal_home';
-      } else if (event.includes(opponent)) {
-        type = 'goal_away';
-      }
-    } else if (event.includes('🟨') || event.includes('🟥')) {
-      type = 'card';
-    }
-    
-    return {
-      minute,
-      type,
-      description: event,
-    };
-  }).sort((a, b) => a.minute - b.minute);
-}
-
 export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithResult }: MatchViewProps) {
   const { user, season, squad } = gameState;
   const { nextMatch } = season;
+
+  // Show helpful message if no nextMatch yet (new user or after season end)
+  if (!nextMatch || !nextMatch.opponent) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 space-y-4">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+        >
+          <Trophy className="w-16 h-16 text-[#FEDD00]" />
+        </motion.div>
+        <div className="text-xl font-bold text-white">Preparando próxima partida...</div>
+        <p className="text-white/60 text-center max-w-md">
+          Sua equipe está se preparando para o próximo jogo. 
+          Volte para o Chat e converse com o técnico para agendar uma partida!
+        </p>
+      </div>
+    );
+  }
   
   // Use refs to track interval and timeout for proper cleanup
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = useRef(true);
+  const intervalStartedRef = useRef(false);
   
   const homeTeamData = getTeamData(user.team);
   const awayTeamData = getTeamData(nextMatch.opponent);
@@ -150,7 +139,9 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
   const [awayScore, setAwayScore] = useState(0);
   const [currentEvent, setCurrentEvent] = useState<string | null>(null);
   const [matchResult, setMatchResult] = useState<MatchResult | null>(null);
-  const [matchEvents, setMatchEvents] = useState<ParsedEvent[]>([]);
+  const [matchEvents, setMatchEvents] = useState<MatchEvent[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [isVRMode, setIsVRMode] = useState(false);
 
   // Cleanup function for intervals and timeouts
   const cleanupTimers = useCallback(() => {
@@ -178,6 +169,7 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
   useEffect(() => {
     // Reset state when gameState changes (user navigated to different view)
     cleanupTimers();
+    intervalStartedRef.current = false;
     setIsSimulating(false);
     setIsCalculating(false);
     setMatchMinute(0);
@@ -186,6 +178,8 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
     setCurrentEvent(null);
     setMatchResult(null);
     setMatchEvents([]);
+    setError(null);
+    setIsVRMode(false);
   }, [gameState, cleanupTimers]);
 
   const handlePlayMatch = async () => {
@@ -195,22 +189,28 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
     }
     
     setIsCalculating(true);
+    setError(null);
     
     try {
       let result: MatchResult | null = null;
-      let parsedEvents: ParsedEvent[] = [];
       
       // If we have the new API, call it first to get real result
       if (onPlayMatchWithResult) {
         const data = await onPlayMatchWithResult();
-        if (!isMountedRef.current) return; // Component unmounted during API call
+        if (!isMountedRef.current) return;
         
         if (data) {
           result = data.result;
           setMatchResult(result);
-          // Parse events for animation
-          parsedEvents = parseMatchEvents(result.events, user.team, nextMatch.opponent);
-          setMatchEvents(parsedEvents);
+          
+          if (!result.events || result.events.length === 0) {
+            setError('Nenhum evento recebido');
+            setIsCalculating(false);
+            onPlayMatch();
+            return;
+          }
+          
+          setMatchEvents(result.events);
         }
       }
       
@@ -223,7 +223,7 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
         return;
       }
       
-      if (!isMountedRef.current) return; // Component unmounted
+      if (!isMountedRef.current) return;
       
       // Start simulation with real data
       setIsCalculating(false);
@@ -233,13 +233,23 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
       setAwayScore(0);
       setCurrentEvent(null);
       
-      let currentHomeScore = 0;
-      let currentAwayScore = 0;
-      
       // Clear any existing interval
       cleanupTimers();
       
-      // Simulate match progression with slower interval (200ms instead of 100ms)
+      // Prevent duplicate interval creation
+      if (intervalStartedRef.current) {
+        return;
+      }
+      intervalStartedRef.current = true;
+      
+      // Get match events for this simulation
+      const simulationEvents = result.events;
+      
+      // Get narration speed from settings (default to normal if not set)
+      const narrationSpeed = gameState.user.matchSettings?.narrationSpeed || 'normal';
+      const msPerMinute = NARRATION_SPEED_CONFIG[narrationSpeed].msPerMinute;
+      
+      // Simulate match progression with configurable interval
       intervalRef.current = setInterval(() => {
         if (!isMountedRef.current) {
           cleanupTimers();
@@ -249,20 +259,20 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
         setMatchMinute(prev => {
           const newMinute = prev + 1;
           
-          // Check for events at this minute
-          const eventAtMinute = parsedEvents.find(e => e.minute === newMinute);
+          // Get ALL events up to current minute to calculate live score correctly
+          const eventsSoFar = simulationEvents.filter(e => e.minute <= newMinute);
+          const liveHomeScore = eventsSoFar.filter(e => e.type === 'goal' && e.team === 'home').length;
+          const liveAwayScore = eventsSoFar.filter(e => e.type === 'goal' && e.team === 'away').length;
+          
+          // Update scores based on all events so far
+          setHomeScore(liveHomeScore);
+          setAwayScore(liveAwayScore);
+          
+          // Get the latest event to show as current event
+          const eventAtMinute = simulationEvents.find(e => e.minute === newMinute);
           
           if (eventAtMinute) {
-            setCurrentEvent(eventAtMinute.description);
-            
-            // Update scores for goals
-            if (eventAtMinute.type === 'goal_home') {
-              currentHomeScore++;
-              setHomeScore(currentHomeScore);
-            } else if (eventAtMinute.type === 'goal_away') {
-              currentAwayScore++;
-              setAwayScore(currentAwayScore);
-            }
+            setCurrentEvent(eventAtMinute.commentary || eventAtMinute.description);
           }
           
           // End of match
@@ -271,6 +281,7 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
               clearInterval(intervalRef.current);
               intervalRef.current = null;
             }
+            intervalStartedRef.current = false; // Reset for next match
             
             if (isMountedRef.current) {
               setCurrentEvent('Apita o árbitro! Fim de jogo!');
@@ -279,7 +290,7 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
               timeoutRef.current = setTimeout(() => {
                 if (isMountedRef.current) {
                   setIsSimulating(false);
-                  onPlayMatch(); // This will show the result modal
+                  onPlayMatch();
                 }
                 timeoutRef.current = null;
               }, 2000);
@@ -288,12 +299,11 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
           
           return newMinute;
         });
-      }, 200); // Slower simulation: 1 minute per 200ms (was 100ms)
-    } catch (error) {
-      console.error('Failed to play match:', error);
+      }, msPerMinute * 4);
+    } catch (err) {
       if (isMountedRef.current) {
+        setError('Erro ao carregar partida');
         setIsCalculating(false);
-        // Fall back to old behavior
         onPlayMatch();
       }
     }
@@ -317,16 +327,68 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
 
   // Show match simulation when simulating
   if (isSimulating && matchResult) {
+    // VR Mode - Full screen A-Frame scene
+    if (isVRMode) {
+      const homeTeamData = getTeamData(user.team);
+      const awayTeamData = getTeamData(nextMatch.opponent);
+      
+      return (
+        <VRMatchView
+          homeTeam={{
+            name: user.team,
+            color: homeTeamData?.primaryColor || '#EF4444',
+            formation: (gameState.squad.formation as Formation) || '4-3-3',
+            players: squad.players.slice(0, 11).map((p, i) => ({
+              id: p.id,
+              name: p.name.split(' ').pop() || p.name,
+              number: i + 1,
+              position: p.position,
+            })),
+          }}
+          awayTeam={{
+            name: nextMatch.opponent,
+            color: awayTeamData?.primaryColor || '#3B82F6',
+            formation: '4-3-3',
+            players: Array.from({ length: 11 }, (_, i) => ({
+              id: `cpu-${i}`,
+              name: `CPU ${i + 1}`,
+              number: i + 1,
+              position: i < 4 ? 'DEF' : i < 8 ? 'MID' : 'FWD',
+            })),
+          }}
+          currentMinute={matchMinute}
+          homeScore={homeScore}
+          awayScore={awayScore}
+          events={matchEvents}
+          currentEvent={currentEvent || undefined}
+          onExitVR={() => setIsVRMode(false)}
+        />
+      );
+    }
+    
+    // Standard mode - show both MatchSimulation and VR toggle button
     return (
-      <MatchSimulation 
-        gameState={gameState}
-        homeScore={homeScore}
-        awayScore={awayScore}
-        minute={matchMinute}
-        currentEvent={currentEvent}
-        isPlaying={true}
-        events={matchEvents}
-      />
+      <div className="relative">
+        <div className="absolute top-2 right-2 z-10">
+          <Button
+            onClick={() => setIsVRMode(true)}
+            className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-bold"
+            size="sm"
+          >
+            <Glasses className="w-4 h-4" />
+            VR Mode
+          </Button>
+        </div>
+        <MatchSimulation 
+          gameState={gameState}
+          homeScore={homeScore}
+          awayScore={awayScore}
+          minute={matchMinute}
+          currentEvent={currentEvent}
+          isPlaying={true}
+          events={matchEvents}
+        />
+      </div>
     );
   }
 
