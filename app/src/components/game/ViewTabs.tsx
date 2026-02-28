@@ -29,7 +29,10 @@ export function ViewTabs({ view, onViewChange, hasPendingMatch }: ViewTabsProps)
           <Button
             key={tab.id}
             variant="ghost"
-            onClick={() => onViewChange(tab.id)}
+            onClick={() => {
+              console.log('[ViewTabs] Clicking tab:', tab.id);
+              onViewChange(tab.id);
+            }}
             className={`
               flex-1 relative rounded transition-all duration-200 pixel-btn
               ${isActive 

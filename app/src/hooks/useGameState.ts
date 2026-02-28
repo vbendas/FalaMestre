@@ -196,7 +196,7 @@ export function useGameState(): UseGameStateReturn {
           if (justOnboarded) {
             console.log('[useGameState] GameState not found, retrying for onboarded user...');
             await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s
-            if (mounted && isLoadingGameStateRef.current === false) {
+            if (mounted && !isLoadingGameStateRef.current) {
               // Retry once
               const retryResponse = await fetch(`/api/conversation?userId=${userId}`);
               if (mounted) {

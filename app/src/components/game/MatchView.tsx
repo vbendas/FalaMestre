@@ -508,7 +508,7 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
             color: homeTeamData?.primaryColor || '#EF4444',
             formation: (gameState.squad.formation as Formation) || '4-3-3',
             players: squad.players.slice(0, 11).map((p, i) => ({
-              id: p.id,
+              id: p.id || `home-${i}`,
               name: p.name.split(' ').pop() || p.name,
               number: i + 1,
               position: p.position,
@@ -519,7 +519,7 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
             color: awayTeamData?.primaryColor || '#3B82F6',
             formation: '4-3-3',
             players: Array.from({ length: 11 }, (_, i) => ({
-              id: `cpu-${i}`,
+              id: `away-${i}`,
               name: `CPU ${i + 1}`,
               number: i + 1,
               position: i < 4 ? 'DEF' : i < 8 ? 'MID' : 'FWD',

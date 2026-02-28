@@ -12,6 +12,7 @@ import { wordCount, hasQuestion, countEmotionalWords, detectAssertiveness } from
 import { embedMessage } from '@/lib/clustering/embedding-service';
 import { messageEmbeddings } from '@/db/schema';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { getAuthenticatedUser, requireAuth } from '@/lib/auth-helpers';
 
 type GameStateRecordShape = {
   currentState: GameState;
@@ -78,6 +79,15 @@ export async function POST(request: NextRequest) {
   const startTime = Date.now();
   
   try {
+    // Check authentication - returns 401 only if REQUIRE_AUTH=true and no session
+    const authError = await requireAuth();
+    if (authError) {
+      return authError;
+    }
+    
+    // Get authenticated user ID (or null if not using auth)
+    const sessionUserId = await getAuthenticatedUser();
+    
     const rateLimit = checkRateLimit(request, 'conversation', 60, 60_000);
     if (!rateLimit.ok) {
       return NextResponse.json(
@@ -123,10 +133,25 @@ export async function POST(request: NextRequest) {
     
     const { userId, message, useMock: requestUseMock } = validatedData;
     
+    // Ensure user can only access their own data
+    if (sessionUserId && userId !== sessionUserId) {
+      return NextResponse.json(
+        { error: 'Forbidden. You can only access your own data.' },
+        { status: 403 }
+      );
+    }
+    
+    // If auth is required but no session and no userId provided
+    if (process.env.REQUIRE_AUTH === 'true' && !sessionUserId && !userId) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
     // Determine if we should use mock AI
-    // Priority: 1. Request param, 2. Env var, 3. Default to true if no API key
     const envMockMode = process.env.USE_MOCK_AI === 'true';
-    const hasApiKey = !!process.env.SYNTHETIC_API_KEY;
+    const hasApiKey = !!process.env.OPENROUTER_API_KEY;
     const useMock = requestUseMock ?? (envMockMode || !hasApiKey);
 
     // Get or create game state with timeout
@@ -184,7 +209,7 @@ export async function POST(request: NextRequest) {
     let aiResponse;
     const aiTimeout = 15000; // 15 second timeout for AI calls
     
-    if (useMock || !process.env.SYNTHETIC_API_KEY) {
+    if (useMock || !process.env.OPENROUTER_API_KEY) {
       try {
         aiResponse = await withTimeout(
           callAIMock(message, gameState, conversationHistory),

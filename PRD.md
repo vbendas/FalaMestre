@@ -561,7 +561,7 @@ Visual Components:
   1. **Dynamic Formation Card (Rive):**
      - *State Machine Inputs:* `FormationID` (4-3-3), `PlayerHealth` (Red/Yellow/Green).
      - *Behavior:* Players "breathe" (idle animation), injured players limp, tactical shifts animate smoothly (players sliding into new positions).
-  
+   
   2. **Match Event Visuals:**
      - *Goal:* Explosion effect with scorer's name.
      - *VAR Check:* Suspense animation (Referee ear piece) before AI announces result.
@@ -575,7 +575,7 @@ Technical Benefit:
   - Fully interactive (reacts to mouse/touch).
   - "Console-quality" feel within a web chat.
 ```
-  
+
 Acceptance Criteria:
   ✓ Formation cards render correctly on mobile
   ✓ Decision points feel natural, not forced
@@ -583,6 +583,50 @@ Acceptance Criteria:
   ✓ Share cards generate correctly
   ✓ Social sharing works on major platforms
   ✓ Educational content is subtle, not preachy
+```
+
+#### F2.2: VR Match Experience
+```yaml
+Priority: P2 (Enhancement)
+Description: Immersive VR mode for match viewing using low-cost cardboard VR glasses. Users can experience matches in a top-down 3D view with their PixelLab character sprites on a procedural soccer field.
+
+Target Hardware:
+  - Cardboard VR glasses (Shinecon Viar or similar - $1-3)
+  - Smartphone (iOS/Android)
+  - No expensive headsets required
+
+Requirements:
+  - VR mode toggle in match simulation screen
+  - Top-down 3D soccer field (procedural geometry)
+  - Player sprite rendering as billboards in 3D space
+  - Real-time sync with match events (goals, positions)
+  - Cardboard VR stereoscopic rendering
+  - Performance optimization for mobile (60fps target)
+
+Technical Implementation:
+  - Framework: A-Frame (WebVR)
+  - View: Pure top-down (MVP), angled 45° (Phase 2)
+  - Player sprites: South-facing PixelLab animations as billboards
+
+Business Value:
+  - Low-cost marketing premium item (customizable with branding)
+  - Unique differentiator for investor presentations
+  - Novelty factor for user acquisition campaigns
+  - Potential to send branded VR glasses to Chiliz/Socios team
+
+Acceptance Criteria:
+  ✓ VR mode accessible from match simulation
+  ✓ 3D field renders correctly in stereoscopic view
+  ✓ Players visible and positioned correctly
+  ✓ Goals trigger celebration animations
+  ✓ Smooth performance on mid-range phones
+  ✓ Works with generic cardboard VR glasses
+
+Future Enhancements (Phase 2+):
+  - Angled 45° view with 3D character models
+  - Squad management in VR
+  - Social viewing rooms
+  - Custom branded VR glasses for marketing campaigns
 ```
 
 #### F3: Squad Management

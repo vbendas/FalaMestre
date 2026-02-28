@@ -2,10 +2,11 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMemo } from 'react';
-import { GameState } from '@/lib/types';
+import { GameState, MatchEvent } from '@/lib/types';
 import { getTeamData } from '@/lib/team-data';
 import Image from 'next/image';
 import { Clock, Trophy, Zap, Target, Shield, Activity } from 'lucide-react';
+import { CommentaryFeed } from './CommentaryFeed';
 
 interface MatchSimulationProps {
   gameState: GameState;
@@ -14,7 +15,7 @@ interface MatchSimulationProps {
   minute: number;
   currentEvent: string | null;
   isPlaying: boolean;
-  events?: { minute: number; type: string; description: string }[];
+  events?: MatchEvent[];
 }
 
 export function MatchSimulation({ 
@@ -71,12 +72,18 @@ export function MatchSimulation({
               } : {}}
               transition={{ duration: 0.5 }}
             >
-              <Image
-                src={homeTeamData?.logo || ''}
-                alt={user.team}
-                fill
-                className="object-contain"
-              />
+              {homeTeamData?.logo && homeTeamData.logo !== '' ? (
+                <Image
+                  src={homeTeamData.logo}
+                  alt={user.team}
+                  fill
+                  className="object-contain"
+                />
+              ) : (
+                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center text-2xl">
+                  {user.team?.charAt(0) || '?'}
+                </div>
+              )}
             </motion.div>
             <div className="font-bold text-white text-sm truncate">{user.team}</div>
           </div>
@@ -85,7 +92,7 @@ export function MatchSimulation({
           <div className="px-6">
             <div className="flex items-center gap-3">
               <motion.div 
-                key={homeScore}
+                key={`home-score-${homeScore}`}
                 initial={{ scale: 1.5, color: '#FEDD00' }}
                 animate={{ scale: 1, color: '#FFFFFF' }}
                 className="text-5xl font-black pixel-text"
@@ -94,7 +101,7 @@ export function MatchSimulation({
               </motion.div>
               <div className="text-3xl text-white/40">:</div>
               <motion.div 
-                key={awayScore}
+                key={`away-score-${awayScore}`}
                 initial={{ scale: 1.5, color: '#FEDD00' }}
                 animate={{ scale: 1, color: '#FFFFFF' }}
                 className="text-5xl font-black pixel-text"
@@ -120,12 +127,18 @@ export function MatchSimulation({
               } : {}}
               transition={{ duration: 0.5 }}
             >
-              <Image
-                src={awayTeamData?.logo || ''}
-                alt={season.nextMatch.opponent}
-                fill
-                className="object-contain"
-              />
+              {awayTeamData?.logo && awayTeamData.logo !== '' ? (
+                <Image
+                  src={awayTeamData.logo}
+                  alt={season.nextMatch.opponent}
+                  fill
+                  className="object-contain"
+                />
+              ) : (
+                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center text-2xl">
+                  {season.nextMatch.opponent?.charAt(0) || '?'}
+                </div>
+              )}
             </motion.div>
             <div className="font-bold text-white text-sm truncate">{season.nextMatch.opponent}</div>
           </div>
@@ -150,7 +163,7 @@ export function MatchSimulation({
           {/* Match Events Markers */}
           {[15, 30, 45, 60, 75].map((mark) => (
             <div
-              key={mark}
+              key={`marker-${mark}`}
               className="absolute top-0 w-0.5 h-full bg-white/30"
               style={{ left: `${(mark / 90) * 100}%` }}
             />
@@ -193,6 +206,25 @@ export function MatchSimulation({
         )}
       </AnimatePresence>
 
+      {/* Commentary Feed */}
+      {events.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <h3 className="font-bold text-white mb-2 flex items-center gap-2 font-[family-name:var(--font-pixel)] text-sm">
+            <Activity className="w-4 h-4 text-[#FEDD00]" />
+            Comentários
+          </h3>
+          <CommentaryFeed 
+            events={events} 
+            currentMinute={minute} 
+            animationQuality={gameState.user.matchSettings?.animationQuality}
+          />
+        </motion.div>
+      )}
+
       {/* Match Stats */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -230,7 +262,7 @@ export function MatchSimulation({
             <div className="flex items-center gap-2">
               <span className="text-lg font-bold text-white">
                 {events.length > 0 
-                  ? events.filter(e => e.minute <= minute && (e.type.includes('goal') || e.type === 'shot')).length + homeScore
+                  ? events.filter(e => e.minute <= minute && (e.type === 'goal' || e.type === 'miss' || e.type === 'buildup')).length + homeScore
                   : Math.floor(minute / 10) + 2}
               </span>
               <Target className="w-4 h-4 text-white/60" />
@@ -240,7 +272,7 @@ export function MatchSimulation({
               <Target className="w-4 h-4 text-white/60" />
               <span className="text-lg font-bold text-white">
                 {events.length > 0 
-                  ? events.filter(e => e.minute <= minute && (e.type.includes('goal') || e.type === 'shot')).length + awayScore
+                  ? events.filter(e => e.minute <= minute && (e.type === 'goal' || e.type === 'miss' || e.type === 'buildup')).length + awayScore
                   : Math.floor(minute / 12) + 1}
               </span>
             </div>
@@ -269,56 +301,6 @@ export function MatchSimulation({
         </div>
       </motion.div>
 
-      {/* Match Commentary - Show real events if available */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="bg-[#012169]/40 rounded p-3 border border-[#FEDD00]/30"
-      >
-        <div className="text-xs text-white/60 mb-2 font-[family-name:var(--font-retro)]">
-          Narração ao vivo
-        </div>
-        <div className="space-y-2 max-h-32 overflow-y-auto">
-          {events.length > 0 ? (
-            // Show real events up to current minute
-            events
-              .filter(e => e.minute <= minute)
-              .slice(-3)
-              .map((event, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: idx * 0.1 }}
-                  className="text-sm text-white/80 py-1 border-l-2 border-[#FEDD00]/50 pl-3"
-                >
-                  {event.description}
-                </motion.div>
-              ))
-          ) : (
-            // Fallback to estimated commentary
-            [
-              `${minute > 5 ? `${Math.max(1, minute - 5)}' - Partida iniciada no ${homeTeamData?.stadium || 'estádio'}` : ''}`,
-              `${minute > 15 ? `15' - Primeira chance de gol para ${user.team}` : ''}`,
-              `${minute > 30 ? `30' - ${season.nextMatch.opponent} pressiona no ataque` : ''}`,
-              `${minute > 45 ? `45' - Fim do primeiro tempo` : ''}`,
-              `${minute > 60 ? `60' - Substituição no ${user.team}` : ''}`,
-              `${minute > 75 ? `75' - Oportunidade clara perdida` : ''}`,
-            ].filter(Boolean).slice(-3).map((comment, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: idx * 0.1 }}
-                className="text-sm text-white/80 py-1 border-l-2 border-[#FEDD00]/50 pl-3"
-              >
-                {comment}
-              </motion.div>
-            ))
-          )}
-        </div>
-      </motion.div>
     </div>
   );
 }

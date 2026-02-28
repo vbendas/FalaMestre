@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import "./globals.css";
 import "./pixel-art.css";
+import { Providers } from "@/components/Providers";
 
 export const metadata: Metadata = {
   title: "Fala Mestre! - Demo for Socios",
@@ -28,10 +30,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" className="dark">
+      <head>
+        <Script 
+          src="https://aframe.io/releases/1.5.0/aframe.min.js" 
+          strategy="beforeInteractive"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body className="antialiased bg-[#012169]">
-        <OnboardingGuard>
-          {children}
-        </OnboardingGuard>
+        <Providers>
+          <OnboardingGuard>
+            {children}
+          </OnboardingGuard>
+        </Providers>
       </body>
     </html>
   );

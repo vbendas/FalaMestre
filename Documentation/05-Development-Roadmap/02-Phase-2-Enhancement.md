@@ -174,6 +174,16 @@ Deliverable: Soft launch with 1,000+ users
 - [ ] Transfer history
 - [ ] Scout network
 
+### VR Match Experience (P2)
+
+- [ ] VR mode toggle in match simulation
+- [ ] Top-down 3D soccer field (A-Frame)
+- [ ] Player sprite billboards in 3D space
+- [ ] Match event synchronization
+- [ ] Cardboard VR stereoscopic rendering
+- [ ] Mobile performance optimization
+- [ ] VR instruction overlay
+
 ---
 
 ## Technical Additions

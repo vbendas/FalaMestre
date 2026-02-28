@@ -207,7 +207,7 @@ export function ChatView({
                                   const style = getActionStyle(action);
                                   return (
                                     <motion.div
-                                      key={idx}
+                                      key={`${msg.id}-${action}-${idx}`}
                                       initial={{ opacity: 0, scale: 0.8 }}
                                       animate={{ opacity: 1, scale: 1 }}
                                       transition={{ delay: 0.3 + idx * 0.05 }}

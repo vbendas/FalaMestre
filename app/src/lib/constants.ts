@@ -3,6 +3,8 @@
  * Centralized configuration values to avoid magic numbers
  */
 
+import { MatchSettings } from './types';
+
 // Match simulation constants
 export const MATCH_CONSTANTS = {
   DURATION_MINUTES: 90,
@@ -109,4 +111,67 @@ export const USER_ID_FORMAT = {
 export const VALIDATION_LIMITS = {
   MESSAGE_MAX_LENGTH: 2000,
   USER_ID_MAX_LENGTH: 100,
+} as const;
+
+// Event density configuration
+export const EVENT_DENSITY_CONFIG = {
+  minimal: { 
+    eventMultiplier: 0.3, 
+    throttleLimit: 1, 
+    throttleWindow: 5,
+    description: '30% events - Relaxed pace',
+  },
+  standard: { 
+    eventMultiplier: 0.5, 
+    throttleLimit: 2, 
+    throttleWindow: 5,
+    description: '50% events - Balanced',
+  },
+  enhanced: { 
+    eventMultiplier: 0.8, 
+    throttleLimit: 3, 
+    throttleWindow: 5,
+    description: '80% events - Intense',
+  },
+  maximum: { 
+    eventMultiplier: 1.0, 
+    throttleLimit: 5, 
+    throttleWindow: 5,
+    description: '100% events - Full action',
+  },
+} as const;
+
+// Animation quality configuration
+export const ANIMATION_CONFIG = {
+  low: {
+    duration: 0.2,
+    springPhysics: false,
+    complexAnimations: false,
+    enableLottie: false,
+    maxSimultaneousAnimations: 2,
+    description: 'Performance optimized',
+  },
+  medium: {
+    duration: 0.3,
+    springPhysics: true,
+    complexAnimations: true,
+    enableLottie: true,
+    maxSimultaneousAnimations: 5,
+    description: 'Balanced quality',
+  },
+  high: {
+    duration: 0.5,
+    springPhysics: true,
+    complexAnimations: true,
+    enableLottie: true,
+    maxSimultaneousAnimations: 10,
+    description: 'Best visual experience',
+  },
+} as const;
+
+// Narration speed configuration (milliseconds per match minute)
+export const NARRATION_SPEED_CONFIG = {
+  slow: { msPerMinute: 400, description: 'Slow - Easy to follow' },
+  normal: { msPerMinute: 200, description: 'Normal - Balanced' },
+  fast: { msPerMinute: 100, description: 'Fast - Quick games' },
 } as const;

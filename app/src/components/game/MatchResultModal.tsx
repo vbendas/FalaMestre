@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { GameState } from '@/lib/types';
+import { GameState, MatchEvent } from '@/lib/types';
 import { getTeamData } from '@/lib/team-data';
 import Image from 'next/image';
 import { X, Trophy, Circle, AlertCircle, Sparkles } from 'lucide-react';
@@ -12,7 +12,7 @@ interface MatchResult {
   homeScore: number;
   awayScore: number;
   winner: string;
-  events: string[];
+  events: MatchEvent[];
 }
 
 interface MatchResultModalProps {
@@ -105,11 +105,13 @@ export function MatchResultModal({
   if (!isOpen || !result) return null;
   
   const { user, season } = gameState;
-  const isHome = season.nextMatch.isHome;
-  const homeTeam = isHome ? user.team : season.nextMatch.opponent;
-  const awayTeam = isHome ? season.nextMatch.opponent : user.team;
-  const homeScore = isHome ? result.homeScore : result.awayScore;
-  const awayScore = isHome ? result.awayScore : result.homeScore;
+  
+  // API now handles home/away correctly, so result is already in correct context
+  // result.homeScore = user's goals if playing at home, opponent's goals if playing away
+  const homeTeam = user.team;
+  const awayTeam = season.nextMatch.opponent;
+  const homeScore = result.homeScore;
+  const awayScore = result.awayScore;
   
   const homeTeamData = getTeamData(homeTeam);
   const awayTeamData = getTeamData(awayTeam);
@@ -222,24 +224,24 @@ export function MatchResultModal({
               <div className="space-y-2 max-h-32 overflow-y-auto">
                 {result.events.slice(0, 5).map((event, idx) => (
                   <motion.div
-                    key={idx}
+                    key={`${event.id}-${idx}`}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.5 + idx * 0.1 }}
                     className="flex items-center gap-3 text-sm"
                   >
                     <div className="w-8 text-right font-mono text-white/40">
-                      {event.match(/^(\d+)/)?.[0] || '??'}'
+                      {event.minute}'
                     </div>
                     <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center">
-                      {event.toLowerCase().includes('gol') || event.toLowerCase().includes('marca') ? (
+                      {event.type === 'goal' ? (
                         <Circle className="w-3 h-3 fill-white text-white" />
                       ) : (
                         <AlertCircle className="w-3 h-3 text-yellow-400" />
                       )}
                     </div>
                     
-                    <div className="flex-1 text-white/80 truncate">{event}</div>
+                    <div className="flex-1 text-white/80 truncate">{event.commentary}</div>
                   </motion.div>
                 ))}
               </div>

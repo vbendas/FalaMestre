@@ -4,7 +4,7 @@
 import { useEffect, useRef, useState, useMemo, Suspense, lazy } from 'react';
 import { getFormationPositions, getOpponentFormationPositions, Formation, FormationPosition, MatchEvent } from './formations';
 import { VRAdBoards } from './VRAdBoards';
-// import { VRStadiumCrowd } from './VRStadiumCrowd';
+import { VRStadiumCrowd } from './VRStadiumCrowd';
 import { VRErrorBoundary } from './VRErrorBoundary';
 
 interface Player {
@@ -376,9 +376,9 @@ function VRScene({
       <VRErrorBoundary>
         <VRAdBoards />
       </VRErrorBoundary>
-      {/* <VRErrorBoundary>
+      <VRErrorBoundary>
         <VRStadiumCrowd homeColor={homeColor} awayColor={awayColor} />
-      </VRErrorBoundary> */}
+      </VRErrorBoundary>
     </a-scene>
   );
 }

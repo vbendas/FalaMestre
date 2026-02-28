@@ -50,6 +50,7 @@ export default function OnboardingPage() {
       // Store userId in localStorage
       if (result.userId) {
         localStorage.setItem('falaMestreUserId', result.userId);
+        localStorage.setItem('falaMestreJustOnboarded', 'true');
       }
 
       // Redirect to game

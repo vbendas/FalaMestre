@@ -8,6 +8,7 @@
     "start": "cd app && bun run start",
     "lint": "cd app && bun run lint"
   },
-  "dependencies": {},
-  "devDependencies": {}
+  "dependencies": {
+    "playwright": "^1.58.2"
+  }
 }

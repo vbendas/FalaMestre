@@ -1,8 +1,15 @@
 import { GameState, Message } from './types';
+import { z } from 'zod';
 
-const SYNTHETIC_API_KEY = process.env.SYNTHETIC_API_KEY;
-const SYNTHETIC_BASE_URL = process.env.SYNTHETIC_BASE_URL || 'https://api.synthetic.new/openai/v1';
-const AI_MODEL = process.env.AI_MODEL || 'hf:moonshotai/Kimi-K2-Instruct-0905';
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
+const AI_MODEL = process.env.AI_MODEL || 'google/gemini-2.0-flash-001';
+
+const AIResponseSchema = z.object({
+  message: z.string(),
+  actions: z.array(z.string()).optional().default([]),
+  intent: z.string().optional()
+});
 
 interface AIResponse {
   content: string;
@@ -55,15 +62,31 @@ Format your response as JSON:
 }
 
 // Intent classification
-function classifyIntent(userMessage: string, gameState: GameState): string {
+export function classifyIntent(userMessage: string, gameState: GameState): string {
   const msg = userMessage.toLowerCase().trim();
-  
+
+  // Direct action button clicks
+  if (msg === 'view_squad') return 'view_squad';
+  if (msg === 'play_match') return 'play_match';
+  if (msg === 'transfer_market') return 'transfer_market';
+  if (msg === 'train') return 'training';
+  if (msg === 'tactics') return 'tactics';
+
   // Greeting patterns
   const greetings = ['ola', 'olá', 'oi', 'bom dia', 'boa tarde', 'boa noite', 'e ai', 'e aí', 'hey', 'hello', 'hi'];
   if (greetings.some(g => msg === g || msg.startsWith(g + ' '))) {
     return 'greeting';
   }
-  
+
+  const negations = ['não', 'nao', 'nunca', 'jamais'];
+  const hasNegation = negations.some(n => msg.includes(`${n} `) || msg === n || msg.includes(` ${n}`));
+
+  // If there's a negation, it often changes the intent to a general statement or refusal
+  if (hasNegation) {
+    if (msg.includes('jogar') || msg.includes('partida')) return 'general_chat'; // "não quero jogar"
+    if (msg.includes('treinar') || msg.includes('treino')) return 'general_chat'; // "não quero treinar"
+  }
+
   if (msg.includes('jogar') || msg.includes('partida') || msg.includes('match')) {
     if (msg.includes('treinar') || msg.includes('treino')) return 'training';
     return 'play_match';
@@ -79,64 +102,92 @@ function classifyIntent(userMessage: string, gameState: GameState): string {
   if (msg.includes('gastar') || msg.includes('investir') || msg.includes('milhões')) return 'spending_aggressive';
   if (msg.includes('proximo') || msg.includes('próximo') || msg.includes('adversario') || msg.includes('adversário')) return 'next_opponent';
   if (msg.includes('classificacao') || msg.includes('classificação') || msg.includes('tabela') || msg.includes('posicao')) return 'standings';
-  
+
+  // Match result patterns - recognize match summaries
+  if (msg.includes('venceu') || msg.includes('perdeu') || msg.includes('empatou') || msg.includes('resultado') || msg.includes('placar') || msg.includes('gols')) {
+    return 'match_result';
+  }
+
   return 'general_chat';
 }
 
-// Call Synthetic.new API
+// Call OpenRouter API
 export async function callAI(
   userMessage: string,
   gameState: GameState,
   conversationHistory: Message[]
 ): Promise<AIResponse> {
   const startTime = Date.now();
-  
-  if (!SYNTHETIC_API_KEY) {
-    throw new Error('SYNTHETIC_API_KEY not set');
+
+  // Fast-path for simple intents like greetings to reduce API costs
+  const preClassifiedIntent = classifyIntent(userMessage, gameState);
+  if (preClassifiedIntent === 'greeting') {
+    return callAIMock(userMessage, gameState, conversationHistory);
   }
-  
+
+  if (!OPENROUTER_API_KEY) {
+    throw new Error('OPENROUTER_API_KEY not set');
+  }
+
   const messages = [
     { role: 'system', content: generateSystemPrompt(gameState) },
     ...conversationHistory.map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.content })),
     { role: 'user', content: userMessage },
   ];
-  
+
   // Create AbortController for timeout
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
-  
+
   try {
-    const response = await fetch(`${SYNTHETIC_BASE_URL}/chat/completions`, {
+    const response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${SYNTHETIC_API_KEY}`,
+        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'HTTP-Referer': 'https://falamestre.ai',
+        'X-Title': 'FalaMestre',
       },
       body: JSON.stringify({
         model: AI_MODEL,
         messages: messages,
         temperature: 0.7,
         max_tokens: 300,
-        response_format: { type: 'json_object' },
       }),
       signal: controller.signal,
     });
-    
+
     clearTimeout(timeoutId);
-    
+
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Synthetic.new API error:', response.status, errorText);
+      console.error('OpenRouter API error:', response.status, errorText);
       throw new Error(`AI API error: ${response.status}`);
     }
-    
+
     const data = await response.json();
-    const content = data.choices[0].message.content;
-    const parsed = JSON.parse(content);
-    
+    let content = data.choices[0].message.content;
+
+    // Strip markdown JSON block if present
+    content = content.replace(/^```[a-z]*\s*/im, '').replace(/```\s*$/m, '').trim();
+
+    let parsed;
+    try {
+      const rawJson = JSON.parse(content);
+      parsed = AIResponseSchema.parse(rawJson);
+    } catch (error) {
+      console.warn('Failed to parse or validate AI JSON response, falling back:', error);
+      // Fallback logic
+      parsed = {
+        message: content, // use the raw text content as message
+        actions: gameState.context.availableActions,
+        intent: classifyIntent(userMessage, gameState)
+      };
+    }
+
     const latency = Date.now() - startTime;
     const cost = (data.usage?.total_tokens || 0) * 0.000001; // Rough estimate
-    
+
     return {
       content: parsed.message,
       actions: parsed.actions || [],
@@ -146,10 +197,10 @@ export async function callAI(
     };
   } catch (error) {
     clearTimeout(timeoutId);
-    
+
     const latency = Date.now() - startTime;
     const intent = classifyIntent(userMessage, gameState);
-    
+
     if (error instanceof Error) {
       if (error.name === 'AbortError') {
         console.warn('AI call timed out after 8 seconds');
@@ -157,7 +208,7 @@ export async function callAI(
         console.error('AI call failed:', error.message);
       }
     }
-    
+
     // Generate contextual fallback response based on intent
     let fallbackMessage = '';
     switch (intent) {
@@ -173,7 +224,7 @@ export async function callAI(
       default:
         fallbackMessage = `⚽ Olá, Mestre! Estou aqui para ajudar o ${gameState.user.team}. O que você precisa?`;
     }
-    
+
     return {
       content: fallbackMessage,
       actions: gameState.context.availableActions,
@@ -237,7 +288,12 @@ export async function callAIMock(
       `🔍 Análise do próximo adversário: ${gameState.season.nextMatch.opponent}\n• Local: ${gameState.season.nextMatch.isHome ? 'Em casa (vantagem)' : 'Fora (desafio maior)'}\n• Competição: ${gameState.season.nextMatch.competition}\n• Semana: ${gameState.season.week} de 38\n\nQuer ver mais detalhes ou preparar a estratégia?`,
     ],
     standings: [
-      `📊 Situação no campeonato:\n• Posição: ${gameState.season.position}º lugar\n• Pontos: ${gameState.season.points}\n• Rodada: ${gameState.season.week}/38\n• Próximo: ${gameState.season.nextMatch.opponent}\n\nEstamos ${gameState.season.position <= 6 ? 'na briga pelo título!' : 'precisando subir na tabela.'}`,
+      `📊 Situação no championship:\n• Posição: ${gameState.season.position}º lugar\n• Pontos: ${gameState.season.points}\n• Rodada: ${gameState.season.week}/38\n• Próximo: ${gameState.season.nextMatch.opponent}\n\nEstamos ${gameState.season.position <= 6 ? 'na briga pelo título!' : 'precisando subir na tabela.'}`,
+    ],
+    match_result: [
+      `⚽ Que partida! O ${gameState.user.team} mostrou garra e determinação. Agora é hora de analisar o que funcionou e o que precisamos melhorar para o próximo confronto!\n\nVamos conversar sobre os próximos passos?`,
+      `🏆 ${gameState.user.team} deu Show hoje! A torcida aplaudiu de pé. Agora é hora de recuperar os jogadores e pensar na próxima batalha!\n\nO que você quer fazer agora, Mestre?`,
+      `💪 ${gameState.user.team} deixou tudo em campo! Mesmo com o resultado, o time mostrou personalidade. Agora é hora de trabalhar nos pontos fracos.\n\nVamos analisar o elenco ou partir para o mercado?`,
     ],
     playing_style_aggressive: [
       `🔥 Estilo ofensivo selecionado! Vamos pressionar alto e buscar o gol desde o início. ${starPlayer} será peça-chave nesse esquema. A torcida vai adorar!`,
