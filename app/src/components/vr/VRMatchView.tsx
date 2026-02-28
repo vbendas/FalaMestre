@@ -3,6 +3,9 @@
 
 import { useEffect, useRef, useState, useMemo, Suspense, lazy } from 'react';
 import { getFormationPositions, getOpponentFormationPositions, Formation, FormationPosition, MatchEvent } from './formations';
+import { VRAdBoards } from './VRAdBoards';
+// import { VRStadiumCrowd } from './VRStadiumCrowd';
+import { VRErrorBoundary } from './VRErrorBoundary';
 
 interface Player {
   id: string;
@@ -108,41 +111,115 @@ function findPlayerByName(name: string | null, positions: FormationPosition[]): 
 function FieldMarkings() {
   return (
     <>
-      <a-plane position="0 0.02 0" rotation="-90 0 0" width={1} height={FIELD_WIDTH - 2} color="white" material="shader: flat; opacity: 0.8; transparent: true" />
-      <a-ring position="0 0.02 0" rotation="-90 0 0" radius-inner={9.1} radius-outer={9.2} color="white" material="shader: flat" />
-      <a-plane position={`0 0.02 ${-FIELD_HALF_Z + 1}`} rotation="-90 0 0" width={18} height={1} color="white" material="shader: flat; opacity: 0.8; transparent: true" />
-      <a-plane position={`0 0.02 ${FIELD_HALF_Z - 1}`} rotation="-90 0 0" width={18} height={1} color="white" material="shader: flat; opacity: 0.8; transparent: true" />
-      <a-plane position={`${-FIELD_HALF_X + 1} 0.02 0`} rotation="-90 0 0" width={1} height={FIELD_WIDTH - 2} color="white" material="shader: flat; opacity: 0.8; transparent: true" />
-      <a-plane position={`${FIELD_HALF_X - 1} 0.02 0`} rotation="-90 0 0" width={1} height={FIELD_WIDTH - 2} color="white" material="shader: flat; opacity: 0.8; transparent: true" />
-      <a-ring position={`${-FIELD_HALF_X + 1} 0.02 0`} rotation="-90 0 0" radius-inner={9.1} radius-outer={9.2} color="white" material="shader: flat" />
-      <a-ring position={`${FIELD_HALF_X - 1} 0.02 0`} rotation="-90 0 0" radius-inner={9.1} radius-outer={9.2} color="white" material="shader: flat" />
-      <a-box position={`${-FIELD_HALF_X} 1.2 0`} width={0.2} height={2.4} depth={8} color="white" opacity={0.8} material="shader: flat; transparent: true" />
-      <a-box position={`${FIELD_HALF_X} 1.2 0`} width={0.2} height={2.4} depth={8} color="white" opacity={0.8} material="shader: flat; transparent: true" />
+      <a-plane position="0 0.02 0" rotation="-90 0 0" width={1} height={FIELD_WIDTH - 2} color="white" material="shader: flat; opacity: 0.9; transparent: true" />
+      <a-ring position="0 0.02 0" rotation="-90 0 0" radius-inner={9.1} radius-outer={9.15} color="white" material="shader: flat" />
+      
+      <a-plane position={`0 0.02 ${-FIELD_HALF_Z + 1}`} rotation="-90 0 0" width={18} height={1} color="white" material="shader: flat; opacity: 0.9; transparent: true" />
+      <a-plane position={`0 0.02 ${FIELD_HALF_Z - 1}`} rotation="-90 0 0" width={18} height={1} color="white" material="shader: flat; opacity: 0.9; transparent: true" />
+      
+      <a-plane position={`${-FIELD_HALF_X + 1} 0.02 0`} rotation="-90 0 0" width={1} height={FIELD_WIDTH - 2} color="white" material="shader: flat; opacity: 0.9; transparent: true" />
+      <a-plane position={`${FIELD_HALF_X - 1} 0.02 0`} rotation="-90 0 0" width={1} height={FIELD_WIDTH - 2} color="white" material="shader: flat; opacity: 0.9; transparent: true" />
+      
+      <a-ring position={`${-FIELD_HALF_X + 1} 0.02 0`} rotation="-90 0 0" radius-inner={9.1} radius-outer={9.15} color="white" material="shader: flat" />
+      <a-ring position={`${FIELD_HALF_X - 1} 0.02 0`} rotation="-90 0 0" radius-inner={9.1} radius-outer={9.15} color="white" material="shader: flat" />
+      
+      <a-plane position={`${-FIELD_HALF_X + 1} 0.02 ${-FIELD_HALF_Z + 16.5}`} rotation="-90 0 0" width={1} height={16.5} color="white" material="shader: flat; opacity: 0.9; transparent: true" />
+      <a-plane position={`${-FIELD_HALF_X + 1} 0.02 ${FIELD_HALF_Z - 16.5}`} rotation="-90 0 0" width={1} height={16.5} color="white" material="shader: flat; opacity: 0.9; transparent: true" />
+      <a-plane position={`${-FIELD_HALF_X + 9.5} 0.02 ${-FIELD_HALF_Z + 1}`} rotation="-90 0 0" width={16.5} height={1} color="white" material="shader: flat; opacity: 0.9; transparent: true" />
+      <a-plane position={`${-FIELD_HALF_X + 9.5} 0.02 ${FIELD_HALF_Z - 1}`} rotation="-90 0 0" width={16.5} height={1} color="white" material="shader: flat; opacity: 0.9; transparent: true" />
+      
+      <a-plane position={`${FIELD_HALF_X - 1} 0.02 ${-FIELD_HALF_Z + 16.5}`} rotation="-90 0 0" width={1} height={16.5} color="white" material="shader: flat; opacity: 0.9; transparent: true" />
+      <a-plane position={`${FIELD_HALF_X - 1} 0.02 ${FIELD_HALF_Z - 16.5}`} rotation="-90 0 0" width={1} height={16.5} color="white" material="shader: flat; opacity: 0.9; transparent: true" />
+      <a-plane position={`${FIELD_HALF_X - 9.5} 0.02 ${-FIELD_HALF_Z + 1}`} rotation="-90 0 0" width={16.5} height={1} color="white" material="shader: flat; opacity: 0.9; transparent: true" />
+      <a-plane position={`${FIELD_HALF_X - 9.5} 0.02 ${FIELD_HALF_Z - 1}`} rotation="-90 0 0" width={16.5} height={1} color="white" material="shader: flat; opacity: 0.9; transparent: true" />
+      
+      <a-box position={`${-FIELD_HALF_X} 1.2 0`} width={0.15} height={2.4} depth={7.32} color="#DDDDDD" material="shader: flat; metalness: 0.6; roughness: 0.4" />
+      <a-box position={`${-FIELD_HALF_X} 2.45 0`} width={0.15} height={0.1} depth={7.32} color="#FFFFFF" material="shader: flat" />
+      <a-box position={`${-FIELD_HALF_X} 1.2 ${3.66}`} width={0.15} height={2.4} depth={0.15} color="#FFFFFF" material="shader: flat" />
+      <a-box position={`${-FIELD_HALF_X} 1.2 ${-3.66}`} width={0.15} height={2.4} depth={0.15} color="#FFFFFF" material="shader: flat" />
+      
+      <a-box position={`${FIELD_HALF_X} 1.2 0`} width={0.15} height={2.4} depth={7.32} color="#DDDDDD" material="shader: flat; metalness: 0.6; roughness: 0.4" />
+      <a-box position={`${FIELD_HALF_X} 2.45 0`} width={0.15} height={0.1} depth={7.32} color="#FFFFFF" material="shader: flat" />
+      <a-box position={`${FIELD_HALF_X} 1.2 ${3.66}`} width={0.15} height={2.4} depth={0.15} color="#FFFFFF" material="shader: flat" />
+      <a-box position={`${FIELD_HALF_X} 1.2 ${-3.66}`} width={0.15} height={2.4} depth={0.15} color="#FFFFFF" material="shader: flat" />
     </>
   );
 }
 
 function PlayerModel({ position, color, number }: { position: { x: number; z: number }; color: string; number: number }) {
   return (
-    <a-entity position={`${position.x} 0.9 ${position.z}`}>
-      <a-cylinder position="0 0 0" radius={0.4} height={0.8} color={color} material="shader: flat" />
-      <a-box position="0 -0.45 0" width={0.4} height={0.2} depth={0.3} color="#1a1a1a" material="shader: flat" />
-      <a-sphere position="0 0.55 0" radius={0.25} color="#8B4513" material="shader: flat" />
-      <a-circle position="0 0.1 0.38" radius={0.18} color="#ffffff" material="shader: flat">
-        <a-text value={number.toString()} position="0 0 0.02" align="center" width={1} color="#000000" />
+    <a-entity position={`${position.x} 0 ${position.z}`}>
+      <a-cylinder position="0 0.4 0" radius={0.35} height={0.7} color={color} material="shader: flat; metalness: 0.1; roughness: 0.8" />
+      <a-cylinder position="0.25 0.35 0" radius={0.08} height={0.5} color={color} material="shader: flat" />
+      <a-cylinder position="-0.25 0.35 0" radius={0.08} height={0.5} color={color} material="shader: flat" />
+      <a-cylinder position="0.12 -0.15 0.08" radius={0.07} height={0.4} color="#F5DEB3" material="shader: flat" />
+      <a-cylinder position="-0.12 -0.15 0.08" radius={0.07} height={0.4} color="#F5DEB3" material="shader: flat" />
+      <a-cylinder position="0.12 -0.15 -0.08" radius={0.07} height={0.4} color="#F5DEB3" material="shader: flat" />
+      <a-cylinder position="-0.12 -0.15 -0.08" radius={0.07} height={0.4} color="#F5DEB3" material="shader: flat" />
+      <a-box position="0 -0.05 0" width={0.4} height={0.25} depth={0.22} color={color} material="shader: flat; opacity: 0.95" />
+      <a-sphere position="0 0.92 0" radius={0.2} color="#8B4513" material="shader: flat" />
+      <a-circle position="0 0.55 0.32" radius={0.15} color="#ffffff" material="shader: flat; side: double">
+        <a-text value={number.toString()} position="0 0 0.01" align="center" width={0.8} color="#000000" />
       </a-circle>
+      <a-circle position="0 0.55 -0.32" radius={0.15} color="#ffffff" material="shader: flat; side: double">
+        <a-text value={number.toString()} position="0 0 0.01" align="center" width={0.8} color="#000000" rotation="0 180 0" />
+      </a-circle>
+      <a-circle position="0.32 0.85 0" rotation="0 90 0" radius={0.12} color="#ffffff" material="shader: flat; side: double">
+        <a-text value={number.toString()} position="0 0 0.01" align="center" width={0.6} color="#000000" rotation="0 90 0" />
+      </a-circle>
+      <a-circle position="-0.32 0.85 0" rotation="0 -90 0" radius={0.12} color="#ffffff" material="shader: flat; side: double">
+        <a-text value={number.toString()} position="0 0 0.01" align="center" width={0.6} color="#000000" rotation="0 -90 0" />
+      </a-circle>
+      <a-cylinder position="0.1 -0.5 0.05" radius={0.05} height={0.15} color="#111111" material="shader: flat" />
+      <a-cylinder position="-0.1 -0.5 0.05" radius={0.05} height={0.15} color="#111111" material="shader: flat" />
+      <a-cylinder position="0.1 -0.5 -0.05" radius={0.05} height={0.15} color="#111111" material="shader: flat" />
+      <a-cylinder position="-0.1 -0.5 -0.05" radius={0.05} height={0.15} color="#111111" material="shader: flat" />
+      <a-circle position="0 0.01 0" rotation="-90 0 0" radius={0.5} color="#000000" opacity={0.3} material="shader: flat; transparent: true" />
     </a-entity>
   );
 }
 
-function Ball({ position, height }: { position: { x: number; z: number }; height: number }) {
+function Ball({ position, height, rotation }: { position: { x: number; z: number }; height: number; rotation?: { x: number; y: number } }) {
+  const rotX = rotation?.x || 0;
+  const rotY = rotation?.y || 0;
+  
   return (
-    <a-sphere
-      position={`${position.x} ${height} ${position.z}`}
-      radius={0.8}
-      color="#FFFF00"
-      material="shader: flat; metalness: 0.3; roughness: 0.3; emissive: #FFFF00; emissiveIntensity: 0.3"
-    />
+    <a-entity position={`${position.x} ${height} ${position.z}`} rotation={`${rotX} ${rotY} 0`}>
+      <a-sphere
+        radius={0.35}
+        color="#FFFFFF"
+        material="metalness: 0.2; roughness: 0.6"
+      />
+      <a-sphere radius={0.12} color="#111111" position="0.2 0.15 0.1" material="shader: flat" />
+      <a-sphere radius={0.12} color="#111111" position="-0.15 0.2 0.15" material="shader: flat" />
+      <a-sphere radius={0.12} color="#111111" position="-0.1 -0.15 0.2" material="shader: flat" />
+      <a-sphere radius={0.12} color="#111111" position="0.15 -0.18 -0.1" material="shader: flat" />
+      <a-sphere radius={0.12} color="#111111" position="-0.2 -0.1 -0.15" material="shader: flat" />
+      <a-sphere radius={0.12} color="#111111" position="0.1 0.25 -0.15" material="shader: flat" />
+      <a-sphere radius={0.12} color="#111111" position="-0.05 -0.05 -0.25" material="shader: flat" />
+      <a-sphere radius={0.12} color="#111111" position="0.22 -0.05 0.05" material="shader: flat" />
+      <a-sphere radius={0.12} color="#111111" position="-0.18 0.05 -0.18" material="shader: flat" />
+      <a-sphere radius={0.12} color="#111111" position="0.05 0.28 0.05" material="shader: flat" />
+      <a-circle position="0 0.36 0" rotation="-90 0 0" radius={0.25} color="#FFFFFF" material="shader: flat; side: double">
+        <a-ring position="0 0 0.01" rotation="-90 0 0" radius-inner={0.12} radius-outer={0.2} color="#111111" material="shader: flat" />
+      </a-circle>
+      <a-circle position="0 -0.36 0" rotation="90 0 0" radius={0.25} color="#FFFFFF" material="shader: flat; side: double">
+        <a-ring position="0 0 0.01" rotation="90 0 0" radius-inner={0.12} radius-outer={0.2} color="#111111" material="shader: flat" />
+      </a-circle>
+      <a-circle position="0.36 0 0" rotation="0 90 0" radius={0.25} color="#FFFFFF" material="shader: flat; side: double">
+        <a-ring position="0.01 0 0" rotation="0 90 0" radius-inner={0.12} radius-outer={0.2} color="#111111" material="shader: flat" />
+      </a-circle>
+      <a-circle position="-0.36 0 0" rotation="0 -90 0" radius={0.25} color="#FFFFFF" material="shader: flat; side: double">
+        <a-ring position="-0.01 0 0" rotation="0 -90 0" radius-inner={0.12} radius-outer={0.2} color="#111111" material="shader: flat" />
+      </a-circle>
+      <a-circle position="0 0 0.36" radius={0.25} color="#FFFFFF" material="shader: flat; side: double">
+        <a-ring position="0 0 0.01" radius-inner={0.12} radius-outer={0.2} color="#111111" material="shader: flat" />
+      </a-circle>
+      <a-circle position="0 0 -0.36" rotation="180 0 0" radius={0.25} color="#FFFFFF" material="shader: flat; side: double">
+        <a-ring position="0 0 0.01" rotation="180 0 0" radius-inner={0.12} radius-outer={0.2} color="#111111" material="shader: flat" />
+      </a-circle>
+      <a-circle position="0 0.01 0" rotation="-90 0 0" radius={0.6} color="#000000" opacity={0.25} material="shader: flat; transparent: true" />
+    </a-entity>
   );
 }
 
@@ -152,7 +229,8 @@ function VRScene({
   homeColor,
   awayColor,
   ballPosition,
-  ballHeight
+  ballHeight,
+  ballRotation
 }: {
   homePositions: FormationPosition[];
   awayPositions: FormationPosition[];
@@ -160,6 +238,7 @@ function VRScene({
   awayColor: string;
   ballPosition: PlayerPosition;
   ballHeight: number;
+  ballRotation: { x: number; y: number };
 }) {
   return (
     <a-scene 
@@ -179,26 +258,95 @@ function VRScene({
         />
       </a-assets>
 
-      <a-sky color="#1a4d1a" radius={500}></a-sky>
+      <a-sky color="#0a1a2e" radius={500}></a-sky>
+      
+      <a-light type="ambient" color="#FFE4B5" intensity={0.4}></a-light>
+      <a-light type="directional" position="20 30 10" intensity={0.7} color="#FFFAF0"></a-light>
+      <a-light type="directional" position="-20 25 -10" intensity={0.4} color="#E0FFFF"></a-light>
+      <a-light type="point" position="0 25 0" intensity={0.5} color="#FFFACD" distance={60}></a-light>
 
       <a-entity position="0 0 0" rotation="0 0 0">
         <a-plane 
-          position="0 0 0" 
+          position="0 -0.01 0" 
           rotation="-90 0 0" 
-          width={FIELD_LENGTH} 
-          height={FIELD_WIDTH} 
-          color="#2d5a27"
-          material="shader: flat; depthTest: true; depthWrite: true"
+          width={FIELD_LENGTH + 4} 
+          height={FIELD_WIDTH + 4} 
+          color="#1a3d1a"
+          material="shader: flat"
         />
+        
+        {Array.from({ length: 16 }).map((_, i) => (
+          <a-plane
+            key={`grass-stripe-${i}`}
+            position={`${-FIELD_HALF_X + 1 + i * 5 + 2.5} 0 0`}
+            rotation="-90 0 0"
+            width={5}
+            height={FIELD_WIDTH - 2}
+            color={i % 2 === 0 ? '#2d5a27' : '#3d6a37'}
+            material="shader: flat; depthTest: true; depthWrite: true"
+          />
+        ))}
+        
         <a-plane 
-          position="0 0.02 0" 
+          position="0 0.015 0" 
           rotation="-90 0 0" 
-          width={FIELD_LENGTH - 2} 
-          height={FIELD_WIDTH - 2} 
-          color="#3d6a37"
-          material="shader: flat; depthTest: true; depthWrite: true"
+          width={FIELD_LENGTH - 1.5} 
+          height={FIELD_WIDTH - 1.5} 
+          color="#4a8c4a"
+          material="shader: flat; opacity: 0.3; transparent: true; depthTest: true"
         />
+        
         <FieldMarkings />
+        
+        <a-box
+          position={`${-FIELD_HALF_X - 0.5} 0.3 0`}
+          width={0.3}
+          height={0.6}
+          depth={2.5}
+          color="#FFFFFF"
+          material="shader: flat"
+        />
+        <a-box
+          position={`${FIELD_HALF_X + 0.5} 0.3 0`}
+          width={0.3}
+          height={0.6}
+          depth={2.5}
+          color="#FFFFFF"
+          material="shader: flat"
+        />
+        
+        <a-cone
+          position={`${-FIELD_HALF_X + 1} 0.6 2`}
+          radius-bottom={0.15}
+          radius-top={0.05}
+          height={1.2}
+          color="#FFFFFF"
+          material="shader: flat"
+        />
+        <a-cone
+          position={`${-FIELD_HALF_X + 1} 0.6 -2`}
+          radius-bottom={0.15}
+          radius-top={0.05}
+          height={1.2}
+          color="#FFFFFF"
+          material="shader: flat"
+        />
+        <a-cone
+          position={`${FIELD_HALF_X - 1} 0.6 2`}
+          radius-bottom={0.15}
+          radius-top={0.05}
+          height={1.2}
+          color="#FFFFFF"
+          material="shader: flat"
+        />
+        <a-cone
+          position={`${FIELD_HALF_X - 1} 0.6 -2`}
+          radius-bottom={0.15}
+          radius-top={0.05}
+          height={1.2}
+          color="#FFFFFF"
+          material="shader: flat"
+        />
       </a-entity>
 
       {homePositions.map((player, idx) => (
@@ -219,14 +367,18 @@ function VRScene({
         />
       ))}
 
-      <Ball position={ballPosition} height={ballHeight} />
+      <Ball position={ballPosition} height={ballHeight} rotation={ballRotation} />
 
-      <a-entity position="0 12 25">
-        <a-camera rotation="-25 0 0" look-controls="enabled: true" wasd-controls="acceleration: 30"></a-camera>
+      <a-entity position="0 18 35">
+        <a-camera rotation="-20 0 0" look-controls="enabled: true" wasd-controls="acceleration: 30"></a-camera>
       </a-entity>
 
-      <a-light type="ambient" color="#ffffff" intensity={0.6}></a-light>
-      <a-light type="directional" position="10 20 10" intensity={0.8}></a-light>
+      <VRErrorBoundary>
+        <VRAdBoards />
+      </VRErrorBoundary>
+      {/* <VRErrorBoundary>
+        <VRStadiumCrowd homeColor={homeColor} awayColor={awayColor} />
+      </VRErrorBoundary> */}
     </a-scene>
   );
 }
@@ -253,6 +405,7 @@ export function VRMatchView({
   
   const [ballPosition, setBallPosition] = useState<PlayerPosition>({ x: 0, z: 0 });
   const [ballHeight, setBallHeight] = useState(0.35);
+  const [ballRotation, setBallRotation] = useState({ x: 0, y: 0 });
   const [isGoalCelebration, setIsGoalCelebration] = useState(false);
   const [homeHasBall, setHomeHasBall] = useState(true);
   const [homePositions, setHomePositions] = useState<FormationPosition[]>([]);
@@ -273,11 +426,11 @@ export function VRMatchView({
     return recentEvents.length > 0 ? recentEvents[recentEvents.length - 1] : null;
   }, [events, currentMinute]);
 
-  const baseHomePositions = getFormationPositions(homeTeam.formation);
-  const baseAwayPositions = getOpponentFormationPositions(awayTeam.formation);
+  const baseHomePositions = getFormationPositions(homeTeam.formation || '4-3-3') || [];
+  const baseAwayPositions = getOpponentFormationPositions(awayTeam.formation || '4-3-3') || [];
   
   useEffect(() => {
-    if (!movementStateRef.current) {
+    if (!movementStateRef.current && baseHomePositions.length && baseAwayPositions.length) {
       movementStateRef.current = {
         homePositions: baseHomePositions.map(p => ({ ...p, position: { ...p.position } })),
         awayPositions: baseAwayPositions.map(p => ({ ...p, position: { ...p.position } })),
@@ -436,6 +589,8 @@ export function VRMatchView({
     let lastTime = Date.now();
     let currentBallPos = { x: 0, z: 0 };
     let ballHeight = 0.35;
+    let currentBallRotX = 0;
+    let currentBallRotY = 0;
     
     const animate = () => {
       const now = Date.now();
@@ -559,6 +714,16 @@ export function VRMatchView({
         
         ballHeight += (targetBallHeight - ballHeight) * 0.15;
         
+        const ballMovementSpeed = Math.sqrt(
+          Math.pow((dx / dist) * ballSpeed * delta, 2) + 
+          Math.pow((dz / dist) * ballSpeed * delta, 2)
+        );
+        
+        if (dist > 0.5) {
+          currentBallRotY += ballMovementSpeed * 150;
+          currentBallRotX += Math.abs(targetBallHeight - ballHeight) * 50;
+        }
+        
         const updateTeamPositions = (
           positions: FormationPosition[], 
           velocities: { x: number; z: number }[],
@@ -651,6 +816,7 @@ export function VRMatchView({
         setAwayPositions([...awayPos]);
         setBallPosition({ ...currentBallPos });
         setBallHeight(ballHeight);
+        setBallRotation({ x: currentBallRotX, y: currentBallRotY });
       }
       
       animationRef.current = requestAnimationFrame(animate);
@@ -738,6 +904,7 @@ export function VRMatchView({
           awayColor={awayColor}
           ballPosition={ballPosition}
           ballHeight={ballHeight}
+          ballRotation={ballRotation}
         />
       </div>
 
