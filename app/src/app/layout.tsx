@@ -3,6 +3,7 @@ import Script from "next/script";
 import "./globals.css";
 import "./pixel-art.css";
 import { Providers } from "@/components/Providers";
+import { VintageBackground } from "@/components/ui/VintageBackground";
 
 export const metadata: Metadata = {
   title: "Fala Mestre! - Demo for Socios",
@@ -37,10 +38,13 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
       </head>
-      <body className="antialiased bg-[#012169]">
+      <body className="antialiased bg-[#006400]">
+        <VintageBackground />
         <Providers>
           <OnboardingGuard>
-            {children}
+            <div className="relative" style={{ zIndex: 5 }}>
+              {children}
+            </div>
           </OnboardingGuard>
         </Providers>
       </body>

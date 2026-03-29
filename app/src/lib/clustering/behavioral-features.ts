@@ -150,7 +150,7 @@ export async function computeBehavioralFeatures(userId: string): Promise<Behavio
     const losses = gameState?.season?.losses || 0;
     const totalGames = wins + losses;
     matchWinRate = totalGames > 0 ? wins / totalGames : 0;
-    totalPoints = gameState?.user?.sociosPoints || 0;
+    totalPoints = gameState?.user?.money || 0;
   }
   
   // Conversation metrics

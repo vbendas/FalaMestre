@@ -1,0 +1,90 @@
+%%{init: {'theme': 'base', 'themeVariables': {'fontSize': '13px'}}}%%
+flowchart TD
+    subgraph client["CLIENT LAYER"]
+        PWA["Next.js 16 + React 19<br/>PWA, mobile-first<br/>shadcn/ui + Tailwind CSS 4"]
+        THREE["Three.js<br/>VR test environment"]
+    end
+
+    subgraph api["API ROUTES (Next.js Serverless)"]
+        CONV["/api/conversation<br/>Chat + intent classification"]
+        MATCH["/api/match<br/>Simulation + streaming"]
+        SQUAD["/api/squad/*<br/>Formation, training, migrate"]
+        WALLET["/api/wallet/connect<br/>Web3 wallet profiling"]
+        ONBOARD["/api/onboarding/create-team"]
+        AUTH["/api/auth/[...nextauth]<br/>Authentication"]
+    end
+
+    subgraph cron["CRON JOBS"]
+        CRON_INTENT["/api/cron/discover-intents<br/>K-means clustering"]
+        CRON_FEATURES["/api/cron/aggregate-features<br/>Behavioral feature computation"]
+        CRON_PERSONA["/api/cron/personality-assessment<br/>Big Five profiling"]
+        CRON_AUDIENCES["/api/cron/sync-audiences<br/>Ad platform sync"]
+    end
+
+    subgraph lib["CORE LIBRARIES"]
+        AI["ai-service.ts<br/>LLM integration<br/>OpenRouter + Gemini Flash"]
+        ENGINE["game-engine.ts<br/>Match simulation<br/>Poisson + tactical counters"]
+        COMMENT["commentary.ts<br/>AI match narration"]
+        CLUSTER_LIB["clustering/*<br/>Intent discovery, embeddings,<br/>cluster engine, lead scoring"]
+        AUDIENCE_LIB["audiences/*<br/>Sync router, segment defs,<br/>4 platform connectors"]
+        WEB3["web3/*<br/>Chiliz chain config,<br/>wallet profiler"]
+    end
+
+    subgraph db["DATA LAYER"]
+        PG[("Neon PostgreSQL<br/>Drizzle ORM")]
+        PGVEC[("pgvector<br/>256-dim embeddings")]
+        KV[("Vercel KV<br/>Session + LLM cache")]
+    end
+
+    subgraph external["EXTERNAL SERVICES"]
+        OPENROUTER["OpenRouter<br/>Gemini 2.0 Flash"]
+        OPENAI_EXT["OpenAI<br/>text-embedding-3-small"]
+        CHILIZ["Chiliz Chain<br/>$CHZ + Fan Tokens"]
+        FB_EXT["Facebook<br/>Custom Audiences"]
+        GOOG_EXT["Google Ads<br/>Customer Match"]
+        TIKTOK_EXT["TikTok<br/>Lookalike Audiences"]
+        BRAZE_EXT["Braze<br/>CDP messaging"]
+    end
+
+    PWA --> CONV
+    PWA --> MATCH
+    PWA --> SQUAD
+    PWA --> WALLET
+    PWA --> ONBOARD
+    PWA --> AUTH
+    THREE --> PWA
+    CONV --> AI
+    MATCH --> ENGINE
+    CONV --> PG
+    MATCH --> PG
+    SQUAD --> PG
+    AUTH --> PG
+    CRON_INTENT --> CLUSTER_LIB
+    CRON_FEATURES --> CLUSTER_LIB
+    CRON_PERSONA --> CLUSTER_LIB
+    CRON_AUDIENCES --> AUDIENCE_LIB
+    CLUSTER_LIB --> PG
+    CLUSTER_LIB --> PGVEC
+    AUDIENCE_LIB --> PG
+    AI --> OPENROUTER
+    CLUSTER_LIB --> OPENAI_EXT
+    WEB3 --> CHILIZ
+    AUDIENCE_LIB --> FB_EXT
+    AUDIENCE_LIB --> GOOG_EXT
+    AUDIENCE_LIB --> TIKTOK_EXT
+    AUDIENCE_LIB --> BRAZE_EXT
+    AI --> KV
+
+    classDef client fill:#4ade80,stroke:#166534,color:#000,font-weight:bold
+    classDef api fill:#60a5fa,stroke:#1e40af,color:#000,font-weight:bold
+    classDef cron fill:#a78bfa,stroke:#5b21b6,color:#000,font-weight:bold
+    classDef lib fill:#ec4899,stroke:#9d174d,color:#000,font-weight:bold
+    classDef db fill:#f59e0b,stroke:#92400e,color:#000,font-weight:bold
+    classDef external fill:#ef4444,stroke:#991b1b,color:#fff,font-weight:bold
+
+    class PWA,THREE client
+    class CONV,MATCH,SQUAD,WALLET,ONBOARD,AUTH api
+    class CRON_INTENT,CRON_FEATURES,CRON_PERSONA,CRON_AUDIENCES cron
+    class AI,ENGINE,COMMENT,CLUSTER_LIB,AUDIENCE_LIB,WEB3 lib
+    class PG,PGVEC,KV db
+    class OPENROUTER,OPENAI_EXT,CHILIZ,FB_EXT,GOOG_EXT,TIKTOK_EXT,BRAZE_EXT external

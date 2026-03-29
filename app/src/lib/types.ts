@@ -35,6 +35,47 @@ export interface MatchEvent {
   stats?: MatchEventStats;
 }
 
+export type ActionType = 'kickoff' | 'pass' | 'dribble' | 'shot' | 'header' | 'tackle' | 'foul' | 'corner' | 'freekick' | 'goal' | 'celebration' | 'throwin' | 'offside' | 'save' | 'miss' | 'buildup' | 'pressure';
+
+export interface PlayerPosition {
+  x: number;
+  z: number;
+}
+
+export interface GameAction {
+  id: string;
+  minute: number;
+  actionType: ActionType;
+  team: 'home' | 'away';
+  
+  ballPosition: PlayerPosition;
+  ballTargetPosition?: PlayerPosition;
+  ballHeight: number;
+  
+  playerId?: string;
+  playerName?: string;
+  playerPosition?: PlayerPosition;
+  
+  targetPlayerId?: string;
+  targetPlayerPosition?: PlayerPosition;
+  
+  homePlayerPositions: Record<string, PlayerPosition>;
+  awayPlayerPositions: Record<string, PlayerPosition>;
+  
+  animation: string;
+  duration: number;
+  
+  commentaryId?: string;
+}
+
+export interface MatchScript {
+  matchId: string;
+  actions: GameAction[];
+  totalActions: number;
+  // Enhanced data for VR mode with 5400 movement events
+  _enhanced?: EnhancedMatchScript;
+}
+
 export interface MatchContext {
   minute: number;
   homeScore: number;
@@ -86,10 +127,81 @@ export interface Squad {
 }
 
 export interface Match {
+  id?: string;
   opponent: string;
   isHome: boolean;
   date: string;
   competition: string;
+}
+
+export type TierDivision = 'Serie D' | 'Serie C' | 'Serie B' | 'Serie A';
+
+export interface Stadium {
+  level: number;
+  capacity: number;
+  amenities: number;
+  ticketPrice: number;
+  maintenanceLevel: number;
+}
+
+export interface FacilityLevel {
+  level: number;
+  upgradeCost: number;
+  monthlyWage: number;
+  currentEffect: number;
+}
+
+export interface Facilities {
+  trainingCenter: number;
+  medicalCenter: number;
+  youthAcademy: number;
+  scoutOffice: number;
+}
+
+export type StaffRole = 'headCoach' | 'scout' | 'medicalStaff';
+export type StaffSpecialty = 'development' | 'injuryPrevention' | 'technical' | 'physical' | 'tactical' | 'scouting' | 'medical';
+
+export interface StaffMember {
+  name: string;
+  level: number;
+  role: StaffRole;
+  specialty: StaffSpecialty;
+  weeklyWage: number;
+  hiredAt: number;
+}
+
+export interface Staff {
+  headCoach: StaffMember | null;
+  scout: StaffMember | null;
+  medicalStaff: StaffMember | null;
+}
+
+export interface TeamStats {
+  totalEarnings: number;
+  totalSpent: number;
+  matchesPlayed: number;
+  championshipsWon: number;
+  promotionCount: number;
+}
+
+export interface YouthPlayer {
+  id: string;
+  name: string;
+  position: 'GK' | 'DEF' | 'MID' | 'FWD';
+  age: number;
+  potential: number;
+  currentAbility: number;
+  personalityTraits: string[];
+  scoutAssessment: number; // 1-5 stars
+}
+
+export type TrainingFocus = 'technical' | 'physical' | 'tactical' | null;
+
+export interface YouthAcademy {
+  nextIntakeWeek: number;
+  playersAvailable: YouthPlayer[];
+  trainingFocus: TrainingFocus;
+  lastIntakeWeek: number;
 }
 
 export interface MatchSettings {
@@ -111,12 +223,13 @@ export interface GameState {
     id: string;
     team: string;
     level: number;
-    sociosPoints: number;
+    money: number;
     matchSettings?: MatchSettings;
   };
   season: {
     week: number;
     league: string;
+    division: TierDivision;
     position: number;
     points: number;
     wins: number;
@@ -125,6 +238,11 @@ export interface GameState {
     nextMatch: Match;
   };
   squad: Squad;
+  stadium: Stadium;
+  facilities: Facilities;
+  staff: Staff;
+  teamStats: TeamStats;
+  youthAcademy: YouthAcademy;
   context: {
     lastAction: string;
     availableActions: string[];
@@ -147,4 +265,247 @@ export interface Message {
 export interface Conversation {
   messages: Message[];
   gameState: GameState;
+}
+
+// VR Mode enhanced types for granular movement and ball possession tracking
+
+export type MovementType = 
+  | 'dribble'       
+  | 'pass'          
+  | 'run'           
+  | 'position'      
+  | 'shot_windup'   
+  | 'shot_flight'   
+  | 'clearance'     
+  | 'tackle'        
+  | 'idle';
+
+export interface MovementEvent {
+  gameSecond: number;              // 0-5399 (90 min × 60 sec)
+  type: MovementType;
+  teamWithBall: 'home' | 'away';
+  playerWithBall: string;          // Player ID
+  ballPosition: { x: number; z: number };
+  ballHeight: number;             // 0.1-3.0 meters
+  intensity: number;               // 0-1 (animation speed)
+  
+  // Optional - for specific event types
+  passTarget?: string;            // Target player ID for passes
+  targetPosition?: { x: number; z: number };
+  
+  // Link to commentary event if this second has one
+  commentaryEventId?: string;
+}
+
+export interface EnhancedMatchScript {
+  matchId: string;
+  homeTeam: { id: string; name: string; formation: string };
+  awayTeam: { id: string; name: string; formation: string };
+  
+  // Original commentary events (every 5 game minutes)
+  commentary: MatchEvent[];
+  
+  // Granular movement events (every 1 game second = 5400 events)
+  movements: MovementEvent[];
+  
+  // Metadata
+  finalScore: { home: number; away: number };
+  winner: 'home' | 'away' | 'draw';
+  generatedAt: number;
+}
+
+// Game clock state for VR mode
+export interface GameClock {
+  realStartTime: number;
+  realElapsedSeconds: number;
+  gameElapsedSeconds: number;
+  currentGameMinute: number;
+  currentGameSecond: number;
+  isPaused: boolean;
+  pausedAt: number | null;
+}
+
+// =====================================================
+// PREDICTION MARKET TYPES
+// =====================================================
+
+export type PredictionType = 'win_draw_loss' | 'first_scorer' | 'clean_sheet' | 'score_range';
+export type PredictionStatus = 'open' | 'closed' | 'settled';
+
+export interface PredictionOption {
+  id: string;
+  label: string;
+  odds: number;
+  totalBets: number;
+  result?: 'won' | 'lost' | 'pending';
+}
+
+export interface Prediction {
+  id: string;
+  matchId: string;
+  homeTeam: string;
+  awayTeam: string;
+  type: PredictionType;
+  options: PredictionOption[];
+  entryCost: number;
+  deadline: string;
+  status: PredictionStatus;
+  settledAt?: string;
+  createdAt: string;
+  matchDate?: string;
+}
+
+export interface UserBet {
+  id: string;
+  userId: string;
+  predictionId: string;
+  optionId: string;
+  amount: number;
+  potentialWin: number;
+  settled: boolean;
+  won?: boolean;
+  settledAt?: string;
+  createdAt: string;
+}
+
+export interface PredictionHistory {
+  userId: string;
+  totalBets: number;
+  correctBets: number;
+  currentStreak: number;
+  bestStreak: number;
+  expertLevel: number; // 0-5
+  totalWinnings: number;
+  lastBetAt?: string;
+}
+
+// =====================================================
+// FAN CLUB INVESTMENT TYPES
+// =====================================================
+
+export type InvestmentOption = 'A' | 'B' | 'C';
+
+export interface FanClubInvestment {
+  id: string;
+  userId: string;
+  option: InvestmentOption;
+  amount: number;
+  startDate: string;
+  unlockDate: string;
+  yieldPerDay: number;
+  moraleBoost: number;
+  revenueBoostPerMatch: number;
+  active: boolean;
+  createdAt: string;
+}
+
+export interface InvestmentYield {
+  id: string;
+  investmentId: string;
+  userId: string;
+  amount: number;
+  createdAt: string;
+  claimed: boolean;
+  claimedAt?: string;
+  expiryDate: string;
+}
+
+export interface InvestmentTier {
+  option: InvestmentOption;
+  amount: number;
+  lockPeriodDays: number;
+  yieldPerDay: number;
+  moraleBoost: number;
+  revenueBoostPerMatch: number;
+}
+
+// =====================================================
+// TOURNAMENT TICKET TYPES
+// =====================================================
+
+export type PrizeType = 'jersey' | 'fan_tokens' | 'game_currency';
+
+export interface SpecialTournament {
+  id: string;
+  name: string;
+  description: string;
+  prizeType: PrizeType;
+  prizeValue: number;
+  entryTicketCost: number;
+  scheduledDate: string;
+  maxParticipants: number;
+  participants: number;
+}
+
+export interface TournamentTicket {
+  id: string;
+  userId: string;
+  tournamentId: string;
+  earned: boolean;
+  earnedAt?: string;
+  used: boolean;
+  usedAt?: string;
+}
+
+export type TicketEarningMethod = 
+  | 'win_5_matches_streak'
+  | 'finish_top_4_league'
+  | 'complete_season_unbeaten'
+  | 'refer_friend_5_matches';
+
+// =====================================================
+// ELITE CONTENT TYPES
+// =====================================================
+
+export interface EliteContent {
+  userId: string;
+  eliteTrainingUnlocked: boolean;
+  eliteTrainingUnlockedAt?: string;
+  eliteTrainingUsesRemaining?: number;
+  fastRecoveryUnlocked: boolean;
+  fastRecoveryUnlockedAt?: string;
+  activeInjuriesFastTracked: string[]; // Player IDs
+}
+
+export interface EliteUnlockCriteria {
+  eliteTraining: {
+    method: 'wins' | 'investment';
+    winsRequired?: number;
+    investmentOptionRequired?: InvestmentOption;
+  };
+  fastRecovery: {
+    method: 'wins_streak' | 'investment';
+    winsStreakRequired?: number;
+    investmentOptionRequired?: InvestmentOption;
+  };
+}
+
+// =====================================================
+// PHASE SYSTEM TYPES
+// =====================================================
+
+export type Phase = 1 | 2 | 3 | 4;
+
+export interface PhaseProgress {
+  userId: string;
+  currentPhase: Phase;
+  phase2Unlocked: boolean;
+  phase2UnlockedAt?: string;
+  phase3Unlocked: boolean;
+  phase3UnlockedAt?: string;
+  phase4Unlocked: boolean;
+  phase4UnlockedAt?: string;
+  totalMatches: number;
+  totalPredictions: number;
+  predictionsWon: number;
+  totalInvestmentMade: number;
+  hoursPlayed: number;
+  lastUpdated: string;
+}
+
+export interface PhaseUnlock {
+  type: 'prediction_market_unlock' | 'fan_club_investment_unlock' | 'tournament_unlock';
+  phase: Phase;
+  priority: 'high' | 'medium';
+  message: string;
 }

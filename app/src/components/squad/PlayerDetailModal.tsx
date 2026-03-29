@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Dumbbell, Heart, Star, TrendingUp, TrendingDown, Minus, UserPlus } from 'lucide-react';
+import { X, Dumbbell, Heart, Star, TrendingUp, TrendingDown, Minus, UserPlus, Zap, Info } from 'lucide-react';
 import { Player, GameState } from '@/lib/types';
 
 interface PlayerDetailModalProps {
@@ -41,10 +41,10 @@ const POSITION_COLORS: Record<string, string> = {
 };
 
 const TRAINING_OPTIONS = [
-  { id: 'technical', label: 'Técnico', icon: '⚡', attrs: ['dri', 'pas'], cost: 15, color: 'bg-yellow-500' },
-  { id: 'physical', label: 'Físico', icon: '💪', attrs: ['pac', 'phy'], cost: 20, color: 'bg-red-500' },
-  { id: 'tactical', label: 'Tático', icon: '🧠', attrs: ['def', 'sho'], cost: 15, color: 'bg-blue-500' },
-  { id: 'rest', label: 'Descanso', icon: '😴', attrs: [], cost: -20, color: 'bg-green-500' },
+  { id: 'technical', label: 'Técnico', icon: '⚡', attrs: ['dri', 'pas'], improvement: 3, cost: 15, color: 'bg-yellow-500' },
+  { id: 'physical', label: 'Físico', icon: '💪', attrs: ['pac', 'phy'], improvement: 3, cost: 20, color: 'bg-red-500' },
+  { id: 'tactical', label: 'Tático', icon: '🧠', attrs: ['def', 'sho'], improvement: 3, cost: 15, color: 'bg-blue-500' },
+  { id: 'rest', label: 'Descanso', icon: '😴', attrs: [], improvement: 0, cost: -20, color: 'bg-green-500' },
 ] as const;
 
 function getOverall(player: Player): number {
@@ -63,6 +63,42 @@ function getRatingColorClass(rating: number): string {
   return 'text-red-400';
 }
 
+function getRecommendedTraining(player: Player): string {
+  const lowestAttrs: Array<{ attr: string; value: number }> = [
+    { attr: 'pac', value: player.pac },
+    { attr: 'sho', value: player.sho },
+    { attr: 'pas', value: player.pas },
+    { attr: 'dri', value: player.dri },
+    { attr: 'def', value: player.def },
+    { attr: 'phy', value: player.phy },
+  ].sort((a, b) => a.value - b.value);
+
+  const lowest = lowestAttrs.slice(0, 2).map((a) => a.attr);
+  
+  if (lowest.includes('pac') || lowest.includes('phy')) return 'physical';
+  if (lowest.includes('def') || lowest.includes('sho')) return 'tactical';
+  return 'technical';
+}
+
+function getRestRecommendation(fitness: number, fatigue: number): { shouldRest: boolean; message: string } {
+  if (fitness < 50 || fatigue < 30) {
+    return {
+      shouldRest: true,
+      message: 'Jogador precisa descansar! Alto risco de lesão.',
+    };
+  }
+  if (fitness < 70 || fatigue < 50) {
+    return {
+      shouldRest: false,
+      message: 'Treino leve recomendado. Considere descansar após.',
+    };
+  }
+  return {
+    shouldRest: false,
+    message: 'Jogador em boa forma. Pode treinar normalmente.',
+  };
+}
+
 export function PlayerDetailModal({
   player,
   isOpen,
@@ -75,12 +111,17 @@ export function PlayerDetailModal({
 }: PlayerDetailModalProps) {
   const [selectedTab, setSelectedTab] = useState<'stats' | 'training'>('stats');
   const [isTraining, setIsTraining] = useState(false);
+  const [hoveredTraining, setHoveredTraining] = useState<string | null>(null);
 
   if (!player) return null;
 
   const overall = getOverall(player);
-  const fitness = gameState.squad.fitness;
+  const fitness = player.fatigue ?? 100;
   const morale = gameState.squad.morale;
+  const weeklyTrainingCount = player.weeklyTrainingCount ?? 0;
+
+  const recommendedTraining = getRecommendedTraining(player);
+  const restRecommendation = getRestRecommendation(fitness, fitness);
 
   const handleTrain = async (focus: 'technical' | 'physical' | 'tactical' | 'rest') => {
     setIsTraining(true);
@@ -89,6 +130,17 @@ export function PlayerDetailModal({
     } finally {
       setIsTraining(false);
     }
+  };
+
+  const getTrainingPreview = (trainingId: string) => {
+    const training = TRAINING_OPTIONS.find((t) => t.id === trainingId);
+    if (!training || trainingId === 'rest') return null;
+
+    return training.attrs.map((attr) => {
+      const currentValue = player[attr as keyof Player] as number;
+      const newValue = Math.min(99, currentValue + training.improvement);
+      return { attr, currentValue, newValue, improvement: training.improvement };
+    });
   };
 
   return (
@@ -253,7 +305,7 @@ export function PlayerDetailModal({
                     {/* Status */}
                     <div className="flex gap-4">
                       <div className="flex-1 bg-[#004d00] rounded-lg p-3">
-                        <div className="text-xs text-white/50 mb-1">Fitness</div>
+                        <div className="text-xs text-white/50 mb-1">Energia</div>
                         <div className="flex items-center gap-2">
                           <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
                             <motion.div
@@ -276,9 +328,71 @@ export function PlayerDetailModal({
                       </div>
                     </div>
 
+                    {/* Rest Recommendation */}
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`rounded-lg p-3 ${
+                        restRecommendation.shouldRest
+                          ? 'bg-red-900/30 border border-red-500/50'
+                          : 'bg-[#004d00] border border-white/10'
+                      }`}
+                    >
+                      <div className="flex items-start gap-2">
+                        <Info className={`w-4 h-4 mt-0.5 ${restRecommendation.shouldRest ? 'text-red-400' : 'text-white/50'}`} />
+                        <p className={`text-xs ${restRecommendation.shouldRest ? 'text-red-200' : 'text-white/60'}`}>
+                          {restRecommendation.message}
+                        </p>
+                      </div>
+                    </motion.div>
+
+                    {/* Weekly Training Count */}
+                    <div className="flex items-center justify-between text-xs text-white/50">
+                      <span>Treinos esta semana: {weeklyTrainingCount}/3</span>
+                      {weeklyTrainingCount >= 3 && (
+                        <span className="text-orange-400 font-medium">Limite atingido</span>
+                      )}
+                    </div>
+
+                    {/* Training Preview */}
+                    <AnimatePresence>
+                      {hoveredTraining && hoveredTraining !== 'rest' && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="bg-[#012169]/50 rounded-lg p-3 border border-[#FEDD00]/30"
+                        >
+                          <p className="text-xs text-white/70 mb-2 font-medium">Prévia do Treino:</p>
+                          <div className="space-y-2">
+                            {getTrainingPreview(hoveredTraining)?.map((preview) => (
+                              <div key={preview.attr} className="flex items-center justify-between">
+                                <span className="text-xs text-white/60">{ATTRIBUTE_LABELS[preview.attr].label}</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-white/40">{preview.currentValue}</span>
+                                  <TrendingUp className="w-3 h-3 text-green-400" />
+                                  <span className="text-sm font-bold text-green-400">+{preview.improvement}</span>
+                                  <span className="text-xs text-white/40">= {preview.newValue}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
                     {/* Training Options */}
                     <div>
-                      <h3 className="text-sm font-medium text-white/70 mb-2">Escolha o Treino</h3>
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-sm font-medium text-white/70">Escolha o Treino</h3>
+                        <button
+                          onClick={() => handleTrain(recommendedTraining as 'technical' | 'physical' | 'tactical')}
+                          className="text-xs text-[#FEDD00] hover:text-yellow-400 flex items-center gap-1"
+                        >
+                          <Zap className="w-3 h-3" />
+                          Recomendado
+                        </button>
+                      </div>
                       <div className="space-y-2">
                         {TRAINING_OPTIONS.map((option) => (
                           <motion.button
@@ -286,22 +400,32 @@ export function PlayerDetailModal({
                             whileHover={{ scale: 1.01, backgroundColor: 'rgba(255,255,255,0.1)' }}
                             whileTap={{ scale: 0.99 }}
                             onClick={() => handleTrain(option.id as 'technical' | 'physical' | 'tactical' | 'rest')}
-                            disabled={isTraining}
+                            onMouseEnter={() => setHoveredTraining(option.id)}
+                            onMouseLeave={() => setHoveredTraining(null)}
+                            disabled={isTraining || (option.id !== 'rest' && weeklyTrainingCount >= 3)}
                             className={`
                               w-full p-3 rounded-lg flex items-center gap-3
                               bg-[#004d00] border border-[#FEDD00]/30 hover:border-[#FEDD00]/50
                               disabled:opacity-50 disabled:cursor-not-allowed
+                              ${option.id === recommendedTraining && option.id !== 'rest' ? 'ring-2 ring-[#FEDD00]' : ''}
                             `}
                           >
                             <div className={`w-10 h-10 rounded-lg ${option.color} flex items-center justify-center text-lg`}>
                               {option.icon}
                             </div>
                             <div className="flex-1 text-left">
-                              <div className="font-medium text-white">{option.label}</div>
+                              <div className="font-medium text-white flex items-center gap-2">
+                                {option.label}
+                                {option.id === recommendedTraining && option.id !== 'rest' && (
+                                  <span className="px-1.5 py-0.5 bg-[#FEDD00] text-[#012169] text-[10px] font-bold rounded">
+                                    ✨
+                                  </span>
+                                )}
+                              </div>
                               <div className="text-xs text-white/50">
                                 {option.id === 'rest' 
-                                  ? '+20 Fitness, +5 Moral' 
-                                  : `+${option.attrs.join(', ').toUpperCase()} (${option.cost} fitness)`
+                                  ? '+20 Energia, +5 Moral' 
+                                  : `+${option.attrs.map(a => ATTRIBUTE_LABELS[a].short).join(', ')} (${option.cost} energia)`
                                 }
                               </div>
                             </div>

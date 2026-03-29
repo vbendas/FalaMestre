@@ -1,0 +1,38 @@
+%%{init: {'theme': 'base', 'themeVariables': {'fontSize': '14px'}}}%%
+flowchart TD
+    PLAY["⚽ Play Match<br/>Make tactical decisions<br/>Manage squad, negotiate transfers"]
+    EARN["Earn Socios Points<br/>Points based on wins,<br/>achievements, daily login"]
+    GOVERN["Simulate Governance<br/>Vote on kit designs,<br/>stadium upgrades, tactics"]
+    ACCUMULATE["Accumulate & Strategize<br/>Manage point balance<br/>Plan long-term investments"]
+    REDEEM["Redeem Voucher<br/>10,000 points =<br/>1 Fan Token Voucher"]
+    REAL["Real Fan Token<br/>$CHZ ecosystem<br/>Socios.com integration"]
+
+    PLAY -->|"match rewards"| EARN
+    EARN -->|"unlocks voting<br/>power"| GOVERN
+    GOVERN -->|"builds point<br/>balance"| ACCUMULATE
+    ACCUMULATE -->|"enough points<br/>earned"| REDEEM
+    REDEEM -->|"voucher →<br/>real token"| REAL
+    REAL -->|"motivates<br/>continued play"| PLAY
+
+    subgraph game_side["IN-GAME (Free, Safe Practice)"]
+        PLAY
+        EARN
+        GOVERN
+        ACCUMULATE
+    end
+
+    subgraph bridge_side["CONVERSION BRIDGE"]
+        REDEEM
+    end
+
+    subgraph real_side["REAL WORLD ($CHZ Ecosystem)"]
+        REAL
+    end
+
+    classDef game fill:#4ade80,stroke:#166534,color:#000,font-weight:bold
+    classDef bridge fill:#f59e0b,stroke:#92400e,color:#000,font-weight:bold
+    classDef real fill:#ef4444,stroke:#991b1b,color:#fff,font-weight:bold
+
+    class PLAY,EARN,GOVERN,ACCUMULATE game
+    class REDEEM bridge
+    class REAL real

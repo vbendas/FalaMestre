@@ -330,7 +330,7 @@ export async function POST(request: NextRequest) {
             emotionalWords: emotionalWords,
             assertiveness: detectAssertiveness(message),
             gameContext: {
-              points: gameState.user.sociosPoints,
+              points: gameState.user.money,
               matchesPlayed: gameState.season.week,
               position: gameState.season.position,
               wins: gameState.season.wins,

@@ -1,14 +1,18 @@
 import { MatchEvent, MatchContext, EventIntensity, ShotType, EventType, Player } from './types';
 
-// Brazilian football slang and expressions
+// Brazilian football slang and expressions - ENHANCED
 const SLANG = {
-  goal: ['golaço', 'gol de placa', 'caneta', 'cavadinha', 'voleio', 'chilena', 'bicicleta', 'goloço', 'tremendo'],
-  save: ['defesaça', 'milagrose', 'paredão', 'monstro', 'human wall', 'voou'],
-  miss: ['tirou tinta', 'passou raspando', 'quase entrou', 'por pouco', 'quase', 'susto'],
-  celebration: ['explodiu', 'vai à loucura', 'festeja', 'comemora', 'mostrawhy', 'égol'],
-  tension: ['está quente', 'pressão total', 'tudo pode acontecer', 'contagem regressiva', 'minutos finais', 'decisão'],
-  player_praise: ['crack', 'monstro', 'ídolo', 'artilheiro', 'craque', 'fenômeno', 'lenda'],
+  goal: ['golaço', 'gol de placa', 'caneta', 'cavadinha', 'voleio', 'chilena', 'bicicleta', 'goloço', 'tremendo', 'petardo', 'no ângulo', 'sem chance', 'faz a festa', 'balança as redes', 'explode a rede', 'coloca no cantinho', 'chapéu', 'gol Olímpico', 'na gaveta', 'de falta'],
+  save: ['defesaça', 'milagrose', 'paredão', 'monstro', 'human wall', 'voou', 'muralha', 'espalmou', 'encaixou', 'fechou o gol', 'defesa impossível', 'salvou em cima da linha', 'cortou', 'interceptou'],
+  miss: ['tirou tinta', 'passou raspando', 'quase entrou', 'por pouco', 'quase', 'susto', 'tá pegando', 'tá trabalhando', 'quase lá', 'perdeu a chance'],
+  celebration: ['explodiu', 'vai à loucura', 'festeja', 'comemora', 'mostra o musculo', 'égol', 'celebra muito', 'extravasa'],
+  tension: ['está quente', 'pressão total', 'tudo pode acontecer', 'contagem regressiva', 'minutos finais', 'decisão', 'não dá mais', 'ninguém aguenta', 'coração na boca'],
+  player_praise: ['crack', 'monstro', 'ídolo', 'artilheiro', 'craque', 'fenômeno', 'lenda', 'mito', 'gênio', 'cavaleiro', 'predestinado'],
   referee: ['juiz', 'árbitro', 'bandeira', 'juiz de fora'],
+  dribble: ['deu um lençol', 'fez a finta', 'driblou bonito', 'cavou', 'deixou sentado', 'passou como quis', 'drible desconcertante'],
+  pass: ['tocou de letra', 'lançamento', 'enfiada', 'passe açucarado', 'assistência perfeita', 'lançou nas costas', 'abriu o jogo', 'tabelinha', 'um-dois'],
+  defense: ['cortou', 'interceptou', 'fechou o espaço', 'antecipou', 'tirou com categoria', 'limpou a área', 'varreu', 'bloqueou', 'fechou a porta'],
+  momentum: ['domínio total', 'pressão', 'tá com fome', 'vai pra cima', 'partiu pra cima', 'está quente', 'não dá descanso', 'sufoca', 'encurrala', 'cerca'],
 };
 
 function random<T>(arr: T[]): T {
@@ -57,6 +61,17 @@ const COMMENTARY_TEMPLATES: Record<EventType, TemplateRecord> = {
       "⚽ DENTRO DA ÁREA! NINGUÉM SEGURA {player}! GOL!",
       "⚽ E O {team} VIRA! {player} MARCA O GOL DA VIRADA!",
       "⚽ TEM CHUTE, TEM GOL! {player} EXPLODE A REDE!",
+      // ENHANCED - More context-rich templates
+      "⚽⚽⚽ GOOOOOOL! {player} RECEBE DE {assist} NA ÁREA, DOMINA COM CATEGORIA E FINALIZA NO CANTO! GOLAÇO!",
+      "⚽⚽⚽ CONTRA-ATAQUE FULMINANTE! {player} AVANÇA PELA ESQUERDA, CORTA PRA DENTRO E SOLTA A BOMBA! {team} MARCA!",
+      "⚽⚽⚽ CRUZAMENTO RASTEIRO DE {assist}, {player} ANTECIPA A DEFESA E COMPLETA DE PRIMEIRA! GOL DO {team}!",
+      "⚽⚽⚽ {player} RECEBE NAS COSTAS DA DEFESA, CARA A CARA COM O GOLEIRO, NÃO PERDOA! GOLAÇO NOS ACRÉSCIMOS!",
+      "⚽⚽⚽ QUE JOGADA! {assist} FAZ A PONTE AÉREA, {player} DOMINA NO PEITO E BATE DE VOLEIO! SEM CHANCE PRO GOLEIRO!",
+      "⚽⚽⚽ ESCANTEIO COBRADO, {player} SOBE MAIS ALTO QUE TODOS E CABECEIA COM FORÇA! A REDE BALANÇA!",
+      "⚽⚽⚽ {player} RECEBE NO MEIO-CAMPO, AVANÇA 40 METROS, DRIBLA DOIS E FINALIZA! GOL DE PLACA!",
+      "⚽⚽⚽ PÊNALTI COBRADO! {player} PARA, OLHA E COLOCA NO CANTINHO! GOLEIRO FOI MAS NÃO ALCANÇA!",
+      "⚽⚽⚽ {player} PEGA A SOBRA NA ENTRADA DA ÁREA E SOLTA O PÉ! TRAVE, GOLEIRO E GOL!",
+      "⚽⚽⚽ JOGADA ENSAIADA! {team} COM FORMAÇÃO OFENSIVA, {assist} ENCONTRA {player} LIVRE, E É GOL!",
     ],
     high: [
       "⚽ GOOOOL! {player} abre o placar para o {team}!",
@@ -318,6 +333,13 @@ const COMMENTARY_TEMPLATES: Record<EventType, TemplateRecord> = {
       "🔥 OH! O {team} pressiona! Vai marcar agora!",
       "🔥 Momento de decisão! O {team} pressiona forte!",
       "🔥🔥🔥 CAOS na área! O {team} pressiona forte!",
+      // ENHANCED
+      "🔥🔥🔥 PRESSÃO TOTAL! {team} CERCA O ADVERSÁRIO, {player} ROUBA A BOLA E AVANÇA!",
+      "🔥 {team} NÃO DÁ DESCANSO! {player} INTERCEPTA E ARMA O CONTRA-ATAQUE!",
+      "🔥 MARCAÇÃO ALTA! {player} ANTECIPA O PASSE E CRIA PERIGO!",
+      "🔥 {team} SUFOCA! {player} ROUBA NA SAÍDA DE BOLA E PARTE PARA O ATAQUE!",
+      "🔥🔥🔥 PRESSÃO NA ÁREA! {player} RECUPERA E O {team} AMEAÇA!",
+      "🔥 O {team} NÃO DÁ RESPIRO! A DEFESA ESTÁ CERCADA!",
     ],
     high: [
       "🔥 O {team} pressiona! Chance pode sair a qualquer momento!",
@@ -328,6 +350,12 @@ const COMMENTARY_TEMPLATES: Record<EventType, TemplateRecord> = {
       "🔥 O ataque aperta! A defesa não respira!",
       "🔥 Pressão constante do {team}! Busca o gol!",
       "🔥 O {team} acordou! Pressiona forte!",
+      // ENHANCED
+      "🔥 {team} pressiona! {player} recupera a bola no meio-campo.",
+      "🔥 {player} intercepta e o {team} parte para o ataque!",
+      "🔥 Marcação forte do {team}! {player} rouba a bola!",
+      "🔥 O {team} ATRACA! Pressão nos minutos finais!",
+      "🔥 {player} GANHA a bola e o {team} CRIA chance!",
     ],
     medium: [
       "Pressão do {team}.",
@@ -360,6 +388,15 @@ const COMMENTARY_TEMPLATES: Record<EventType, TemplateRecord> = {
       "🎯 {player} recebe e Gira! Busca companions!",
       "🎯 O {team} trabalha a bola! Paciência compensa!",
       "🎯 {player} tabelinha com o lateral! {team} pressiona!",
+      // ENHANCED
+      "🎯 {player} recebe de costas, gira e busca o meio-campo! O {team} organiza!",
+      "🎯 Troca de passes no círculo central! {team} tenta criar espaços!",
+      "🎯 {player} PROTEC A BOLA, espera o apoio e toca de letra! JOGADA BONITA!",
+      "🎯 O {team} EXPLORA as laterais! {player} recebe e espera!",
+      "🎯 Passes curtos no meio-campo! {team} DOMINA a partida!",
+      "🎯 {player} LANÇA nas costas da defesa! AAAAAAAH, quasi!",
+      "🎯 TABELINHA entre {player} e {assist}! CRIA a jogada!",
+      "🎯 O {team} muda o ritmo! Passa a jogada pelo MEIO!",
     ],
     high: [
       "🎯 {player} COM A BOLA! Procura espaço...",

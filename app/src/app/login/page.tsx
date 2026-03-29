@@ -19,14 +19,14 @@ export default function LoginPage() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#012169] to-[#001438]">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-white text-xl">Carregando...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#012169] to-[#001438] p-4">
+    <div className="min-h-screen flex items-center justify-center p-4">
       <Card className="w-full max-w-md bg-white/10 backdrop-blur-sm border-white/20">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">

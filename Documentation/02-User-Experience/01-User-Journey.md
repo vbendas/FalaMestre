@@ -2,10 +2,14 @@
 
 ---
 tags: #ux #journey #experience #flow
-status: complete
+status: updated
 priority: high
-phase: planning
-last_updated: 2026-01-18
+phase: mvp
+last_updated: 2026-03-29
+---
+
+> ⚠️ **NOTE:** This document was originally written for a chat-based interface. The game now uses a menu-based, mobile-first dashboard. All conversations with "AI" should be interpreted as interacting with the app's UI elements (buttons, menus, modals).
+
 ---
 
 ## Overview
@@ -14,7 +18,21 @@ The user journey maps the complete experience from discovery to long-term engage
 
 ---
 
-## Journey Phases
+## Migration Note (March 2026)
+
+**Original:** This journey referenced "AI: ..." prompts and chat-based interactions.
+
+**Current:** All interactions are now UI-based:
+- Chat prompts → Buttons, menus, modals
+- "AI Persona" → UI component states
+- Conversational hints → In-app tooltips and feature balances
+- Voice/natural language → Touch/tap navigation
+
+**For current interface architecture, see:** [[03-Interface-Architecture]]
+
+---
+
+## Original Journey Phases (Legacy Reference)
 
 ```mermaid
 flowchart LR
@@ -67,17 +85,23 @@ flowchart LR
 
 ### Entry Experience
 
+> ⚠️ **Legacy text describes conversational interface. Current app uses menu-based entry.**
+
 ```
-AI: "👋 Bem-vindo ao Fala Mestre!
-
-Sou seu assistente de futebol pessoal. 
-Aqui você gerencia seu time favorito apenas conversando comigo.
-
-Qual time você quer comandar?"
-
-[Show top 5 team options with logos]
-[Search for other teams]
+1. User lands on app (web or mobile)
+2. Sees clean dashboard with onboarding flow
+3. Selects team from list (fictional teams - IP safe)
+4. Shown dashboard with quick start options:
+   - "JOGAR" button (primary)
+   - Bottom nav: Elenco, Calendário, Apostas
+5. Ready to play - no signup wall
 ```
+
+### New User Onboarding Flow
+
+See [[02-Onboarding-Flow]] for current onboarding process.
+
+---
 
 ### User Emotions
 

@@ -9,16 +9,22 @@ import { PlayerCard } from '@/components/squad/PlayerCard';
 import { PlayerDetailModal } from '@/components/squad/PlayerDetailModal';
 import { SquadStats } from '@/components/squad/SquadStats';
 import { FormationSelector } from '@/components/squad/FormationSelector';
+import { SquadViewSkeleton } from '@/components/ui/SkeletonLoader';
 
 interface SquadViewProps {
   gameState: GameState;
   onViewChange: (view: ViewType) => void;
   onTrainPlayer?: (playerId: string, focus: 'technical' | 'physical' | 'tactical' | 'rest') => Promise<void>;
   userId?: string | null;
+  isLoading?: boolean;
 }
 
-export function SquadView({ gameState, onViewChange, onTrainPlayer, userId }: SquadViewProps) {
+export function SquadView({ gameState, onViewChange, onTrainPlayer, userId, isLoading = false }: SquadViewProps) {
   const { squad, season, user } = gameState;
+
+  if (isLoading) {
+    return <SquadViewSkeleton />;
+  }
   
   // State for modals
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
@@ -120,10 +126,10 @@ export function SquadView({ gameState, onViewChange, onTrainPlayer, userId }: Sq
             </div>
             {pos === 'FWD' && (
               <button
-                onClick={() => onViewChange('chat')}
+                onClick={() => onViewChange('dashboard')}
                 className="text-xs text-[#FEDD00] hover:underline"
               >
-                Ver no chat →
+                Ver início →
               </button>
             )}
           </div>

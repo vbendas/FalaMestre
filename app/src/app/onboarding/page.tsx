@@ -70,7 +70,7 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#012169] via-[#009739] to-[#006400] text-white pixel-bg-grid">
+    <div className="min-h-screen text-white">
       {/* Header */}
       <div className="bg-black bg-opacity-50 border-b-4 border-yellow-400 py-6">
         <div className="max-w-4xl mx-auto px-4">

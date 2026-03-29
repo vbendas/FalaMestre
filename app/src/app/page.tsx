@@ -1,46 +1,63 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useGameState } from '@/hooks/useGameState';
 import {
   Header,
   ViewTabs,
-  ChatView,
+  DashboardView,
   SquadView,
   MatchView,
   LoadingScreen,
-  Footer,
   MatchResultModal,
 } from '@/components/game';
+import { TransferMarketView } from '@/components/game/TransferMarketView';
+import { StandingsView } from '@/components/game/StandingsView';
+import { StadiumView } from '@/components/game/StadiumView';
+import { FacilitiesView } from '@/components/game/FacilitiesView';
+import { YouthAcademyView } from '@/components/game/YouthAcademyView';
+import { StaffView } from '@/components/game/StaffView';
 import { LoginPromptModal } from '@/components/game/LoginPromptModal';
-import { getTeamData } from '@/lib/team-data';
+import { FloatingBottomNav } from '@/components/ui/FloatingBottomNav';
+import { FloatingWidgets } from '@/components/ui/FloatingWidgets';
+import { PredictionDetailModal } from '@/components/predictions/PredictionDetailModal';
+import { FanClubInvestmentCard } from '@/components/investment/FanClubInvestmentCard';
+import { ApostasView } from '@/components/game/ApostasView';
+import { InvestirView } from '@/components/game/InvestirView';
+import { formatMoney } from '@/lib/economy';
 import { motion } from 'framer-motion';
-import { Trophy } from 'lucide-react';
+import { Trophy, TrendingUp, Wallet } from 'lucide-react';
 
 export default function Home() {
   const router = useRouter();
   const {
     gameState,
-    messages,
-    input,
     isLoading,
     userId,
     view,
     setView,
-    setInput,
-    sendMessage,
     playMatch,
     playMatchAndGetResult,
-    scrollRef,
     lastMatchResult,
     showMatchModal,
     closeMatchModal,
     isNewUser,
     hasCheckedUser,
+    updateGameState,
   } = useGameState();
 
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [isVRMode, setIsVRMode] = useState(false);
+  const [showPredictionsModal, setShowPredictionsModal] = useState(false);
+  const [showInvestmentsModal, setShowInvestmentsModal] = useState(false);
+
+  const handleMoneyUpdate = useCallback((newBalance: number) => {
+    updateGameState(prev => ({
+      ...prev,
+      user: { ...prev.user, money: newBalance },
+    }));
+  }, [updateGameState]);
 
   // Redirect to onboarding if new user (only after checking)
   useEffect(() => {
@@ -54,9 +71,10 @@ export default function Home() {
       playMatch();
     } else if (action === 'view_squad') {
       setView('squad');
-      sendMessage(action);
-    } else {
-      sendMessage(action);
+    } else if (action === 'predictions') {
+      setShowPredictionsModal(true);
+    } else if (action === 'investments') {
+      setShowInvestmentsModal(true);
     }
   };
 
@@ -71,20 +89,12 @@ export default function Home() {
         body: JSON.stringify({ userId, playerId, focus }),
       });
 
-      if (response.ok) {
-        const result = await response.json();
-        // Show success message in chat
-        sendMessage(result.message || '✅ Treino concluído com sucesso!');
-      } else {
-        // Handle error case - show error to user
+      if (!response.ok) {
         const error = await response.json();
         console.error('[Training] API error:', error);
-        const errorMessage = error.details || error.error || 'Erro no treino';
-        sendMessage(`❌ ${errorMessage}`);
       }
     } catch (error) {
       console.error('[Training] Network error:', error);
-      sendMessage('❌ Erro de conexão. Tente novamente.');
     }
   };
 
@@ -94,24 +104,25 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#012169] via-[#009739] to-[#006400] text-white pixel-bg-grid">
-      <Header gameState={gameState} />
+    <div className="min-h-screen text-white">
+      {!isVRMode && <Header gameState={gameState} />}
+
+      {/* Floating Widgets (Dicas & Recompensa) */}
+      {!isVRMode && gameState && userId && (
+        <FloatingWidgets 
+          gameState={gameState} 
+          userId={userId} 
+          onMoneyUpdate={handleMoneyUpdate}
+        />
+      )}
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto p-4">
-        <ViewTabs view={view} onViewChange={setView} hasPendingMatch={!!gameState?.season.nextMatch} />
-
-        {/* Chat View */}
-        {view === 'chat' && (
-          <ChatView
-            messages={messages}
-            input={input}
-            isLoading={isLoading}
-            onSend={sendMessage}
-            onInputChange={setInput}
-            onActionClick={handleActionClick}
-            scrollRef={scrollRef}
-            teamName={gameState?.user.team}
+      <div className="max-w-4xl mx-auto p-4 pt-20 pb-24">
+        {/* Dashboard View */}
+        {view === 'dashboard' && gameState && (
+          <DashboardView
+            gameState={gameState}
+            onViewChange={setView}
           />
         )}
 
@@ -132,10 +143,72 @@ export default function Home() {
             isLoading={isLoading}
             onPlayMatch={playMatch}
             onPlayMatchWithResult={playMatchAndGetResult}
+            onVRModeChange={setIsVRMode}
           />
         )}
+
+        {/* Transfers View */}
+        {view === 'transfers' && gameState && userId && (
+          <TransferMarketView
+            gameState={gameState}
+            userId={userId}
+          />
+        )}
+
+        {/* Standings View */}
+        {view === 'standings' && gameState && (
+          <StandingsView gameState={gameState} />
+        )}
+
+        {/* Stadium View */}
+        {view === 'stadium' && gameState && (
+          <StadiumView gameState={gameState} onViewChange={setView} />
+        )}
+
+        {/* Facilities View */}
+        {view === 'facilities' && gameState && (
+          <FacilitiesView gameState={gameState} onViewChange={setView} />
+        )}
+
+        {/* Youth Academy View */}
+        {view === 'youth' && gameState && userId && (
+          <YouthAcademyView
+            gameState={gameState}
+            userId={userId}
+            onViewChange={setView}
+          />
+        )}
+
+        {/* Apostas View */}
+        {view === 'apostas' && gameState && userId && (
+          <ApostasView
+            gameState={gameState}
+            userId={userId}
+            onViewChange={(v) => setView(v as any)}
+          />
+        )}
+
+        {/* Investir View */}
+        {view === 'investir' && gameState && userId && (
+          <InvestirView
+            gameState={gameState}
+            userId={userId}
+            onViewChange={(v) => setView(v as any)}
+            onMoneyUpdate={handleMoneyUpdate}
+          />
+        )}
+
+        {/* Staff View */}
+        {view === 'staff' && gameState && userId && (
+          <StaffView
+            gameState={gameState}
+            userId={userId}
+            onViewChange={setView}
+          />
+        )}
+
         {/* Show loading when gameState is missing */}
-        {view === 'match' && !gameState && (
+        {!gameState && (
           <div className="flex flex-col items-center justify-center py-20 space-y-4">
             <motion.div
               animate={{ rotate: 360 }}
@@ -151,8 +224,13 @@ export default function Home() {
         )}
       </div>
 
-      {/* Footer */}
-      <Footer teamColor={gameState ? getTeamData(gameState.user.team)?.primaryColor : undefined} />
+      {/* Floating Bottom Navigation */}
+      {!isVRMode && gameState && (
+        <FloatingBottomNav
+          currentView={view}
+          onViewChange={setView}
+        />
+      )}
 
       {/* Match Result Modal */}
       {gameState && (

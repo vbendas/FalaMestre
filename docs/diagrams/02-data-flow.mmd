@@ -1,0 +1,71 @@
+%%{init: {'theme': 'base', 'themeVariables': {'fontSize': '13px'}}}%%
+flowchart LR
+    subgraph input["USER ACTIONS"]
+        direction TB
+        MSG["User Message<br/>'quero jogar a partida'"]
+        CLICK["Button Click<br/>play_match, tactics..."]
+    end
+
+    subgraph process["PROCESSING PIPELINE"]
+        direction TB
+        CLASSIFY["Intent Classification<br/>ai-service.ts<br/>rule-based + LLM"]
+        LOG[("PostgreSQL<br/>analytics_events")]
+        EMBED_MSG["Text Embedding<br/>OpenAI text-embedding-3-small<br/>256-dimensional vector"]
+        STORE_VEC[("pgvector<br/>message_embeddings")]
+        AGG["Feature Aggregation<br/>behavioral-features.ts<br/>cron: daily"]
+        CLUSTER["Cluster Assignment<br/>cluster-engine.ts<br/>6 behavioral clusters"]
+        PERSONA["Personality Profiling<br/>Big Five traits<br/>from conversation patterns"]
+        LEAD["Lead Scoring<br/>HOT / WARM / COLD"]
+    end
+
+    subgraph segments["SEGMENTATION"]
+        direction TB
+        SEG_TOKEN["token_ready_extroverts"]
+        SEG_POWER["power_user_hot_lead"]
+        SEG_RISK["at_risk_high_value"]
+        SEG_SOCIAL["social_amplifiers"]
+        SEG_WHALE["whale_potential"]
+    end
+
+    subgraph platforms["AD PLATFORMS"]
+        direction TB
+        FB["Facebook<br/>Custom Audiences"]
+        GOOG["Google Ads<br/>Customer Match"]
+        TIKTOK["TikTok<br/>Lookalike"]
+        BRAZE["Braze<br/>Push + Email"]
+    end
+
+    MSG --> CLASSIFY
+    CLICK --> CLASSIFY
+    CLASSIFY -->|"intent signal"| LOG
+    CLASSIFY -->|"text"| EMBED_MSG
+    EMBED_MSG -->|"256-dim vector"| STORE_VEC
+    LOG -->|"raw events"| AGG
+    AGG -->|"behavioral features"| CLUSTER
+    AGG -->|"message history"| PERSONA
+    CLUSTER -->|"cluster + confidence"| LEAD
+    PERSONA -->|"traits"| LEAD
+    LEAD --> SEG_TOKEN
+    LEAD --> SEG_POWER
+    LEAD --> SEG_RISK
+    LEAD --> SEG_SOCIAL
+    LEAD --> SEG_WHALE
+    SEG_TOKEN -->|"sync daily"| FB
+    SEG_TOKEN --> GOOG
+    SEG_POWER --> FB
+    SEG_POWER --> GOOG
+    SEG_RISK --> BRAZE
+    SEG_SOCIAL --> TIKTOK
+    SEG_SOCIAL --> BRAZE
+    SEG_WHALE --> FB
+    SEG_WHALE --> GOOG
+
+    classDef input fill:#4ade80,stroke:#166534,color:#000
+    classDef process fill:#60a5fa,stroke:#1e40af,color:#000
+    classDef segment fill:#a78bfa,stroke:#5b21b6,color:#000
+    classDef platform fill:#ef4444,stroke:#991b1b,color:#fff
+
+    class MSG,CLICK input
+    class CLASSIFY,LOG,EMBED_MSG,STORE_VEC,AGG,CLUSTER,PERSONA,LEAD process
+    class SEG_TOKEN,SEG_POWER,SEG_RISK,SEG_SOCIAL,SEG_WHALE segment
+    class FB,GOOG,TIKTOK,BRAZE platform

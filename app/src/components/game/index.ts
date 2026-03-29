@@ -1,9 +1,11 @@
 export { Header } from './Header';
 export { ViewTabs } from './ViewTabs';
-export { ChatView } from './ChatView';
+export { DashboardView } from './DashboardView';
 export { SquadView } from './SquadView';
 export { MatchView } from './MatchView';
 export { LoadingScreen } from './LoadingScreen';
 export { Footer } from './Footer';
 export { MatchResultModal } from './MatchResultModal';
 export { MatchSimulation } from './MatchSimulation';
+export { TransferMarketView } from './TransferMarketView';
+export { StandingsView } from './StandingsView';

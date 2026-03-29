@@ -14,7 +14,7 @@ export function Header({ gameState }: HeaderProps) {
   const hasPendingMatch = gameState?.season.nextMatch !== undefined;
 
   return (
-    <div className="relative">
+    <div className="fixed top-0 left-0 right-0 z-50">
       {/* Main header */}
       <div 
         className="bg-[#012169]/90 backdrop-blur-md border-b-4 border-[#FEDD00] p-4 pixel-border-thin"
@@ -43,8 +43,24 @@ export function Header({ gameState }: HeaderProps) {
             
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold text-[#FEDD00] pixel-text">
-                  Fala Mestre!
+                <h1 className="text-2xl font-bold text-[#FEDD00] pixel-text relative">
+                  <span
+                    className="absolute inset-0"
+                    style={{ color: 'rgba(255, 50, 50, 0.5)', transform: 'translate(-1.5px, 0.5px)' }}
+                    aria-hidden="true"
+                  >
+                    Fala Mestre!
+                  </span>
+                  <span
+                    className="absolute inset-0"
+                    style={{ color: 'rgba(50, 100, 255, 0.4)', transform: 'translate(1.5px, -0.5px)' }}
+                    aria-hidden="true"
+                  >
+                    Fala Mestre!
+                  </span>
+                  <span className="relative" style={{ textShadow: '2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 0 0 20px rgba(254, 221, 0, 0.3)' }}>
+                    Fala Mestre!
+                  </span>
                 </h1>
                 {/* Notification dot for pending match */}
                 {hasPendingMatch && (
@@ -78,24 +94,26 @@ export function Header({ gameState }: HeaderProps) {
             <div className="text-right">
               <AnimatePresence mode="wait">
                 <motion.div
-                  key={gameState.user.sociosPoints}
+                  key={gameState.user.money || 0}
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 10 }}
                   className="text-2xl font-bold text-[#FFD700] pixel-text"
                 >
-                  {gameState.user.sociosPoints.toLocaleString()}
+                  $ {(gameState.user.money || 0).toLocaleString()}
                 </motion.div>
               </AnimatePresence>
               <div className="text-xs text-[#FEDD00]/70 font-[family-name:var(--font-pixel)] uppercase tracking-wider">
-                Socios Points
+                Conta Corrente
               </div>
             </div>
           )}
         </div>
       </div>
       
-      {/* Gradient accent line */}
+      {/* Green accent line (flag tricolor) */}
+      <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-[#009739] to-transparent opacity-60" />
+      {/* Team gradient accent line */}
       {teamData && (
         <motion.div
           className="h-0.5 w-full"

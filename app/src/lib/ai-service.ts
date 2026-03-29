@@ -219,7 +219,7 @@ export async function callAI(
         fallbackMessage = `📋 Aqui está seu elenco do ${gameState.user.team}. Temos ${gameState.squad.players.length} jogadores disponíveis. Quer fazer alguma alteração?`;
         break;
       case 'transfer_market':
-        fallbackMessage = `💰 O mercado de transferências está movimentado! Você tem ${gameState.user.sociosPoints} pontos para investir. Quer ver algumas opções?`;
+        fallbackMessage = `💰 O mercado de transferências está movimentado! Você tem R$ ${gameState.user.money.toLocaleString()} para investir. Quer ver algumas opções?`;
         break;
       default:
         fallbackMessage = `⚽ Olá, Mestre! Estou aqui para ajudar o ${gameState.user.team}. O que você precisa?`;
@@ -271,10 +271,10 @@ export async function callAIMock(
       `👥 Status do ${gameState.user.team}:\n${gameState.squad.players.slice(0, 5).map(p => `• ${p.name} (${p.position}) - Overall ${Math.round((p.pac + p.sho + p.pas + p.dri + p.def + p.phy) / 6)}`).join('\n')}\n\nMoral atual: ${gameState.squad.morale}%. Precisa de reforços?`,
       `⚡ Análise do elenco:\nForça média: ${avgRating}/99\n${starPlayer} é nosso destaque absoluto. O time está ${gameState.squad.morale > 70 ? 'confiante' : 'precisando de um gás'}. Quer ver opções de mercado?`,
     ],
-    transfer_market: [
-      `💰 Mercado de transferências movimentado! Você tem ${gameState.user.sociosPoints} pontos disponíveis para investir. Estamos monitorando algumas oportunidades interessantes. Quer ver quem está disponível?`,
-      `🛒 Bolsa aquecida! Com ${gameState.user.sociosPoints} pontos, podemos buscar reforços de qualidade. Alguns jogadores estão de olho no ${gameState.user.team}. Quer fazer uma proposta?`,
-      `📈 Hora de reforçar o elenco! Seu orçamento: ${gameState.user.sociosPoints} pontos. O mercado está ${avgRating < 75 ? 'cheio de promessas' : 'com poucas opções top'}. Vamos negociar?`,
+transfer_market: [
+      `💰 Mercado de transferências movimentado! Você tem R$ ${gameState.user.money.toLocaleString()} disponíveis para investir. Estamos monitorando algumas oportunidades interessantes. Quer ver quem está disponível?`,
+      `🛑 Bolsa aquecida! Com R$ ${gameState.user.money.toLocaleString()}, podemos buscar reforços de qualidade. Alguns jogadores estão de olho no ${gameState.user.team}. Quer fazer uma proposta?`,
+      `📈 Hora de reforçar o elenco! Seu orçamento: R$ ${gameState.user.money.toLocaleString()}. O mercado está ${avgRating < 75 ? 'cheio de promessas' : 'com poucas opções top'}. Vamos negociar?`,
     ],
     tactics: [
       `📊 Táticas disponíveis para o ${gameState.user.team}:\n• 4-4-2 (Equilibrado)\n• 4-3-3 (Ofensivo)\n• 4-5-1 (Defensivo)\n• 3-5-2 (Controle)\n\nQual formação você prefere usar contra o ${gameState.season.nextMatch.opponent}?`,
@@ -302,13 +302,13 @@ export async function callAIMock(
       `🛡️ Postura defensiva definida. Vamos fortalecer a marcação e explorar os contra-ataques. Às vezes, a melhor defesa é o ataque... contido!`,
     ],
     spending_conservative: [
-      `💡 Modo econômico ativado. Com ${gameState.user.sociosPoints} pontos, vamos buscar negócios inteligentes. Jogadores jovens e promessas são nosso foco!`,
+      `💡 Modo econômico ativado. Com R$ ${gameState.user.money.toLocaleString()}, vamos buscar negócios inteligentees. Jogadores jovens e promessas são nosso foco!`,
     ],
     spending_aggressive: [
-      `💸 Modo investidor ligado! Vamos buscar estrelas para o ${gameState.user.team}. Com ${gameState.user.sociosPoints} pontos, podemos montar um time de peso. Quem você quer contratar?`,
+      `💸 Modo investidor ligado! Vamos buscar estrelas para o ${gameState.user.team}. Com R$ ${gameState.user.money.toLocaleString()}, podemos montar um time de peso. Quem você quer contratar?`,
     ],
     general_chat: [
-      `🤔 Entendido! Estou aqui para ajudar o ${gameState.user.team} a conquistar a glória. Temos ${gameState.season.points} pontos e ${gameState.user.sociosPoints} pontos Socios. O que você precisa?`,
+      `🤔 Entendido! Estou aqui para ajudar o ${gameState.user.team} a conquistar a glória. Temos ${gameState.season.points} pontos na tabela e R$ ${gameState.user.money.toLocaleString()} na conta. O que você precisa?`,
       `⚽ Pode contar comigo, Mestre! O ${gameState.user.team} está na ${gameState.season.position}ª posição. Como posso ajudar você hoje?`,
       `👔 Às suas ordens! O time está ${gameState.squad.morale > 70 ? 'motivado' : 'precisando de um empurrão'}. Temos um jogo importante contra o ${gameState.season.nextMatch.opponent}. O que fazer?`,
     ],

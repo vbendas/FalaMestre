@@ -1,0 +1,145 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [active]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e6]:
+          - navigation [ref=e7]:
+            - button "previous" [disabled] [ref=e8]:
+              - img "previous" [ref=e9]
+            - generic [ref=e11]:
+              - generic [ref=e12]: 1/
+              - text: "1"
+            - button "next" [disabled] [ref=e13]:
+              - img "next" [ref=e14]
+          - img
+        - generic [ref=e16]:
+          - generic [ref=e17]:
+            - img [ref=e18]
+            - generic "Latest available version is detected (16.1.6)." [ref=e20]: Next.js 16.1.6
+            - generic [ref=e21]: Turbopack
+          - img
+      - dialog "Runtime ReferenceError" [ref=e23]:
+        - generic [ref=e26]:
+          - generic [ref=e27]:
+            - generic [ref=e28]:
+              - generic [ref=e30]: Runtime ReferenceError
+              - generic [ref=e31]:
+                - button "Copy Error Info" [ref=e32] [cursor=pointer]:
+                  - img [ref=e33]
+                - button "No related documentation found" [disabled] [ref=e35]:
+                  - img [ref=e36]
+                - button "Attach Node.js inspector" [ref=e38] [cursor=pointer]:
+                  - img [ref=e39]
+            - generic [ref=e48]: Cannot access 'currentActiveEvent' before initialization
+          - generic [ref=e50]:
+            - paragraph [ref=e52]:
+              - text: Call Stack
+              - generic [ref=e53]: "15"
+            - generic [ref=e54]:
+              - generic [ref=e55]:
+                - text: VRMatchView
+                - button "Sourcemapping failed. Click to log cause of error." [ref=e56] [cursor=pointer]:
+                  - img [ref=e57]
+              - text: file:///Users/victorbendas/Documents/GitHub/FalaMestre!/app/.next/dev/static/chunks/src_components_vr_e66abc99._.js (2558:208)
+            - generic [ref=e59]:
+              - generic [ref=e60]:
+                - text: Object.react_stack_bottom_frame
+                - button "Sourcemapping failed. Click to log cause of error." [ref=e61] [cursor=pointer]:
+                  - img [ref=e62]
+              - text: file:///Users/victorbendas/Documents/GitHub/FalaMestre!/app/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (14826:24)
+            - generic [ref=e64]:
+              - generic [ref=e65]:
+                - text: renderWithHooks
+                - button "Sourcemapping failed. Click to log cause of error." [ref=e66] [cursor=pointer]:
+                  - img [ref=e67]
+              - text: file:///Users/victorbendas/Documents/GitHub/FalaMestre!/app/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (4651:24)
+            - generic [ref=e69]:
+              - generic [ref=e70]:
+                - text: updateFunctionComponent
+                - button "Sourcemapping failed. Click to log cause of error." [ref=e71] [cursor=pointer]:
+                  - img [ref=e72]
+              - text: file:///Users/victorbendas/Documents/GitHub/FalaMestre!/app/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (6112:21)
+            - generic [ref=e74]:
+              - generic [ref=e75]:
+                - text: beginWork
+                - button "Sourcemapping failed. Click to log cause of error." [ref=e76] [cursor=pointer]:
+                  - img [ref=e77]
+              - text: file:///Users/victorbendas/Documents/GitHub/FalaMestre!/app/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (6687:639)
+            - generic [ref=e79]:
+              - generic [ref=e80]:
+                - text: runWithFiberInDEV
+                - button "Sourcemapping failed. Click to log cause of error." [ref=e81] [cursor=pointer]:
+                  - img [ref=e82]
+              - text: file:///Users/victorbendas/Documents/GitHub/FalaMestre!/app/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (965:74)
+            - generic [ref=e84]:
+              - generic [ref=e85]:
+                - text: performUnitOfWork
+                - button "Sourcemapping failed. Click to log cause of error." [ref=e86] [cursor=pointer]:
+                  - img [ref=e87]
+              - text: file:///Users/victorbendas/Documents/GitHub/FalaMestre!/app/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (9562:97)
+            - generic [ref=e89]:
+              - generic [ref=e90]:
+                - text: workLoopSync
+                - button "Sourcemapping failed. Click to log cause of error." [ref=e91] [cursor=pointer]:
+                  - img [ref=e92]
+              - text: file:///Users/victorbendas/Documents/GitHub/FalaMestre!/app/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (9456:40)
+            - generic [ref=e94]:
+              - generic [ref=e95]:
+                - text: renderRootSync
+                - button "Sourcemapping failed. Click to log cause of error." [ref=e96] [cursor=pointer]:
+                  - img [ref=e97]
+              - text: file:///Users/victorbendas/Documents/GitHub/FalaMestre!/app/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (9440:13)
+            - generic [ref=e99]:
+              - generic [ref=e100]:
+                - text: performWorkOnRoot
+                - button "Sourcemapping failed. Click to log cause of error." [ref=e101] [cursor=pointer]:
+                  - img [ref=e102]
+              - text: file:///Users/victorbendas/Documents/GitHub/FalaMestre!/app/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (9105:47)
+            - generic [ref=e104]:
+              - generic [ref=e105]:
+                - text: performWorkOnRootViaSchedulerTask
+                - button "Sourcemapping failed. Click to log cause of error." [ref=e106] [cursor=pointer]:
+                  - img [ref=e107]
+              - text: file:///Users/victorbendas/Documents/GitHub/FalaMestre!/app/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (10230:9)
+            - generic [ref=e109]:
+              - generic [ref=e110]:
+                - text: MessagePort.performWorkUntilDeadline
+                - button "Sourcemapping failed. Click to log cause of error." [ref=e111] [cursor=pointer]:
+                  - img [ref=e112]
+              - text: file:///Users/victorbendas/Documents/GitHub/FalaMestre!/app/.next/dev/static/chunks/node_modules_next_dist_compiled_a0e4c7b4._.js (2647:64)
+            - generic [ref=e114]:
+              - generic [ref=e115]:
+                - text: LoadableComponent
+                - button "Sourcemapping failed. Click to log cause of error." [ref=e116] [cursor=pointer]:
+                  - img [ref=e117]
+              - text: file:///Users/victorbendas/Documents/GitHub/FalaMestre!/app/.next/dev/static/chunks/_f477c641._.js (405:57)
+            - generic [ref=e119]:
+              - generic [ref=e120]:
+                - text: TestVRPage
+                - button "Sourcemapping failed. Click to log cause of error." [ref=e121] [cursor=pointer]:
+                  - img [ref=e122]
+              - text: file:///Users/victorbendas/Documents/GitHub/FalaMestre!/app/.next/dev/static/chunks/_f477c641._.js (201:221)
+            - generic [ref=e124]:
+              - generic [ref=e125]:
+                - text: ClientPageRoot
+                - button "Sourcemapping failed. Click to log cause of error." [ref=e126] [cursor=pointer]:
+                  - img [ref=e127]
+              - text: file:///Users/victorbendas/Documents/GitHub/FalaMestre!/app/.next/dev/static/chunks/node_modules_next_dist_be32b49c._.js (2403:50)
+        - generic [ref=e129]: "1"
+        - generic [ref=e130]: "2"
+    - generic [ref=e135] [cursor=pointer]:
+      - button "Open Next.js Dev Tools" [ref=e136]:
+        - img [ref=e137]
+      - generic [ref=e140]:
+        - button "Open issues overlay" [ref=e141]:
+          - generic [ref=e142]:
+            - generic [ref=e143]: "0"
+            - generic [ref=e144]: "1"
+          - generic [ref=e145]: Issue
+        - button "Collapse issues badge" [ref=e146]:
+          - img [ref=e147]
+  - 'heading "Application error: a client-side exception has occurred while loading localhost (see the browser console for more information)." [level=2] [ref=e151]'
+```

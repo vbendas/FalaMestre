@@ -1,0 +1,70 @@
+%%{init: {'theme': 'base', 'themeVariables': {'fontSize': '14px'}}}%%
+flowchart TD
+    subgraph surface["SURFACE — What the user sees"]
+        direction LR
+        CHAT["Chat Interface<br/>Natural language commands"]
+        MATCH["Match Narration<br/>AI-generated commentary"]
+        SQUAD["Squad Management<br/>Formation, training"]
+        VOTE["Kit Voting<br/>Governance simulation"]
+    end
+
+    subgraph engine["GAME ENGINE — How decisions are made"]
+        direction LR
+        LLM["LLM Service<br/>OpenRouter + Gemini Flash"]
+        SIM["Match Simulator<br/>Poisson distribution, tactical counters"]
+        TRANSFER["Transfer Market<br/>AI negotiation engine"]
+        POINTS["Points Economy<br/>Socios Points → Fan Token Voucher"]
+    end
+
+    subgraph data["DATA PLATFORM — The real product (invisible)"]
+        direction LR
+        INTENT["Intent Detection<br/>Rule-based + LLM classification"]
+        EMBED["Embedding Engine<br/>text-embedding-3-small, 256-dim"]
+        CLUSTER["Behavioral Clustering<br/>K-means, 6 clusters"]
+        PERSONA["Personality Profiling<br/>Big Five from conversation"]
+        SCORE["Lead Scoring<br/>HOT / WARM / COLD classification"]
+    end
+
+    subgraph activate["AUDIENCE ACTIVATION — Revenue engine"]
+        direction LR
+        SEGMENTS["7 Audience Segments<br/>token_ready, whale_potential,<br/>at_risk_high_value..."]
+        SYNC["Sync Router<br/>Daily cron job"]
+    end
+
+    subgraph ads["AD PLATFORMS — Real money"]
+        direction LR
+        FB["Facebook<br/>Custom Audiences"]
+        GOOG["Google Ads<br/>Customer Match"]
+        TIKTOK["TikTok<br/>Lookalike Audiences"]
+        BRAZE["Braze<br/>CDP messaging"]
+    end
+
+    CHAT -->|"plays"| LLM
+    MATCH -->|"simulates"| SIM
+    VOTE -->|"teaches governance"| POINTS
+    LLM -->|"classifies intent"| INTENT
+    SIM -->|"logs events"| INTENT
+    POINTS -->|"tracks behavior"| INTENT
+    INTENT -->|"text"| EMBED
+    EMBED -->|"vectors"| CLUSTER
+    INTENT -->|"signals"| PERSONA
+    CLUSTER -->|"segments"| SCORE
+    PERSONA -->|"traits"| SCORE
+    SCORE -->|"qualified users"| SEGMENTS
+    SEGMENTS -->|"sync"| SYNC
+    SYNC --> FB
+    SYNC --> GOOG
+    SYNC --> TIKTOK
+    SYNC --> BRAZE
+
+    classDef visible fill:#4ade80,stroke:#166534,color:#000,font-weight:bold
+    classDef engine fill:#60a5fa,stroke:#1e40af,color:#000,font-weight:bold
+    classDef data fill:#a78bfa,stroke:#5b21b6,color:#000,font-weight:bold
+    classDef activate fill:#f59e0b,stroke:#92400e,color:#000,font-weight:bold
+    classDef ads fill:#ef4444,stroke:#991b1b,color:#fff,font-weight:bold
+
+    class CHAT,MATCH,SQUAD,VOTE visible
+    class LLM,SIM,TRANSFER,POINTS engine
+    class INTENT,EMBED,CLUSTER,PERSONA,SCORE data
+    class SEGMENTS,SYNC activate
+    class FB,GOOG,TIKTOK,BRAZE ads

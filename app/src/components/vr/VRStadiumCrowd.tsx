@@ -109,12 +109,14 @@ function StadiumTier({ position, y, width, depth, isHorizontal, maxPeople, teamC
 interface StadiumStandProps {
   side: 'left' | 'right' | 'top' | 'bottom';
   peoplePerTier: number;
+  homeColors: string[];
+  awayColors: string[];
 }
 
-function StadiumStand({ side, peoplePerTier }: StadiumStandProps) {
+function StadiumStand({ side, peoplePerTier, homeColors, awayColors }: StadiumStandProps) {
   const tiers = useMemo(() => {
     const result: JSX.Element[] = [];
-    const teamColors = side === 'left' || side === 'bottom' ? CROWD_COLORS.home : CROWD_COLORS.away;
+    const teamColors = side === 'left' || side === 'bottom' ? homeColors : awayColors;
     
     switch (side) {
       case 'left':
@@ -229,10 +231,17 @@ function StadiumStand({ side, peoplePerTier }: StadiumStandProps) {
 }
 
 export function VRStadiumCrowd({ homeColor = '#DC2626', awayColor = '#2563EB' }: { homeColor?: string; awayColor?: string }) {
-  CROWD_COLORS.home[0] = homeColor;
-  CROWD_COLORS.away[0] = awayColor;
-
   const [isClient, setIsClient] = useState(false);
+  
+  const homeColors = useMemo(() => [
+    homeColor,
+    ...CROWD_COLORS.home.slice(1)
+  ], [homeColor]);
+  
+  const awayColors = useMemo(() => [
+    awayColor,
+    ...CROWD_COLORS.away.slice(1)
+  ], [awayColor]);
   
   useEffect(() => {
     setIsClient(true);
@@ -242,15 +251,15 @@ export function VRStadiumCrowd({ homeColor = '#DC2626', awayColor = '#2563EB' }:
     return null;
   }
 
-  // 600 total people / 4 stands / 2 tiers = 75 people per section
-  const peoplePerTier = 75;
+  // 240 total people / 4 stands / 2 tiers = 30 people per section
+  const peoplePerTier = 30;
 
   return (
     <a-entity id="stadium-crowd">
-      <StadiumStand side="left" peoplePerTier={peoplePerTier} />
-      <StadiumStand side="right" peoplePerTier={peoplePerTier} />
-      <StadiumStand side="top" peoplePerTier={peoplePerTier} />
-      <StadiumStand side="bottom" peoplePerTier={peoplePerTier} />
+      <StadiumStand side="left" peoplePerTier={peoplePerTier} homeColors={homeColors} awayColors={awayColors} />
+      <StadiumStand side="right" peoplePerTier={peoplePerTier} homeColors={homeColors} awayColors={awayColors} />
+      <StadiumStand side="top" peoplePerTier={peoplePerTier} homeColors={homeColors} awayColors={awayColors} />
+      <StadiumStand side="bottom" peoplePerTier={peoplePerTier} homeColors={homeColors} awayColors={awayColors} />
     </a-entity>
   );
 }

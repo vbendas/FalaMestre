@@ -1,7 +1,12 @@
 'use client';
 
-import { VRMatchView } from '@/components/vr/VRMatchView';
-import { MatchEvent } from '@/components/vr/formations';
+import dynamic from 'next/dynamic';
+import { MatchEvent } from '@/lib/types';
+
+const ThreeMatchView = dynamic(
+  () => import('@/components/vr/ThreeMatchView').then(mod => ({ default: mod.default })),
+  { ssr: false }
+);
 
 const mockHomeTeam = {
   name: 'Flamengo',
@@ -49,6 +54,9 @@ const mockEvents: MatchEvent[] = [
     team: 'home',
     description: 'Match starting',
     commentary: 'O jogo começou!',
+    intensity: 'medium',
+    highlight: false,
+    momentum: 0,
   },
   {
     id: '2',
@@ -57,21 +65,27 @@ const mockEvents: MatchEvent[] = [
     team: 'home',
     description: 'Home team attacking',
     commentary: 'Bruno Santos domina a bola no meio-campo',
+    intensity: 'high',
+    highlight: false,
+    momentum: 10,
   },
   {
     id: '3',
     minute: 10,
-    type: 'shot',
+    type: 'goal',
     team: 'home',
-    description: 'Shot on goal',
-    commentary: 'Chuta pelo meio!',
+    description: 'Goal',
+    commentary: 'Goooooooool!',
+    intensity: 'dramatic',
+    highlight: true,
+    momentum: 50,
   },
 ];
 
 export default function TestVRPage() {
   return (
     <div className="w-screen h-screen">
-      <VRMatchView
+      <ThreeMatchView
         homeTeam={mockHomeTeam}
         awayTeam={mockAwayTeam}
         currentMinute={15}

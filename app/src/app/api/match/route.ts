@@ -9,6 +9,8 @@ import { matchRequestSchema } from '@/lib/validations';
 import { ZodError } from 'zod';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { getAuthenticatedUser, requireAuth } from '@/lib/auth-helpers';
+import { generateMatchScript, generateEnhancedMatchScript } from '@/lib/matchScriptGenerator';
+import { calculateMatchEarnings, calculateWeeklyStaffWages } from '@/lib/economy';
 
 type GameStateRecordShape = {
   currentState: GameState;
@@ -169,7 +171,29 @@ export async function POST(request: NextRequest) {
 
     // Update game state
     const pointsEarned = result.winner === gameState.user.team ? 3 : result.winner === 'Empate' ? 1 : 0;
-    const pointsChange = result.winner === gameState.user.team ? 100 : result.winner === 'Empate' ? 50 : 20;
+    
+    // Determine match result for earnings
+    let matchResult: 'win' | 'draw' | 'loss' = 'loss';
+    if (result.winner === gameState.user.team) matchResult = 'win';
+    else if (result.winner === 'Empate') matchResult = 'draw';
+    
+    // Ensure stadium exists for old game states
+    if (!gameState.stadium) {
+      gameState.stadium = { level: 0, capacity: 0, amenities: 0, ticketPrice: 0, maintenanceLevel: 1 };
+    }
+    
+    // Ensure division exists for old game states
+    if (!gameState.season.division) {
+      gameState.season.division = 'Serie D';
+    }
+    
+    // Calculate money earned from match
+    const matchEarnings = calculateMatchEarnings(
+      gameState.season.division,
+      matchResult,
+      match.isHome,
+      gameState.stadium
+    );
 
     // Update win/draw/loss record
     if (result.winner === gameState.user.team) {
@@ -182,7 +206,33 @@ export async function POST(request: NextRequest) {
 
     gameState.season.week++;
     gameState.season.points += pointsEarned;
-    gameState.user.sociosPoints += pointsChange;
+    
+    // Update money instead of sociosPoints
+    gameState.user.money = (gameState.user.money || 0) + matchEarnings;
+    
+    // Ensure staff exists for old game states
+    if (!gameState.staff) {
+      gameState.staff = { headCoach: null, scout: null, medicalStaff: null };
+    }
+    
+    // Calculate and deduct weekly staff wages
+    const weeklyWages = calculateWeeklyStaffWages(gameState.staff);
+    if (weeklyWages > 0) {
+      gameState.user.money -= weeklyWages;
+      if (gameState.teamStats) {
+        gameState.teamStats.totalSpent += weeklyWages;
+      }
+    }
+    
+    // Ensure teamStats exists for old game states
+    if (!gameState.teamStats) {
+      gameState.teamStats = { totalEarnings: 0, totalSpent: 0, matchesPlayed: 0, championshipsWon: 0, promotionCount: 0 };
+    }
+    
+    // Update team stats
+    gameState.teamStats.totalEarnings += matchEarnings;
+    gameState.teamStats.matchesPlayed += 1;
+    
     gameState.squad.morale = Math.max(30, Math.min(100, gameState.squad.morale + (pointsEarned * 5 - 5)));
 
     // Calculate realistic league position based on points and other teams' performance
@@ -309,6 +359,76 @@ export async function POST(request: NextRequest) {
     const duration = Date.now() - startTime;
     console.log(`[Match] Request processed in ${duration}ms`);
 
+    const matchId = `${gameState.user.team}-${gameState.season.week}-${Date.now()}`;
+    
+    const homeTeamData = {
+      name: homeTeam,
+      formation: (gameState.squad.formation as string) || '4-3-3',
+      players: homeSquad.map((p: any, idx: number) => ({
+        id: p.id || `home-${idx}`,
+        name: p.name,
+        number: idx + 1,
+        position: p.position || 'MID',
+      })),
+      color: '#DC2626',
+    };
+    
+    const awayTeamData = {
+      name: awayTeam,
+      formation: '4-3-3' as const,
+      players: awaySquad.map((p: any, idx: number) => ({
+        id: p.id || `away-${idx}`,
+        name: p.name,
+        number: idx + 1,
+        position: p.position || 'MID',
+      })),
+      color: '#2563EB',
+    };
+    
+    // Create Squad objects for enhanced script generation
+    const homeSquadObj = {
+      players: homeSquad,
+      formation: (gameState.squad.formation as string) || '4-3-3',
+      morale: homeMorale,
+      fitness: 75,
+      weeklyTrainingBudget: 15,
+      currentWeek: gameState.season.week,
+    };
+
+    const awaySquadObj = {
+      players: awaySquad,
+      formation: '4-3-3',
+      morale: awayMorale,
+      fitness: 75,
+      weeklyTrainingBudget: 15,
+      currentWeek: gameState.season.week,
+    };
+
+    // Generate enhanced script with 5400 movement events (1 per game second)
+    const enhancedScript = generateEnhancedMatchScript(
+      matchId,
+      result.events,
+      { id: 'home', name: homeTeam, formation: homeSquadObj.formation },
+      { id: 'away', name: awayTeam, formation: awaySquadObj.formation },
+      homeSquadObj,
+      awaySquadObj,
+      { home: result.homeScore, away: result.awayScore }
+    );
+
+    // DEBUG: Log enhanced script generation
+    console.log('[API] Enhanced script generated:', {
+      matchId: enhancedScript.matchId,
+      movementsCount: enhancedScript.movements?.length || 0,
+      commentaryCount: enhancedScript.commentary?.length || 0,
+      finalScore: enhancedScript.finalScore,
+    });
+
+    // Generate match script with proper formation-based player positions
+    const matchScript = {
+      ...generateMatchScript(matchId, result.events, homeTeamData, awayTeamData),
+      _enhanced: enhancedScript,
+    };
+
     return NextResponse.json({
       result: {
         homeScore: result.homeScore,
@@ -316,8 +436,16 @@ export async function POST(request: NextRequest) {
         winner: result.winner,
         events: result.events,
       },
+      matchScript,
       pointsEarned,
-      pointsChange,
+      earnings: {
+        amount: matchEarnings,
+        breakdown: match.isHome && gameState.stadium.capacity > 0 
+          ? `Ingressos: R$${Math.floor(matchEarnings * 0.7).toLocaleString()} + Bônus: R$${Math.floor(matchEarnings * 0.3).toLocaleString()}`
+          : matchResult === 'win' ? 'Vitória' : matchResult === 'draw' ? 'Empate' : 'Derrota',
+        isHome: match.isHome,
+        hasStadium: gameState.stadium.capacity > 0,
+      },
       narration: aiResponse.content,
       nextMatch: gameState.season.nextMatch,
       updatedGameState: gameState,

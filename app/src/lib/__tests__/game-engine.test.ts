@@ -301,9 +301,9 @@ describe('Game Engine', () => {
       expect(gameState.user.id).toBe(userId);
     });
 
-    it('should start with zero socios points', () => {
+    it('should start with initial money', () => {
       const gameState = createInitialGameState('user_123456789', 'Leões do Norte');
-      expect(gameState.user.sociosPoints).toBe(0);
+      expect(gameState.user.money).toBe(100000);
     });
 
     it('should have correct initial position', () => {

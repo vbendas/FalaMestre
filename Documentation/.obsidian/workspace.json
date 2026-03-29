@@ -4,19 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "2353601b41a57b1a",
+        "id": "290055b7fbd91742",
         "type": "tabs",
         "children": [
           {
-            "id": "54d67043088e9dea",
+            "id": "c4c0325f98491e74",
             "type": "leaf",
             "state": {
-              "type": "release-notes",
+              "type": "markdown",
               "state": {
-                "currentVersion": "1.11.7"
+                "file": "01-Game-Design/00-Core-Concept.md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "lucide-book-up",
-              "title": "Release Notes 1.11.7"
+              "icon": "lucide-file",
+              "title": "00-Core-Concept"
             }
           }
         ]
@@ -181,7 +183,7 @@
       "bases:Create new base": false
     }
   },
-  "active": "54d67043088e9dea",
+  "active": "c4c0325f98491e74",
   "lastOpenFiles": [
     "04-Business/19-IP-Protection-Team-Naming-Strategy.md",
     "08-Evaluations/02-Quick-Wins-Plan.md",

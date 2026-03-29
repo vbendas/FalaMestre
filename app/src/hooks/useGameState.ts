@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Message, GameState, Match, MatchEvent } from '@/lib/types';
-import { generateUserId, generateMessageId } from '@/lib/utils';
+import { GameState, Match, MatchEvent, MatchScript } from '@/lib/types';
+import { generateUserId } from '@/lib/utils';
 
-export type ViewType = 'chat' | 'squad' | 'match';
+export type ViewType = 'dashboard' | 'squad' | 'match' | 'transfers' | 'standings' | 'stadium' | 'facilities' | 'youth' | 'staff' | 'apostas' | 'investir';
 
 interface MatchResult {
   homeScore: number;
@@ -20,6 +20,7 @@ interface MatchAPIResult {
     winner: string;
     events: MatchEvent[];
   };
+  matchScript?: MatchScript;
   pointsEarned: number;
   pointsChange: number;
   narration: string;
@@ -29,22 +30,18 @@ interface MatchAPIResult {
 
 interface UseGameStateReturn {
   gameState: GameState | null;
-  messages: Message[];
-  input: string;
-  isLoading: boolean;
   userId: string | null;
   isNewUser: boolean;
   hasCheckedUser: boolean;
   view: ViewType;
   setView: (view: ViewType) => void;
-  setInput: (input: string) => void;
-  sendMessage: (messageText?: string) => Promise<void>;
   playMatch: () => Promise<void>;
   playMatchAndGetResult: () => Promise<MatchAPIResult | null>;
-  scrollRef: React.RefObject<HTMLDivElement | null>;
   lastMatchResult: { result: MatchResult; pointsEarned: number; pointsChange: number } | null;
   showMatchModal: boolean;
   closeMatchModal: () => void;
+  isLoading: boolean;
+  updateGameState: (updater: (prev: GameState) => GameState) => void;
 }
 
 // Request timeout in milliseconds
@@ -75,30 +72,27 @@ async function fetchWithTimeout(
 }
 
 export function useGameState(): UseGameStateReturn {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [isNewUser, setIsNewUser] = useState(true);
   const [hasCheckedUser, setHasCheckedUser] = useState(false);
-  const [view, setView] = useState<ViewType>('chat');
+  const [view, setView] = useState<ViewType>('dashboard');
   const [lastMatchResult, setLastMatchResult] = useState<{ result: MatchResult; pointsEarned: number; pointsChange: number } | null>(null);
   const [showMatchModal, setShowMatchModal] = useState(false);
   const [cachedMatchResult, setCachedMatchResult] = useState<MatchAPIResult | null>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
   
   // Use refs to track mounted state and abort controllers
   const isMountedRef = useRef(true);
   const abortControllersRef = useRef<AbortController[]>([]);
   const isLoadingGameStateRef = useRef(false);
-  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const closeMatchModal = useCallback(() => {
     console.log('[DEBUG closeMatchModal] Closing modal...');
     setShowMatchModal(false);
     // Clear cached match result after modal is closed
     setCachedMatchResult(null);
+    setLastMatchResult(null);
   }, []);
 
   // Cleanup function for all resources
@@ -112,12 +106,6 @@ export function useGameState(): UseGameStateReturn {
       }
     });
     abortControllersRef.current = [];
-    
-    // Clear any pending timeouts
-    if (scrollTimeoutRef.current) {
-      clearTimeout(scrollTimeoutRef.current);
-      scrollTimeoutRef.current = null;
-    }
   }, []);
 
   // Handle component unmount
@@ -177,8 +165,41 @@ export function useGameState(): UseGameStateReturn {
         if (!mounted) return;
         
         if (data.exists) {
-          setGameState(data.gameState);
-          setMessages(data.conversationHistory || []);
+          // Migrate old gameState structure to new one
+          const gs = data.gameState as any;
+          
+          // Migrate sociosPoints to money
+          if (gs.user?.sociosPoints !== undefined && gs.user?.money === undefined) {
+            gs.user.money = gs.user.sociosPoints || 100000;
+            delete gs.user.sociosPoints;
+          }
+          
+          // Ensure money exists
+          if (gs.user?.money === undefined) {
+            gs.user.money = 100000;
+          }
+          
+          // Ensure new structures exist
+          if (!gs.stadium) {
+            gs.stadium = { level: 0, capacity: 0, amenities: 0, ticketPrice: 0, maintenanceLevel: 1 };
+          }
+          if (!gs.facilities) {
+            gs.facilities = { trainingCenter: 0, medicalCenter: 0, youthAcademy: 0, scoutOffice: 0 };
+          }
+          if (!gs.staff) {
+            gs.staff = { headCoach: null, scout: null, medicalStaff: null };
+          }
+          if (!gs.teamStats) {
+            gs.teamStats = { totalEarnings: 0, totalSpent: 0, matchesPlayed: 0, championshipsWon: 0, promotionCount: 0 };
+          }
+          if (!gs.youthAcademy) {
+            gs.youthAcademy = { nextIntakeWeek: 4, playersAvailable: [], trainingFocus: null, lastIntakeWeek: 0 };
+          }
+          if (!gs.season?.division) {
+            gs.season.division = 'Serie D';
+          }
+          
+          setGameState(gs);
           setIsNewUser(false);
           
           // Auto-migrate training fields if needed (run in background)
@@ -203,7 +224,6 @@ export function useGameState(): UseGameStateReturn {
                 const retryData = await retryResponse.json();
                 if (retryData.exists) {
                   setGameState(retryData.gameState);
-                  setMessages(retryData.conversationHistory || []);
                   setIsNewUser(false);
                 } else {
                   setIsNewUser(true);
@@ -245,81 +265,6 @@ export function useGameState(): UseGameStateReturn {
       mounted = false;
     };
   }, [userId]);
-
-  const sendMessage = useCallback(async (messageText?: string) => {
-    const message = messageText || input.trim();
-    if (!message || !userId) return;
-
-    setInput('');
-    setIsLoading(true);
-
-    // Add user message
-    const userMessage: Message = {
-      id: generateMessageId(),
-      role: 'user',
-      content: message,
-      timestamp: new Date(),
-    };
-    setMessages(prev => [...prev, userMessage]);
-
-    // Create abort controller for this request
-    const controller = new AbortController();
-    abortControllersRef.current.push(controller);
-
-    try {
-      const response = await fetchWithTimeout(
-        '/api/conversation',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, message }),
-          signal: controller.signal,
-        },
-        REQUEST_TIMEOUT
-      );
-
-      if (!isMountedRef.current) return;
-
-      const data = await response.json();
-      
-      if (!isMountedRef.current) return;
-
-      // Add AI response
-      const aiMessage: Message = {
-        id: generateMessageId(),
-        role: 'ai',
-        content: data.response,
-        timestamp: new Date(),
-        actions: data.actions,
-      };
-      setMessages(prev => [...prev, aiMessage]);
-      setGameState(data.gameState);
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        console.log('[useGameState] Send message aborted');
-        return;
-      }
-      console.error('[useGameState] Failed to send message:', error);
-      if (isMountedRef.current) {
-        const errorMessage: Message = {
-          id: generateMessageId(),
-          role: 'ai',
-          content: '❌ Desculpe, ocorreu um erro. Tente novamente.',
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, errorMessage]);
-      }
-    } finally {
-      if (isMountedRef.current) {
-        setIsLoading(false);
-      }
-      // Remove this controller from the list
-      const index = abortControllersRef.current.indexOf(controller);
-      if (index > -1) {
-        abortControllersRef.current.splice(index, 1);
-      }
-    }
-  }, [input, userId]);
 
   // Core function to play match and return result data
   const playMatchAndGetResult = useCallback(async (): Promise<MatchAPIResult | null> => {
@@ -382,16 +327,9 @@ export function useGameState(): UseGameStateReturn {
 
   // Wrapper that handles UI updates after match
   const playMatch = useCallback(async () => {
-    // Use cached result from simulation instead of making a new API call
-    let data = cachedMatchResult;
-    
-    console.log('[DEBUG playMatch] cachedMatchResult exists:', !!data);
-    
-    // If no cached result (called directly without simulation), fetch new result
-    if (!data) {
-      console.log('[DEBUG playMatch] No cache, calling API...');
-      data = await playMatchAndGetResult();
-    }
+    // Always fetch a new result when user explicitly clicks "Jogar"
+    // This ensures fresh match data instead of showing cached stats
+    let data = await playMatchAndGetResult();
     
     console.log('[DEBUG playMatch] Final data used:', data);
     console.log('[DEBUG playMatch] result.homeScore:', data?.result?.homeScore, 'result.awayScore:', data?.result?.awayScore);
@@ -408,59 +346,22 @@ export function useGameState(): UseGameStateReturn {
     });
     setShowMatchModal(true);
 
-    // Add match result as AI message
-    const matchMessage: Message = {
-      id: generateMessageId(),
-      role: 'ai',
-      content: `⚽ ${data.narration}\n\n📊 Resultado: ${data.result.homeScore}x${data.result.awayScore}\n🏆 ${data.result.winner}\n➕ +${data.pointsChange} Socios Points`,
-      timestamp: new Date(),
-    };
-    console.log('[DEBUG playMatch] Adding message with result:', data.result.homeScore, 'x', data.result.awayScore, 'winner:', data.result.winner);
-    setMessages(prev => [...prev, matchMessage]);
     setGameState(data.updatedGameState);
-    setView('chat');
   }, [playMatchAndGetResult, cachedMatchResult]);
-
-  // Auto-scroll to bottom when messages change (with debouncing)
-  useEffect(() => {
-    // Clear any existing scroll timeout
-    if (scrollTimeoutRef.current) {
-      clearTimeout(scrollTimeoutRef.current);
-    }
-
-    // Debounce scroll to prevent excessive updates
-    scrollTimeoutRef.current = setTimeout(() => {
-      if (scrollRef.current && isMountedRef.current) {
-        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-      }
-      scrollTimeoutRef.current = null;
-    }, 50); // 50ms debounce
-
-    return () => {
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-        scrollTimeoutRef.current = null;
-      }
-    };
-  }, [messages]);
 
    return {
     gameState,
-    messages,
-    input,
-    isLoading,
     userId,
     isNewUser,
     hasCheckedUser,
     view,
     setView,
-    setInput,
-    sendMessage,
     playMatch,
     playMatchAndGetResult,
-    scrollRef,
     lastMatchResult,
     showMatchModal,
     closeMatchModal,
+    isLoading,
+    updateGameState: (updater) => setGameState(prev => prev ? updater(prev) : prev),
   };
 }

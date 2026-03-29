@@ -1,59 +1,75 @@
 import { test, expect } from '@playwright/test';
 
-test('VR scene renders with mock data', async ({ page }) => {
-  const vrLogs: string[] = [];
-  const criticalErrors: string[] = [];
-  
-  page.on('console', msg => {
-    const text = msg.text();
-    if (text.includes('[VR]')) {
-      vrLogs.push(text);
-    }
-    
-    const isCriticalError = 
-      msg.type() === 'error' && 
-      !text.includes('WebGL') &&
-      !text.includes('THREE.WebGLRenderer') &&
-      !text.includes('Could not create a WebGL context') &&
-      !text.includes('Error creating WebGL context');
-    
-    if (isCriticalError) {
-      criticalErrors.push(text);
-    }
-  });
-  
-  page.on('pageerror', error => {
-    criticalErrors.push(error.message);
+test.describe('VR Mode', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('http://localhost:3001/test-vr');
+    await page.waitForTimeout(3000);
   });
 
-  await page.goto('http://localhost:3001/test-vr');
-  await page.waitForTimeout(5000);
-  
-  console.log('=== VR Scene Test Results ===');
-  
-  const sceneCount = await page.locator('a-scene').count();
-  console.log(`a-scene: ${sceneCount}`);
-  
-  const planes = await page.locator('a-plane').count();
-  console.log(`a-plane: ${planes}`);
-  
-  const spheres = await page.locator('a-sphere').count();
-  console.log(`a-sphere: ${spheres}`);
-  
-  const entities = await page.locator('a-entity').count();
-  console.log(`a-entity: ${entities}`);
-  
-  const isSceneVisible = await page.locator('a-scene').isVisible().catch(() => false);
-  console.log(`a-scene visible: ${isSceneVisible}`);
-  
-  console.log(`\nCritical errors: ${criticalErrors.length}`);
-  if (criticalErrors.length > 0) {
-    console.log('Errors:', criticalErrors.slice(0, 5));
-  }
-  
-  expect(sceneCount).toBe(1);
-  expect(planes).toBeGreaterThan(5);
-  expect(spheres).toBeGreaterThan(10);
-  expect(entities).toBeGreaterThan(20);
-  expect(isSceneVisible).toBe(true);
+  test('should render Three.js canvas', async ({ page }) => {
+    const canvas = page.locator('canvas');
+    await expect(canvas).toBeVisible({ timeout: 10000 });
+  });
+
+  test('should display HUD with score', async ({ page }) => {
+    await page.waitForTimeout(3000);
+    
+    const scoreBar = page.locator('.vr-score-bar, .bg-black\\/85');
+    await expect(scoreBar.first()).toBeVisible({ timeout: 10000 });
+  });
+
+  test('should display camera mode toggle button', async ({ page }) => {
+    await page.waitForTimeout(3000);
+    
+    const toggleButton = page.locator('button:has-text("Torcida"), button:has-text("Transmissão")');
+    await expect(toggleButton.first()).toBeVisible({ timeout: 10000 });
+  });
+
+  test('should toggle camera mode', async ({ page }) => {
+    await page.waitForTimeout(3000);
+    
+    const toggleButton = page.locator('button:has-text("Torcida"), button:has-text("Transmissão")');
+    const initialText = await toggleButton.first().textContent();
+    
+    await toggleButton.first().click();
+    await page.waitForTimeout(500);
+    
+    const newText = await toggleButton.first().textContent();
+    expect(newText).not.toBe(initialText);
+  });
+
+  test('should display exit VR button', async ({ page }) => {
+    await page.waitForTimeout(3000);
+    
+    const exitButton = page.locator('button:has-text("Sair VR")');
+    await expect(exitButton).toBeVisible({ timeout: 10000 });
+  });
+
+  test('should display tracking mode indicator', async ({ page }) => {
+    await page.waitForTimeout(3000);
+    
+    const trackingIndicator = page.locator('text=Modo VR Ativo');
+    await expect(trackingIndicator).toBeVisible({ timeout: 10000 });
+  });
+
+  test('should have no console errors', async ({ page }) => {
+    const errors: string[] = [];
+    
+    page.on('console', msg => {
+      if (msg.type() === 'error') {
+        errors.push(msg.text());
+      }
+    });
+    
+    await page.waitForTimeout(10000);
+    
+    const criticalErrors = errors.filter(e => 
+      !e.includes('404') && 
+      !e.includes('favicon') &&
+      !e.includes('net::ERR')
+    );
+    
+    console.log('Console errors:', criticalErrors);
+    expect(criticalErrors.length).toBe(0);
+  });
 });

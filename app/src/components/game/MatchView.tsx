@@ -3,15 +3,15 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { GameState, Match, MatchEvent } from '@/lib/types';
+import { GameState, Match, MatchEvent, MatchScript, Player } from '@/lib/types';
 import { NARRATION_SPEED_CONFIG } from '@/lib/constants';
 import { motion } from 'framer-motion';
 import { getTeamData } from '@/lib/team-data';
 import Image from 'next/image';
-import { Home, Plane, Trophy, Swords, Glasses } from 'lucide-react';
+import { Home, Plane, Trophy, Swords, Glasses, TrendingUp, Users, Zap, Target } from 'lucide-react';
 import { MatchSimulation } from './MatchSimulation';
 import { HighlightOverlay } from './HighlightOverlay';
-import { VRMatchView } from '@/components/vr';
+import { ThreeMatchView, VRTutorialModal, VRModeIndicator } from '@/components/vr';
 import { Formation } from '@/components/vr/formations';
 
 interface MatchViewProps {
@@ -25,12 +25,14 @@ interface MatchViewProps {
       winner: string;
       events: MatchEvent[];
     };
+    matchScript?: MatchScript;
     pointsEarned: number;
     pointsChange: number;
     narration: string;
     nextMatch: Match;
     updatedGameState: GameState;
   } | null>;
+  onVRModeChange?: (isActive: boolean) => void;
 }
 
 interface MatchResult {
@@ -46,45 +48,176 @@ function ComparisonBar({
   homeValue, 
   awayValue, 
   homeColor, 
-  awayColor 
+  awayColor,
+  showPercentage = false,
+  homeLabel,
+  awayLabel
 }: { 
   label: string; 
   homeValue: number; 
   awayValue: number;
   homeColor: string;
   awayColor: string;
+  showPercentage?: boolean;
+  homeLabel?: string;
+  awayLabel?: string;
 }) {
   const total = homeValue + awayValue;
   const homePercent = total > 0 ? (homeValue / total) * 100 : 50;
   
   return (
-    <div className="space-y-1">
+    <div className="space-y-2">
       <div className="flex justify-between text-xs text-white/60">
-        <span>{homeValue}</span>
-        <span className="font-medium">{label}</span>
-        <span>{awayValue}</span>
+        <span className="flex items-center gap-1">
+          {homeLabel && <span className="text-white/40">{homeLabel}</span>}
+          <span>{homeValue}</span>
+        </span>
+        <span className="font-medium text-white/80">{label}</span>
+        <span className="flex items-center gap-1">
+          <span>{awayValue}</span>
+          {awayLabel && <span className="text-white/40">{awayLabel}</span>}
+        </span>
       </div>
-      <div className="h-2 bg-white/10 rounded-full overflow-hidden flex">
+      <div className="h-3 bg-[#004d00] rounded-full overflow-hidden flex">
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${homePercent}%` }}
           transition={{ duration: 1, delay: 0.5 }}
-          className="h-full"
+          className="h-full relative"
           style={{ backgroundColor: homeColor }}
-        />
+        >
+          {showPercentage && homePercent > 20 && (
+            <span className="absolute right-1 top-1/2 -translate-y-1/2 text-[10px] font-bold text-white/80">
+              {Math.round(homePercent)}%
+            </span>
+          )}
+        </motion.div>
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${100 - homePercent}%` }}
           transition={{ duration: 1, delay: 0.5 }}
-          className="h-full"
+          className="h-full relative"
           style={{ backgroundColor: awayColor }}
-        />
+        >
+          {showPercentage && (100 - homePercent) > 20 && (
+            <span className="absolute left-1 top-1/2 -translate-y-1/2 text-[10px] font-bold text-white/80">
+              {Math.round(100 - homePercent)}%
+            </span>
+          )}
+        </motion.div>
       </div>
     </div>
   );
 }
 
-export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithResult }: MatchViewProps) {
+// Pre-match Preview Component
+function MatchPreview({ homeTeam, awayTeam, homeColor, awayColor }: {
+  homeTeam: string;
+  awayTeam: string;
+  homeColor: string;
+  awayColor: string;
+}) {
+  const narratives = [
+    `${homeTeam} entra confiante para este confronto contra ${awayTeam}. A torcida estáansiosa!`,
+    `O técnico prepara a equipe para um grande espetáculo. Será que vem vitória por aí?`,
+    `Ambos os times querem a vitória. Prepare-se para um grande jogo!`,
+  ];
+  const narrative = narratives[Math.floor(Math.random() * narratives.length)];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.2 }}
+      className="bg-[#006400] rounded-xl p-4 border-2 border-[#FEDD00]/50"
+    >
+      <div className="flex items-center gap-2 mb-2">
+        <Target className="w-4 h-4 text-[#FEDD00]" />
+        <span className="text-xs font-bold text-[#FEDD00] uppercase tracking-wider">Prévia da Partida</span>
+      </div>
+      <p className="text-white/80 text-sm leading-relaxed">
+        {narrative}
+      </p>
+    </motion.div>
+  );
+}
+
+// Key Players Component  
+function KeyPlayers({ players, teamName, color }: { players: Player[]; teamName: string; color: string }) {
+  if (players.length === 0) return null;
+  
+  return (
+    <div className="bg-[#006400] rounded-lg p-3 border-2 border-[#FEDD00]/50">
+      <div className="flex items-center gap-2 mb-2">
+        <Users className="w-4 h-4 text-white/60" />
+        <span className="text-xs text-white/60">Destaques - {teamName}</span>
+      </div>
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {players.slice(0, 3).map((player) => {
+          const overall = Math.round((player.pac + player.sho + player.pas + player.dri + player.def + player.phy) / 6);
+          return (
+            <div key={player.id} className="flex-shrink-0 flex items-center gap-2 bg-[#004d00] rounded-lg px-2 py-1.5">
+              <div 
+                className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
+                style={{ backgroundColor: color }}
+              >
+                {overall}
+              </div>
+              <span className="text-xs text-white/80 truncate max-w-[80px]">{player.name.split(' ').pop()}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// Win Probability Component
+function WinProbability({ homeRating, awayRating, homeColor, awayColor }: {
+  homeRating: number;
+  awayRating: number;
+  homeColor: string;
+  awayColor: string;
+}) {
+  const total = homeRating + awayRating;
+  const homeProb = Math.round((homeRating / total) * 100);
+  const drawProb = 100 - homeProb - Math.round(((awayRating - homeRating) / total) * 100);
+  const clampedDraw = Math.max(5, Math.min(40, drawProb));
+  const remaining = 100 - clampedDraw;
+  const homeWin = Math.round(remaining * 0.6);
+  const awayWin = 100 - clampedDraw - homeWin;
+
+  return (
+    <div className="bg-[#006400] rounded-lg p-3 border-2 border-[#FEDD00]/50">
+      <div className="flex items-center gap-2 mb-3">
+        <TrendingUp className="w-4 h-4 text-[#FEDD00]" />
+        <span className="text-xs text-white/60">Probabilidades</span>
+      </div>
+      <div className="flex gap-1">
+        <div 
+          className="flex-1 text-center py-2 rounded-lg"
+          style={{ backgroundColor: `${homeColor}40` }}
+        >
+          <div className="text-lg font-bold" style={{ color: homeColor }}>{homeWin}%</div>
+          <div className="text-[10px] text-white/50">Vitória</div>
+        </div>
+        <div className="flex-1 text-center py-2 bg-[#004d00] rounded-lg">
+          <div className="text-lg font-bold text-white/70">{clampedDraw}%</div>
+          <div className="text-[10px] text-white/50">Empate</div>
+        </div>
+        <div 
+          className="flex-1 text-center py-2 rounded-lg"
+          style={{ backgroundColor: `${awayColor}40` }}
+        >
+          <div className="text-lg font-bold" style={{ color: awayColor }}>{awayWin}%</div>
+          <div className="text-[10px] text-white/50">Derrota</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithResult, onVRModeChange }: MatchViewProps) {
   const { user, season, squad } = gameState;
   const { nextMatch } = season;
 
@@ -142,12 +275,27 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
   const [currentEvent, setCurrentEvent] = useState<string | null>(null);
   const [matchResult, setMatchResult] = useState<MatchResult | null>(null);
   const [matchEvents, setMatchEvents] = useState<MatchEvent[]>([]);
+  const [matchScript, setMatchScript] = useState<MatchScript | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isVRMode, setIsVRMode] = useState(false);
+  const [showVRTutorial, setShowVRTutorial] = useState(false);
   
   // Highlight mode state for special moments
   const [isHighlightMode, setIsHighlightMode] = useState(false);
   const [highlightEvent, setHighlightEvent] = useState<MatchEvent | null>(null);
+  
+  // Retry button state for loading timeout
+  const [showRetry, setShowRetry] = useState(false);
+  
+  // Show retry button after 15 seconds of calculating
+  useEffect(() => {
+    if (isCalculating) {
+      const timer = setTimeout(() => setShowRetry(true), 15000);
+      return () => clearTimeout(timer);
+    } else {
+      setShowRetry(false);
+    }
+  }, [isCalculating]);
   
   // Refs for highlight mode
   const highlightTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -287,7 +435,7 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
           
           return newMinute;
         });
-      }, msPerMinute * 4);
+      }, msPerMinute);
     }
   }, [gameState.user.matchSettings, isHighlightMode, triggerHighlight, cleanupTimers, onPlayMatch]);
 
@@ -303,7 +451,7 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
 
   // Cleanup on gameState change (navigation)
   useEffect(() => {
-    // Reset state when gameState changes (user navigated to different view)
+    if (isSimulating || isCalculating) return;
     cleanupTimers();
     intervalStartedRef.current = false;
     setIsSimulating(false);
@@ -316,9 +464,10 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
     setMatchEvents([]);
     setError(null);
     setIsVRMode(false);
+    onVRModeChange?.(false);
     setIsHighlightMode(false);
     setHighlightEvent(null);
-  }, [gameState, cleanupTimers]);
+  }, [gameState, cleanupTimers, isSimulating, isCalculating]);
 
   const handlePlayMatch = async () => {
     // Prevent multiple concurrent match starts
@@ -341,6 +490,10 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
           result = data.result;
           setMatchResult(result);
           
+          if (data.matchScript) {
+            setMatchScript(data.matchScript);
+          }
+          
           if (!result.events || result.events.length === 0) {
             setError('Nenhum evento recebido');
             setIsCalculating(false);
@@ -354,6 +507,7 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
       
       // If API failed or we don't have the new prop, fall back to old behavior
       if (!result) {
+        intervalStartedRef.current = false;
         if (isMountedRef.current) {
           setIsCalculating(false);
           onPlayMatch();
@@ -395,8 +549,8 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
           return;
         }
         
-        // Skip if in highlight mode
-        if (isHighlightMode) {
+        // Skip if in highlight mode (use ref to avoid stale closure)
+        if (isHighlightModeRef.current) {
           return;
         }
         
@@ -468,8 +622,9 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
           
           return newMinute;
         });
-      }, msPerMinute * 4);
+      }, msPerMinute);
     } catch (err) {
+      intervalStartedRef.current = false;
       if (isMountedRef.current) {
         setError('Erro ao carregar partida');
         setIsCalculating(false);
@@ -490,6 +645,18 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
         </motion.div>
         <div className="text-xl font-bold text-white">Calculando resultado...</div>
         <div className="text-white/60">O juiz está analisando o VAR</div>
+        {showRetry && (
+          <button
+            onClick={() => {
+              setIsCalculating(false);
+              intervalStartedRef.current = false;
+              handlePlayMatch();
+            }}
+            className="mt-4 px-4 py-2 bg-[#FEDD00] text-black font-bold rounded-lg"
+          >
+            Tentar novamente
+          </button>
+        )}
       </div>
     );
   }
@@ -502,7 +669,7 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
       const awayTeamData = getTeamData(nextMatch.opponent);
       
       return (
-        <VRMatchView
+        <ThreeMatchView
           homeTeam={{
             name: user.team,
             color: homeTeamData?.primaryColor || '#EF4444',
@@ -522,7 +689,7 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
               id: `away-${i}`,
               name: `CPU ${i + 1}`,
               number: i + 1,
-              position: i < 4 ? 'DEF' : i < 8 ? 'MID' : 'FWD',
+              position: i === 0 ? 'GK' : i <= 4 ? 'DEF' : i <= 7 ? 'MID' : 'FWD',
             })),
           }}
           currentMinute={matchMinute}
@@ -530,7 +697,8 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
           awayScore={awayScore}
           events={matchEvents}
           currentEvent={currentEvent || undefined}
-          onExitVR={() => setIsVRMode(false)}
+          matchScript={matchScript || undefined}
+          onExitVR={() => { setIsVRMode(false); onVRModeChange?.(false); }}
         />
       );
     }
@@ -540,7 +708,15 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
       <div className="relative">
         <div className="absolute top-2 right-2 z-10">
           <Button
-            onClick={() => setIsVRMode(true)}
+            onClick={() => {
+              const seenVR = localStorage.getItem('vrTutorialSeen');
+              if (seenVR === 'true') {
+                setIsVRMode(true);
+                onVRModeChange?.(true);
+              } else {
+                setShowVRTutorial(true);
+              }
+            }}
             className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-bold"
             size="sm"
           >
@@ -569,6 +745,24 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
             onSkip={exitHighlight}
           />
         )}
+        
+        {/* VR Tutorial Modal */}
+        <VRTutorialModal
+          isOpen={showVRTutorial}
+          onClose={() => setShowVRTutorial(false)}
+          onStartVR={() => {
+            setShowVRTutorial(false);
+            setIsVRMode(true);
+            onVRModeChange?.(true);
+          }}
+          mode="entry"
+        />
+        
+        {/* VR Mode Indicator */}
+        <VRModeIndicator 
+          isVRMode={isVRMode} 
+          onClick={() => { setIsVRMode(false); onVRModeChange?.(false); }} 
+        />
       </div>
     );
   }
@@ -576,7 +770,7 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
   return (
     <div className="space-y-4">
       {/* VS Screen */}
-      <Card className="pixel-card overflow-hidden">
+      <Card className="pixel-card overflow-hidden bg-[#006400] border-2 border-[#FEDD00]/50">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             {/* Home Team */}
@@ -651,7 +845,7 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="mt-6 pt-4 border-t border-white/10"
+            className="mt-6 pt-4 border-t border-[#004d00]"
           >
             <div className="flex items-center justify-center gap-4 text-sm"
             >
@@ -668,36 +862,92 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
         </CardContent>
       </Card>
 
-      {/* Team Comparison */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="bg-[#012169]/60 rounded p-4 border-2 border-[#FEDD00]/50 pixel-border-thin"
-      >
-        <h3 className="font-bold text-white mb-4 flex items-center gap-2">
-          <Swords className="w-4 h-4" />
-          Comparação de Equipes
-        </h3>
-        
-        <div className="space-y-4">
-          <ComparisonBar
-            label="Moral"
-            homeValue={squad.morale}
-            awayValue={70}
-            homeColor={homeTeamData?.primaryColor || '#EF4444'}
-            awayColor={awayTeamData?.primaryColor || '#3B82F6'}
-          />
-          
-          <ComparisonBar
-            label="Força do Elenco"
-            homeValue={avgRating}
-            awayValue={opponentRating}
-            homeColor={homeTeamData?.primaryColor || '#EF4444'}
-            awayColor={awayTeamData?.primaryColor || '#3B82F6'}
-          />
+      {/* Match Preview */}
+      <MatchPreview 
+        homeTeam={user.team}
+        awayTeam={nextMatch.opponent}
+        homeColor={homeTeamData?.primaryColor || '#EF4444'}
+        awayColor={awayTeamData?.primaryColor || '#3B82F6'}
+      />
+
+      {/* Key Players */}
+      <div className="grid grid-cols-2 gap-2">
+        <KeyPlayers 
+          players={squad.players.slice(0, 5)}
+          teamName={user.team}
+          color={homeTeamData?.primaryColor || '#EF4444'}
+        />
+        <div className="bg-[#006400] rounded-lg p-3 border-2 border-[#FEDD00]/50">
+          <div className="flex items-center gap-2 mb-2">
+            <Users className="w-4 h-4 text-white/60" />
+            <span className="text-xs text-white/60">Destaques - {nextMatch.opponent}</span>
+          </div>
+          <div className="flex gap-2">
+            {['Jogador A', 'Jogador B', 'Jogador C'].map((name, i) => (
+              <div key={i} className="flex-shrink-0 flex items-center gap-2 bg-[#004d00] rounded-lg px-2 py-1.5">
+                <div className="w-6 h-6 rounded-full bg-[#004d00] flex items-center justify-center text-[10px] font-bold text-white">
+                  {70 + i * 3}
+                </div>
+                <span className="text-xs text-white/80 truncate max-w-[60px]">{name}</span>
+              </div>
+            ))}
+          </div>
         </div>
-      </motion.div>
+      </div>
+
+      {/* Team Comparison & Win Probability */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+            className="bg-[#006400] rounded-xl p-4 border-2 border-[#FEDD00]/50"
+        >
+          <h3 className="font-bold text-white mb-4 flex items-center gap-2">
+            <Swords className="w-4 h-4" />
+            Comparação de Equipes
+          </h3>
+          
+          <div className="space-y-4">
+            <ComparisonBar
+              label="Moral"
+              homeValue={squad.morale}
+              awayValue={70}
+              homeColor={homeTeamData?.primaryColor || '#EF4444'}
+              awayColor={awayTeamData?.primaryColor || '#3B82F6'}
+              homeLabel={user.team.substring(0, 3)}
+              awayLabel={nextMatch.opponent.substring(0, 3)}
+            />
+            
+            <ComparisonBar
+              label="Força do Elenco"
+              homeValue={avgRating}
+              awayValue={opponentRating}
+              homeColor={homeTeamData?.primaryColor || '#EF4444'}
+              awayColor={awayTeamData?.primaryColor || '#3B82F6'}
+              homeLabel={user.team.substring(0, 3)}
+              awayLabel={nextMatch.opponent.substring(0, 3)}
+            />
+
+            <ComparisonBar
+              label="Energia"
+              homeValue={gameState.squad.fitness}
+              awayValue={75}
+              homeColor={homeTeamData?.primaryColor || '#EF4444'}
+              awayColor={awayTeamData?.primaryColor || '#3B82F6'}
+              homeLabel={user.team.substring(0, 3)}
+              awayLabel={nextMatch.opponent.substring(0, 3)}
+            />
+          </div>
+        </motion.div>
+
+        <WinProbability 
+          homeRating={avgRating}
+          awayRating={opponentRating}
+          homeColor={homeTeamData?.primaryColor || '#EF4444'}
+          awayColor={awayTeamData?.primaryColor || '#3B82F6'}
+        />
+      </div>
 
       {/* Play Button */}
       <motion.div
@@ -723,7 +973,7 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
           <Button
             onClick={handlePlayMatch}
             disabled={isLoading || isSimulating || isCalculating}
-            className="w-full h-16 text-xl font-bold rounded bg-[#009739] hover:bg-[#00b342] border-4 border-[#FEDD00] text-white pixel-text pixel-btn"
+            className="w-full py-4 text-xl font-bold bg-[#009739] hover:bg-[#00b344] border-4 border-[#FEDD00] text-white flex items-center justify-center gap-3"
           >
             {isLoading || isSimulating || isCalculating ? (
               <div className="flex items-center gap-3">

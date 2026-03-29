@@ -1,5 +1,5 @@
-import { GameState, Player, Match, FormState, MatchEvent, MatchContext, EventIntensity, EventType, MatchSettings, MATCH_SETTINGS_DEFAULTS } from './types';
-import { generatePlayerId } from './utils';
+import { GameState, Player, Match, FormState, MatchEvent, MatchContext, EventIntensity, EventType, MatchSettings, MATCH_SETTINGS_DEFAULTS, TierDivision } from './types';
+import { generatePlayerId, generateMatchId } from './utils';
 import {
   PLAYER_RATINGS,
   SQUAD_CONSTANTS,
@@ -7,7 +7,8 @@ import {
   ATTRIBUTE_RANGES,
   MATCH_CONSTANTS,
   SEASON_CONSTANTS,
-  EVENT_DENSITY_CONFIG
+  EVENT_DENSITY_CONFIG,
+  ECONOMY_CONSTANTS
 } from './constants';
 import {
   generateGoalCommentary,
@@ -609,17 +610,19 @@ export function createInitialGameState(userId: string, teamName: string): GameSt
       id: userId,
       team: teamName,
       level: 1,
-      sociosPoints: 0,
+      money: ECONOMY_CONSTANTS.INITIAL_MONEY,
     },
     season: {
       week: 1,
-      league: 'Brasileirão Serie A',
+      league: 'Brasileirão',
+      division: 'Serie D' as TierDivision,
       position: SEASON_CONSTANTS.INITIAL_POSITION,
       points: SEASON_CONSTANTS.INITIAL_POINTS,
       wins: 0,
       draws: 0,
       losses: 0,
       nextMatch: {
+        id: generateMatchId(),
         opponent: 'Palmeiras',
         isHome: true,
         date: new Date().toISOString(),
@@ -633,6 +636,37 @@ export function createInitialGameState(userId: string, teamName: string): GameSt
       fitness: SQUAD_CONSTANTS.DEFAULT_FITNESS,
       weeklyTrainingBudget: 15,
       currentWeek: 1,
+    },
+    stadium: {
+      level: 0,
+      capacity: 0,
+      amenities: 0,
+      ticketPrice: 0,
+      maintenanceLevel: 1,
+    },
+    facilities: {
+      trainingCenter: 0,
+      medicalCenter: 0,
+      youthAcademy: 0,
+      scoutOffice: 0,
+    },
+    staff: {
+      headCoach: null,
+      scout: null,
+      medicalStaff: null,
+    },
+    teamStats: {
+      totalEarnings: 0,
+      totalSpent: 0,
+      matchesPlayed: 0,
+      championshipsWon: 0,
+      promotionCount: 0,
+    },
+    youthAcademy: {
+      nextIntakeWeek: 4,
+      playersAvailable: [],
+      trainingFocus: null,
+      lastIntakeWeek: 0,
     },
     context: {
       lastAction: 'team_selected',
