@@ -1,5 +1,5 @@
 import { MatchEvent, GameAction, MatchScript, ActionType, PlayerPosition } from '@/lib/types';
-import { Formation, FormationPosition, getFormationPositions, getOpponentFormationPositions, mapPlayersToFormation, mapOpponentPlayersToFormation, PlayerData } from '@/components/vr/formations';
+import { Formation, FormationPosition, getFormationPositions, getOpponentFormationPositions, mapPlayersToFormation, mapOpponentPlayersToFormation, PlayerData } from '@/lib/match-formations';
 
 const FIELD_LENGTH = 80;
 const FIELD_WIDTH = 45;
@@ -226,110 +226,218 @@ export function generateMatchScript(
   awayTeam: TeamData
 ): MatchScript {
   const actions: GameAction[] = [];
-  
+
   const homeFormation = (homeTeam.formation as Formation) || DEFAULT_FORMATION;
   const awayFormation = (awayTeam.formation as Formation) || DEFAULT_FORMATION;
-  
+
   const homeBasePositions = getFormationPositions(homeFormation);
   const awayBasePositions = getOpponentFormationPositions(awayFormation);
-  
+
   let currentHomePositions = positionsToRecord(homeBasePositions);
   let currentAwayPositions = positionsToRecord(awayBasePositions);
-  
-  events.forEach((event, eventIndex) => {
-    const actionType = getActionTypeFromEvent(event);
-    const ballInfo = getBallPositionForAction(actionType, event.team, event);
-    
-    const homePlayerIds = Object.keys(currentHomePositions);
-    const awayPlayerIds = Object.keys(currentAwayPositions);
-    const playerId = event.team === 'home' 
-      ? homePlayerIds[Math.floor(Math.random() * homePlayerIds.length)] || 'st'
-      : awayPlayerIds[Math.floor(Math.random() * awayPlayerIds.length)] || 'st';
-    const playerPosition = event.team === 'home' 
-      ? currentHomePositions[playerId] || { x: 0, z: 0 }
-      : currentAwayPositions[playerId] || { x: 0, z: 0 };
-    
-    const targetPlayerId = event.assistPlayer 
-      ? (event.team === 'home'
-          ? homePlayerIds[Math.floor(Math.random() * homePlayerIds.length)]
-          : awayPlayerIds[Math.floor(Math.random() * awayPlayerIds.length)])
-      : undefined;
-    const targetPlayerPosition = targetPlayerId 
-      ? (event.team === 'home' 
-          ? currentHomePositions[targetPlayerId] 
-          : currentAwayPositions[targetPlayerId])
-      : undefined;
-    
-    const noiseRange = actionType === 'buildup' || actionType === 'pressure' ? 3 : 1;
-    const homePositionsWithMovement: Record<string, PlayerPosition> = {};
-    const awayPositionsWithMovement: Record<string, PlayerPosition> = {};
-    
-    Object.entries(currentHomePositions).forEach(([id, pos]) => {
-      const isBallCarrier = id === playerId && event.team === 'home';
-      const targetPos = isBallCarrier && ballInfo.target 
-        ? ballInfo.target 
-        : addNoiseToPosition(pos, noiseRange);
-      homePositionsWithMovement[id] = clampPosition(targetPos);
-    });
-    
-    Object.entries(currentAwayPositions).forEach(([id, pos]) => {
-      const isBallCarrier = id === playerId && event.team === 'away';
-      const targetPos = isBallCarrier && ballInfo.target 
-        ? ballInfo.target 
-        : addNoiseToPosition(pos, noiseRange);
-      awayPositionsWithMovement[id] = clampPosition(targetPos);
-    });
-    
-    if (ballInfo.target) {
-      if (event.team === 'home') {
-        Object.keys(homePositionsWithMovement).forEach(id => {
-          if (id !== playerId) {
-            const forwardOffset = id === 'st' || id === 'lw' || id === 'rw' || id === 'st1' || id === 'st2' ? 3 : 0;
-            homePositionsWithMovement[id] = clampPosition({
-              x: homePositionsWithMovement[id].x + forwardOffset,
-              z: homePositionsWithMovement[id].z,
-            });
-          }
-        });
-      } else {
-        Object.keys(awayPositionsWithMovement).forEach(id => {
-          if (id !== playerId) {
-            const forwardOffset = id === 'st' || id === 'lw' || id === 'rw' || id === 'st1' || id === 'st2' ? 3 : 0;
-            awayPositionsWithMovement[id] = clampPosition({
-              x: awayPositionsWithMovement[id].x + forwardOffset,
-              z: awayPositionsWithMovement[id].z,
-            });
-          }
-        });
-      }
-    }
-    
-    const action: GameAction = {
-      id: `action-${eventIndex}`,
-      minute: event.minute,
-      actionType,
-      team: event.team,
-      ballPosition: ballInfo.position,
-      ballTargetPosition: ballInfo.target,
-      ballHeight: ballInfo.height,
-      playerId,
-      playerName: event.player?.name,
-      playerPosition,
-      targetPlayerId,
-      targetPlayerPosition,
-      homePlayerPositions: homePositionsWithMovement,
-      awayPlayerPositions: awayPositionsWithMovement,
-      animation: getAnimationForAction(actionType),
-      duration: getDurationForAction(actionType),
-      commentaryId: event.id,
-    };
-    
-    actions.push(action);
-    
-    currentHomePositions = homePositionsWithMovement;
-    currentAwayPositions = awayPositionsWithMovement;
+
+  // Build lookup maps for base positions (O(1) access in filler loops)
+  const homeBasePositionMap: Record<string, FormationPosition> = {};
+  for (const fp of homeBasePositions) homeBasePositionMap[fp.id] = fp;
+  const awayBasePositionMap: Record<string, FormationPosition> = {};
+  for (const fp of awayBasePositions) awayBasePositionMap[fp.id] = fp;
+
+  // Build a map of minutes that have commentary events
+  const eventsByMinute: Map<number, MatchEvent[]> = new Map();
+  events.forEach((event) => {
+    const arr = eventsByMinute.get(event.minute) || [];
+    arr.push(event);
+    eventsByMinute.set(event.minute, arr);
   });
-  
+
+  // Track ball position continuity for filler actions
+  let lastBallPos: PlayerPosition = { x: 0, z: 0 };
+  let lastBallHeight = 0.35;
+  let lastTeam: 'home' | 'away' = 'home';
+  let actionCounter = 0;
+
+  // Helper: pick a random outfield player id from positions record
+  const pickOutfieldPlayer = (positions: Record<string, PlayerPosition>, exclude?: string): string => {
+    const ids = Object.keys(positions).filter(id => id !== 'gk' && id !== exclude);
+    return ids[Math.floor(Math.random() * ids.length)] || 'cm2';
+  };
+
+  // Generate actions for EVERY minute (0-90)
+  for (let minute = 0; minute <= 90; minute++) {
+    const minuteEvents = eventsByMinute.get(minute);
+
+    if (minuteEvents && minuteEvents.length > 0) {
+      // --- Minutes with commentary events: generate event-driven actions ---
+      for (const event of minuteEvents) {
+        const actionType = getActionTypeFromEvent(event);
+        const ballInfo = getBallPositionForAction(actionType, event.team, event);
+
+        const homePlayerIds = Object.keys(currentHomePositions);
+        const awayPlayerIds = Object.keys(currentAwayPositions);
+        const playerId = event.team === 'home'
+          ? homePlayerIds[Math.floor(Math.random() * homePlayerIds.length)] || 'st'
+          : awayPlayerIds[Math.floor(Math.random() * awayPlayerIds.length)] || 'st';
+        const playerPosition = event.team === 'home'
+          ? currentHomePositions[playerId] || { x: 0, z: 0 }
+          : currentAwayPositions[playerId] || { x: 0, z: 0 };
+
+        const targetPlayerId = event.assistPlayer
+          ? (event.team === 'home'
+              ? homePlayerIds[Math.floor(Math.random() * homePlayerIds.length)]
+              : awayPlayerIds[Math.floor(Math.random() * awayPlayerIds.length)])
+          : undefined;
+        const targetPlayerPosition = targetPlayerId
+          ? (event.team === 'home'
+              ? currentHomePositions[targetPlayerId]
+              : currentAwayPositions[targetPlayerId])
+          : undefined;
+
+        const noiseRange = actionType === 'buildup' || actionType === 'pressure' ? 3 : 1;
+        const homePositionsWithMovement: Record<string, PlayerPosition> = {};
+        const awayPositionsWithMovement: Record<string, PlayerPosition> = {};
+
+        Object.entries(currentHomePositions).forEach(([id, pos]) => {
+          const isBallCarrier = id === playerId && event.team === 'home';
+          const targetPos = isBallCarrier && ballInfo.target
+            ? ballInfo.target
+            : addNoiseToPosition(pos, noiseRange);
+          homePositionsWithMovement[id] = clampPosition(targetPos);
+        });
+
+        Object.entries(currentAwayPositions).forEach(([id, pos]) => {
+          const isBallCarrier = id === playerId && event.team === 'away';
+          const targetPos = isBallCarrier && ballInfo.target
+            ? ballInfo.target
+            : addNoiseToPosition(pos, noiseRange);
+          awayPositionsWithMovement[id] = clampPosition(targetPos);
+        });
+
+        if (ballInfo.target) {
+          const positionsToShift = event.team === 'home' ? homePositionsWithMovement : awayPositionsWithMovement;
+          Object.keys(positionsToShift).forEach(id => {
+            if (id !== playerId) {
+              const forwardOffset = id === 'st' || id === 'lw' || id === 'rw' || id === 'st1' || id === 'st2' ? 3 : 0;
+              positionsToShift[id] = clampPosition({
+                x: positionsToShift[id].x + forwardOffset,
+                z: positionsToShift[id].z,
+              });
+            }
+          });
+        }
+
+        const action: GameAction = {
+          id: `action-${actionCounter++}`,
+          minute,
+          actionType,
+          team: event.team,
+          ballPosition: ballInfo.position,
+          ballTargetPosition: ballInfo.target,
+          ballHeight: ballInfo.height,
+          playerId,
+          playerName: event.player?.name,
+          playerPosition,
+          targetPlayerId,
+          targetPlayerPosition,
+          homePlayerPositions: homePositionsWithMovement,
+          awayPlayerPositions: awayPositionsWithMovement,
+          animation: getAnimationForAction(actionType),
+          duration: getDurationForAction(actionType),
+          commentaryId: event.id,
+        };
+
+        actions.push(action);
+
+        currentHomePositions = homePositionsWithMovement;
+        currentAwayPositions = awayPositionsWithMovement;
+        lastBallPos = ballInfo.position;
+        lastBallHeight = ballInfo.height;
+        lastTeam = event.team;
+      }
+    } else {
+      // --- Minutes WITHOUT events: generate possession filler actions ---
+      // Alternate possession, create passing chains to fill dead time
+      const possessionTeam: 'home' | 'away' = Math.random() < 0.55 ? lastTeam : (lastTeam === 'home' ? 'away' : 'home');
+      const direction = possessionTeam === 'home' ? 1 : -1;
+
+      // Ball drifts forward with some lateral movement
+      const newBallX = Math.max(-35, Math.min(35,
+        lastBallPos.x + (Math.random() * 6 - 1.5) * direction
+      ));
+      const newBallZ = Math.max(-18, Math.min(18,
+        lastBallPos.z + (Math.random() - 0.5) * 8
+      ));
+      const newBallPos: PlayerPosition = { x: newBallX, z: newBallZ };
+
+      // Pick a ball carrier (midfielder or forward)
+      const carrierPositions = possessionTeam === 'home' ? currentHomePositions : currentAwayPositions;
+      const carrierId = pickOutfieldPlayer(carrierPositions);
+
+      // Move all players with small noise + ball pull
+      const homePositionsFiller: Record<string, PlayerPosition> = {};
+      const awayPositionsFiller: Record<string, PlayerPosition> = {};
+
+      Object.entries(currentHomePositions).forEach(([id, pos]) => {
+        if (id === carrierId && possessionTeam === 'home') {
+          homePositionsFiller[id] = clampPosition(newBallPos);
+        } else {
+          // Drift toward formation with noise + slight ball pull
+          const basePos = homeBasePositionMap[id];
+          const bx = basePos ? basePos.position.x : pos.x;
+          const bz = basePos ? basePos.position.z : pos.z;
+          const pullX = (newBallX - pos.x) * 0.08;
+          const pullZ = (newBallZ - pos.z) * 0.06;
+          homePositionsFiller[id] = clampPosition({
+            x: bx + pullX + (Math.random() - 0.5) * 3,
+            z: bz + pullZ + (Math.random() - 0.5) * 3,
+          });
+        }
+      });
+
+      Object.entries(currentAwayPositions).forEach(([id, pos]) => {
+        if (id === carrierId && possessionTeam === 'away') {
+          awayPositionsFiller[id] = clampPosition(newBallPos);
+        } else {
+          const basePos = awayBasePositionMap[id];
+          const bx = basePos ? basePos.position.x : pos.x;
+          const bz = basePos ? basePos.position.z : pos.z;
+          const pullX = (newBallX - pos.x) * 0.08;
+          const pullZ = (newBallZ - pos.z) * 0.06;
+          awayPositionsFiller[id] = clampPosition({
+            x: bx + pullX + (Math.random() - 0.5) * 3,
+            z: bz + pullZ + (Math.random() - 0.5) * 3,
+          });
+        }
+      });
+
+      // Randomly choose pass or dribble
+      const fillerType: ActionType = Math.random() < 0.6 ? 'pass' : 'dribble';
+
+      const action: GameAction = {
+        id: `action-${actionCounter++}`,
+        minute,
+        actionType: fillerType,
+        team: possessionTeam,
+        ballPosition: newBallPos,
+        ballTargetPosition: undefined,
+        ballHeight: 0.35,
+        playerId: carrierId,
+        playerPosition: carrierPositions[carrierId] || { x: 0, z: 0 },
+        homePlayerPositions: homePositionsFiller,
+        awayPlayerPositions: awayPositionsFiller,
+        animation: fillerType === 'pass' ? 'pass' : 'dribble',
+        duration: 2500,
+      };
+
+      actions.push(action);
+
+      currentHomePositions = homePositionsFiller;
+      currentAwayPositions = awayPositionsFiller;
+      lastBallPos = newBallPos;
+      lastBallHeight = 0.35;
+      lastTeam = possessionTeam;
+    }
+  }
+
   return {
     matchId,
     actions,
@@ -578,21 +686,37 @@ function interpolateTowardEvent(
   const direction = teamWithBall === 'home' ? 1 : -1;
   const player = selectRandomPlayerFromSquad(squad);
   
-  const startX = previousMovement?.ballPosition.x || 0;
+  const startX = previousMovement?.ballPosition.x ?? 0;
+  const startZ = previousMovement?.ballPosition.z ?? 0;
   const targetX = nextEvent.type === 'goal' || nextEvent.type === 'pressure' ? 30 * direction : 15 * direction;
+  const targetZ = (Math.random() - 0.5) * 18; // lateral drift target
   const currentX = startX + (targetX - startX) * Math.max(0, Math.min(1, progress));
-  
-  const movementType: MovementType = progress > 0.8 ? 'shot_windup' : 
+  const currentZ = startZ + (targetZ - startZ) * Math.max(0, Math.min(1, progress * 0.3)); // slower lateral drift
+
+  const movementType: MovementType = progress > 0.8 ? 'shot_windup' :
                                     progress > 0.5 ? 'dribble' : 'pass';
-  
+
+  // Carry forward ball carrier during dribble runs
+  let playerWithBall: string;
+  if (
+    movementType === 'dribble' &&
+    previousMovement?.type === 'dribble' &&
+    previousMovement.playerWithBall &&
+    previousMovement.teamWithBall === teamWithBall
+  ) {
+    playerWithBall = previousMovement.playerWithBall;
+  } else {
+    playerWithBall = player?.id || 'player-0';
+  }
+
   return {
     gameSecond,
     type: movementType,
     teamWithBall,
-    playerWithBall: player?.id || 'player-0',
+    playerWithBall,
     ballPosition: {
       x: currentX,
-      z: (Math.random() - 0.5) * 18
+      z: Math.max(-20, Math.min(20, currentZ)),
     },
     ballHeight: movementType === 'pass' ? 0.5 : 0.3,
     intensity: 0.3 + progress * 0.4,
@@ -608,24 +732,44 @@ function generateDefaultMovement(
   squad: Squad,
   previousMovement: MovementEvent | undefined
 ): MovementEvent {
-  const player = selectRandomPlayerFromSquad(squad);
   const direction = teamWithBall === 'home' ? 1 : -1;
-  
+
   const rand = Math.random();
   const type: MovementType = rand < 0.6 ? 'dribble' : rand < 0.9 ? 'pass' : 'position';
-  
-  const baseX = previousMovement?.ballPosition.x || 0;
+
+  // Carry forward the ball carrier during dribble sequences for 3-8 seconds
+  let playerWithBall: string;
+  if (
+    type === 'dribble' &&
+    previousMovement?.type === 'dribble' &&
+    previousMovement.playerWithBall &&
+    previousMovement.teamWithBall === teamWithBall
+  ) {
+    // Keep same carrier for a dribble run, switch after 3-8 seconds
+    const dribbleDuration = gameSecond % 8;
+    if (dribbleDuration < 3 + Math.floor(Math.random() * 5)) {
+      playerWithBall = previousMovement.playerWithBall;
+    } else {
+      playerWithBall = selectRandomPlayerFromSquad(squad)?.id || 'player-0';
+    }
+  } else {
+    playerWithBall = selectRandomPlayerFromSquad(squad)?.id || 'player-0';
+  }
+
+  // Use previous position as base for both X and Z (smooth continuity)
+  const baseX = previousMovement?.ballPosition.x ?? 0;
+  const baseZ = previousMovement?.ballPosition.z ?? 0;
   const xMovement = (Math.random() - 0.3) * 2 * direction;
   const zMovement = (Math.random() - 0.5) * 3;
-  
+
   return {
     gameSecond,
     type,
     teamWithBall,
-    playerWithBall: player?.id || 'player-0',
+    playerWithBall,
     ballPosition: {
       x: Math.max(-38, Math.min(38, baseX + xMovement)),
-      z: Math.max(-20, Math.min(20, zMovement))
+      z: Math.max(-20, Math.min(20, baseZ + zMovement)),
     },
     ballHeight: type === 'pass' ? 0.5 : 0.3,
     intensity: 0.3,

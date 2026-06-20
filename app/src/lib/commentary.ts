@@ -815,3 +815,129 @@ export {
   random,
   SLANG,
 };
+
+/**
+ * Generates a contextual analysis summary of what happened in a match segment.
+ * Used between decision turns to inform the user about the state of play.
+ */
+export function generateSegmentSummary(
+  events: MatchEvent[],
+  homeTeam: string,
+  awayTeam: string,
+  homeScore: number,
+  awayScore: number,
+  fromMinute: number,
+  toMinute: number
+): string {
+  const homeGoals: string[] = [];
+  const awayGoals: string[] = [];
+  let homeSaves = 0;
+  let awaySaves = 0;
+  let homeMisses = 0;
+  let awayMisses = 0;
+  let homeCards = 0;
+  let awayCards = 0;
+  let homePressure = 0;
+  let awayPressure = 0;
+
+  for (const event of events) {
+    const isHome = event.team === 'home';
+
+    switch (event.type) {
+      case 'goal':
+        if (isHome) {
+          homeGoals.push(event.player?.name ?? 'Jogador');
+        } else {
+          awayGoals.push(event.player?.name ?? 'Jogador');
+        }
+        break;
+      case 'save':
+        if (isHome) homeSaves++; else awaySaves++;
+        break;
+      case 'miss':
+        if (isHome) homeMisses++; else awayMisses++;
+        break;
+      case 'card':
+        if (isHome) homeCards++; else awayCards++;
+        break;
+      case 'pressure':
+        if (isHome) homePressure++; else awayPressure++;
+        break;
+    }
+  }
+
+  const totalHomeChances = homeGoals.length + homeMisses + homePressure;
+  const totalAwayChances = awayGoals.length + awayMisses + awayPressure;
+  const parts: string[] = [];
+
+  // Score and time context
+  parts.push(`Placar atual: ${homeScore}x${awayScore} (${fromMinute}\x27 a ${toMinute}\x27)`);
+
+  // Dominance analysis
+  if (totalHomeChances > totalAwayChances + 2) {
+    parts.push('Seu time domina o jogo mas precisa finalizar melhor');
+  } else if (totalAwayChances > totalHomeChances + 2) {
+    parts.push('Adversário pressiona pela direita, defesa precisa se organizar');
+  } else {
+    parts.push('Jogo equilibrado, ambos os times criam chances');
+  }
+
+  // Goals scored in this segment
+  if (homeGoals.length > 0) {
+    const scorers = homeGoals.join(' e ');
+    parts.push(`${scorers} balançou as redes para o ${homeTeam}`);
+  }
+  if (awayGoals.length > 0) {
+    const scorers = awayGoals.join(' e ');
+    parts.push(`${scorers} marcou para o ${awayTeam}`);
+  }
+
+  // Discipline issues
+  if (homeCards > 0 || awayCards > 0) {
+    const cardCount = homeCards + awayCards;
+    parts.push(`${cardCount === 1 ? 'Cartão mostrado' : 'Problemas de disciplina'} — atenção com as faltas`);
+  }
+
+  return parts.join('. ') + '.';
+}
+
+/**
+ * Generates decision context text explaining WHY a tactical decision is needed.
+ * Used as the prompt text in the DecisionPrompt UI component.
+ */
+export function generateTurnPrompt(
+  turnLabel: string,
+  homeScore: number,
+  awayScore: number,
+  homeTeam: string,
+  awayTeam: string,
+  segmentSummary: string,
+  hasRedCard: boolean,
+  tiredPlayerName?: string
+): string {
+  const parts: string[] = [];
+
+  // Turn context
+  parts.push(`${turnLabel}: ${homeTeam} ${homeScore}x${awayScore} ${awayTeam}. ${segmentSummary}`);
+
+  // Score and time context
+  if (homeScore < awayScore) {
+    parts.push(`Você está perdendo ${homeScore}x${awayScore}. Precisa reagir!`);
+  } else if (homeScore > awayScore) {
+    parts.push(`Você está ganhando ${homeScore}x${awayScore}. Pode segurar ou ampliar?`);
+  } else {
+    parts.push(`Jogo empatado em ${homeScore}x${awayScore}. Hora de arriscar?`);
+  }
+
+  // Red card situation
+  if (hasRedCard) {
+    parts.push('Um jogador foi expulso — precisa preencher a vaga.');
+  }
+
+  // Tired player
+  if (tiredPlayerName) {
+    parts.push(`${tiredPlayerName} está cansado — considere uma substituição.`);
+  }
+
+  return parts.join(' ');
+}

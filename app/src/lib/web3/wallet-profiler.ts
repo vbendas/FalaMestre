@@ -24,7 +24,12 @@ function classifyWalletArchetype(
 /**
  * Profiles a wallet using conservative defaults when Web3 SDKs are unavailable.
  */
-export async function profileWallet(address: `0x${string}`): Promise<WalletProfile> {
+export async function profileWallet(address: `0x${string}`): Promise<WalletProfile | null> {
+  if (!process.env.WALLET_PROFILER_ENABLED) {
+    console.warn('[wallet-profiler] Stub mode — WALLET_PROFILER_ENABLED not set. Returning null.');
+    return null;
+  }
+
   const fanTokenBalances: Record<string, number> = {};
   Object.keys(FAN_TOKEN_ADDRESSES).forEach((symbol) => {
     fanTokenBalances[symbol] = 0;
@@ -44,6 +49,7 @@ export async function profileWallet(address: `0x${string}`): Promise<WalletProfi
 
 export async function hasFanTokens(address: `0x${string}`): Promise<boolean> {
   const profile = await profileWallet(address);
+  if (!profile) return false;
   const totalTokens = Object.values(profile.fanTokenBalances).reduce((a, b) => a + b, 0);
   return totalTokens > 0;
 }
@@ -53,5 +59,6 @@ export async function getFanTokenBalance(
   symbol: string
 ): Promise<number> {
   const profile = await profileWallet(address);
+  if (!profile) return 0;
   return profile.fanTokenBalances[symbol] ?? 0;
 }

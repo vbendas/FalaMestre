@@ -14,8 +14,8 @@ export async function getAuthenticatedUser() {
 }
 
 export async function requireAuth() {
-  // If REQUIRE_AUTH is not set to 'true', skip authentication
-  if (process.env.REQUIRE_AUTH !== 'true') {
+  // Auth is on by default. Set AUTH_DISABLED=true only in dev.
+  if (process.env.AUTH_DISABLED === 'true') {
     return null;
   }
   
@@ -32,14 +32,13 @@ export async function requireAuth() {
 }
 
 export async function getRequestUserId(request: NextRequest): Promise<string | null> {
-  // First, check for authenticated session
   const sessionUserId = await getAuthenticatedUser();
   if (sessionUserId) {
     return sessionUserId;
   }
   
-  // If auth is not required, return null to indicate localStorage fallback should be used
-  if (process.env.REQUIRE_AUTH !== 'true') {
+  // If auth is disabled (dev only), return null for localStorage fallback
+  if (process.env.AUTH_DISABLED === 'true') {
     return null;
   }
   

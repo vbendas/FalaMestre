@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { predictions, userBets, predictionHistory, gameStates } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 export async function POST(request: NextRequest) {
   try {
@@ -64,7 +64,29 @@ export async function POST(request: NextRequest) {
     }
     
     const potentialWin = Math.round(amount * 1.8);
-    
+
+    await db.insert(userBets).values({
+      userId: targetUserId,
+      predictionId,
+      optionId,
+      amount,
+      potentialWin,
+      settled: false,
+    });
+
+    await db.insert(predictionHistory).values({
+      userId: targetUserId,
+      totalBets: 1,
+      lastBetAt: new Date(),
+    }).onConflictDoUpdate({
+      target: predictionHistory.userId,
+      set: {
+        totalBets: sql`${predictionHistory.totalBets} + 1`,
+        lastBetAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+
     return NextResponse.json({
       success: true,
       newBalance: newBalance,

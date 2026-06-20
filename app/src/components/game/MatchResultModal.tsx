@@ -1,12 +1,12 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@/components/ui/button';
 import { GameState, MatchEvent } from '@/lib/types';
 import { getTeamData } from '@/lib/team-data';
 import Image from 'next/image';
 import { X, Trophy, Circle, AlertCircle, Sparkles, Share2, Star, ChevronDown, ChevronUp, Crown } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { GlassCard, CrtButton, StatCard, SectionTitle, Divider } from '@/components/crt';
 
 interface MatchResult {
   homeScore: number;
@@ -24,7 +24,6 @@ interface MatchResultModalProps {
   onClose: () => void;
 }
 
-// Confetti component
 function Confetti() {
   const pieces = useMemo(() => {
     return [...Array(30)].map((_, i) => ({
@@ -33,7 +32,7 @@ function Confetti() {
       rotateEnd: Math.random() * 720 - 360,
       duration: 2.5 + Math.random() * 2,
       delay: Math.random() * 0.5,
-      color: ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FF69B4'][i % 6],
+      color: ['#FFDF00', '#FF3333', '#55e0a0', '#3EA0D4', '#00A859', '#FFDF00'][i % 6],
       size: 4 + Math.random() * 4,
     }));
   }, []);
@@ -71,7 +70,6 @@ function Confetti() {
   );
 }
 
-// Man of the Match Component
 function ManOfTheMatch({ playerName, playerRating, teamColor }: {
   playerName: string;
   playerRating: number;
@@ -82,37 +80,38 @@ function ManOfTheMatch({ playerName, playerRating, teamColor }: {
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay: 0.6 }}
-      className="flex items-center gap-3 bg-gradient-to-r from-[#FFD700]/20 to-transparent rounded-lg p-3 border border-[#FFD700]/30"
+      className="mx-4 mb-3"
     >
-      <motion.div
-        animate={{ rotate: [0, 10, -10, 0] }}
-        transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-        className="w-12 h-12 rounded-full flex items-center justify-center"
-        style={{ backgroundColor: teamColor }}
-      >
-        <Crown className="w-6 h-6 text-white" />
-      </motion.div>
-      <div className="flex-1">
-        <p className="text-[#FFD700] text-xs font-bold uppercase tracking-wider">🏆 Homem do Jogo</p>
-        <p className="text-white font-semibold">{playerName}</p>
-      </div>
-      <div className="text-center">
-        <div className="text-2xl font-bold text-[#FFD700]">{playerRating}</div>
-        <div className="text-[10px] text-white/50">rating</div>
-      </div>
+      <GlassCard className="flex items-center gap-3 p-3 border border-[#FFDF00]/30" glow>
+        <motion.div
+          animate={{ rotate: [0, 10, -10, 0] }}
+          transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+          className="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
+          style={{ backgroundColor: teamColor }}
+        >
+          <Crown className="w-6 h-6 text-white" />
+        </motion.div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[#FFDF00] text-[0.55rem] font-[family-name:var(--font-pixel)] uppercase tracking-wider">Homem do Jogo</p>
+          <p className="text-white font-semibold truncate">{playerName}</p>
+        </div>
+        <div className="text-center shrink-0">
+          <div className="text-2xl font-bold gold-glow-text font-[family-name:var(--font-pixel)]">{playerRating}</div>
+          <div className="text-[10px] text-white/50">rating</div>
+        </div>
+      </GlassCard>
     </motion.div>
   );
 }
 
-// Expandable Stats Section
 function ExpandableStats({ events }: { events: MatchEvent[] }) {
   const [isExpanded, setIsExpanded] = useState(false);
-  
+
   const stats = useMemo(() => {
     const goals = events.filter(e => e.type === 'goal');
     const cards = events.filter(e => e.type === 'foul');
     const saves = events.filter(e => e.type === 'save');
-    
+
     return {
       goals: goals.length,
       cards: cards.length,
@@ -122,19 +121,20 @@ function ExpandableStats({ events }: { events: MatchEvent[] }) {
   }, [events]);
 
   return (
-    <div className="border-t border-white/10">
+    <div className="mx-4">
+      <Divider />
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
+        className="w-full flex items-center justify-between py-3 hover:opacity-80 transition-opacity"
       >
-        <span className="text-sm text-white/70">Estatísticas da Partida</span>
+        <span className="section-title">Estatisticas da Partida</span>
         {isExpanded ? (
-          <ChevronUp className="w-4 h-4 text-white/50" />
+          <ChevronUp className="w-4 h-4 text-[#FFDF00]/60" />
         ) : (
-          <ChevronDown className="w-4 h-4 text-white/50" />
+          <ChevronDown className="w-4 h-4 text-[#FFDF00]/60" />
         )}
       </button>
-      
+
       <AnimatePresence>
         {isExpanded && (
           <motion.div
@@ -143,38 +143,29 @@ function ExpandableStats({ events }: { events: MatchEvent[] }) {
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
-            <div className="px-4 pb-4 space-y-3">
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <div className="bg-white/5 rounded-lg p-2">
-                  <div className="text-lg font-bold text-white">{stats.goals}</div>
-                  <div className="text-[10px] text-white/50">Gols</div>
-                </div>
-                <div className="bg-white/5 rounded-lg p-2">
-                  <div className="text-lg font-bold text-white">{stats.saves}</div>
-                  <div className="text-[10px] text-white/50">Defesas</div>
-                </div>
-                <div className="bg-white/5 rounded-lg p-2">
-                  <div className="text-lg font-bold text-white">{stats.cards}</div>
-                  <div className="text-[10px] text-white/50">Faltas</div>
-                </div>
+            <div className="pb-4 space-y-3">
+              <div className="grid grid-cols-3 gap-2">
+                <StatCard value={stats.goals} label="Gols" />
+                <StatCard value={stats.saves} label="Defesas" />
+                <StatCard value={stats.cards} label="Faltas" />
               </div>
               <div className="space-y-1">
                 <div className="flex justify-between text-xs">
                   <span className="text-white/50">Posse de Bola</span>
-                  <span className="text-white/70">{Math.round(stats.possession.home)}% - {Math.round(stats.possession.away)}%</span>
+                  <span className="text-[#55e0a0] font-[family-name:var(--font-pixel)]">{Math.round(stats.possession.home)}% - {Math.round(stats.possession.away)}%</span>
                 </div>
                 <div className="h-2 bg-white/10 rounded-full overflow-hidden flex">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${stats.possession.home}%` }}
                     transition={{ duration: 1, delay: 0.2 }}
-                    className="h-full bg-green-500"
+                    className="h-full bg-[#00A859]"
                   />
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${stats.possession.away}%` }}
                     transition={{ duration: 1, delay: 0.2 }}
-                    className="h-full bg-blue-500"
+                    className="h-full bg-[#3EA0D4]"
                   />
                 </div>
               </div>
@@ -186,60 +177,57 @@ function ExpandableStats({ events }: { events: MatchEvent[] }) {
   );
 }
 
-// Animated counter
 function AnimatedCounter({ value, duration = 1.5 }: { value: number; duration?: number }) {
   const [count, setCount] = useState(0);
-  
+
   useEffect(() => {
     let startTime: number;
     let animationFrame: number;
-    
+
     const animate = (timestamp: number) => {
       if (!startTime) startTime = timestamp;
       const progress = Math.min((timestamp - startTime) / (duration * 1000), 1);
-      
+
       setCount(Math.floor(progress * value));
-      
+
       if (progress < 1) {
         animationFrame = requestAnimationFrame(animate);
       }
     };
-    
+
     animationFrame = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animationFrame);
   }, [value, duration]);
-  
+
   return <span>{count}</span>;
 }
 
-export function MatchResultModal({ 
-  isOpen, 
-  result, 
-  gameState, 
-  pointsEarned, 
+export function MatchResultModal({
+  isOpen,
+  result,
+  gameState,
+  pointsEarned,
   pointsChange,
-  onClose 
+  onClose
 }: MatchResultModalProps) {
   if (!isOpen || !result) return null;
-  
+
   const { user, season } = gameState;
-  
-  // API now handles home/away correctly, so result is already in correct context
-  // result.homeScore = user's goals if playing at home, opponent's goals if playing away
+
   const homeTeam = user.team;
   const awayTeam = season.nextMatch.opponent;
   const homeScore = result.homeScore;
   const awayScore = result.awayScore;
-  
+
   const homeTeamData = getTeamData(homeTeam);
   const awayTeamData = getTeamData(awayTeam);
-  
+
   const isWin = result.winner === user.team;
   const isDraw = result.winner === 'Empate';
 
   const handleShare = async () => {
-    const text = `⚽ ${homeTeam} ${homeScore} x ${awayScore} ${awayTeam}\n${isWin ? '🎉 Vitória!' : isDraw ? '🤝 Empate' : '😢 Derrota'}\n#FalaMestre`;
-    
+    const text = `⚽ ${homeTeam} ${homeScore} x ${awayScore} ${awayTeam}\n${isWin ? '🎉 Vitoria!' : isDraw ? '🤝 Empate' : '😢 Derrota'}\n#FalaMestre`;
+
     if (navigator.share) {
       try {
         await navigator.share({ text });
@@ -253,7 +241,7 @@ export function MatchResultModal({
 
   const motmName = gameState.squad.players[0]?.name || 'Jogador';
   const motmRating = Math.round(75 + Math.random() * 10);
-  
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -261,200 +249,192 @@ export function MatchResultModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
           onClick={onClose}
         >
           {isWin && <Confetti />}
-          
+
           <motion.div
             initial={{ scale: 0.8, opacity: 0, y: 50 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.8, opacity: 0, y: 50 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className="relative w-full max-w-md bg-gradient-to-b from-[#012169] to-[#001845] rounded border-4 border-[#FEDD00] overflow-hidden shadow-2xl pixel-card"
+            className="relative w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Close button */}
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-            >
-              <X className="w-4 h-4 text-white/60" />
-            </button>
-            
-            {/* Header */}
-            <div className="text-center pt-8 pb-4">
-              <motion.div
-                initial={{ y: -20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className="text-sm font-medium text-white/60 uppercase tracking-wider mb-2"
+            <GlassCard strong className="border border-[#FFDF00]/40 overflow-hidden" glow>
+              <button
+                onClick={onClose}
+                className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
               >
-                Fim de Jogo
-              </motion.div>
-              
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 400, damping: 20, delay: 0.3 }}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold ${
-                  isWin 
-                    ? 'bg-green-500/20 text-green-400' 
-                    : isDraw 
-                      ? 'bg-yellow-500/20 text-yellow-400'
-                      : 'bg-red-500/20 text-red-400'
-                }`}
-              >
-                <Trophy className="w-4 h-4" />
-                {isWin ? 'Vitória!' : isDraw ? 'Empate' : 'Derrota'}
-              </motion.div>
-            </div>
-            
-            {/* Scoreboard */}
-            <div className="px-6 py-4">
-              <div className="flex items-center justify-between">
-                {/* Home Team */}
-                <div className="flex-1 text-center">
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.35 }}
-                    className="relative w-16 h-16 mx-auto mb-2"
-                  >
-                    {homeTeamData && (
-                      <Image
-                        src={homeTeamData.logo}
-                        alt={homeTeam}
-                        fill
-                        className="object-contain"
-                      />
-                    )}
-                  </motion.div>
-                  <div className="text-sm font-medium text-white/80 truncate">{homeTeam}</div>
-                </div>
-                
-                {/* Score */}
+                <X className="w-4 h-4 text-white/60" />
+              </button>
+
+              <div className="text-center pt-8 pb-4">
+                <motion.div
+                  initial={{ y: -20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="section-title mb-2"
+                >
+                  Fim de Jogo
+                </motion.div>
+
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 20, delay: 0.4 }}
-                  className="px-4"
+                  transition={{ type: "spring", stiffness: 400, damping: 20, delay: 0.3 }}
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-[family-name:var(--font-pixel)] font-bold ${
+                    isWin
+                      ? 'bg-[#FFDF00]/20 text-[#FFDF00]'
+                      : isDraw
+                        ? 'bg-[#55e0a0]/20 text-[#55e0a0]'
+                        : 'bg-[#FF3333]/20 text-[#FF3333]'
+                  }`}
                 >
-                  <div className="flex items-center gap-3 text-5xl font-black">
-                    <AnimatedCounter value={homeScore} />
-                    <span className="text-white/30">x</span>
-                    <AnimatedCounter value={awayScore} />
-                  </div>
+                  <Trophy className="w-4 h-4" />
+                  {isWin ? 'VITORIA!' : isDraw ? 'Empate' : 'Derrota'}
                 </motion.div>
-                
-                {/* Away Team */}
-                <div className="flex-1 text-center">
+              </div>
+
+              <div className="px-6 py-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 text-center">
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.35 }}
+                      className="relative w-16 h-16 mx-auto mb-2"
+                    >
+                      {homeTeamData && (
+                        <Image
+                          src={homeTeamData.logo}
+                          alt={homeTeam}
+                          fill
+                          className="object-contain"
+                        />
+                      )}
+                    </motion.div>
+                    <div className="text-sm font-medium text-white/80 truncate">{homeTeam}</div>
+                  </div>
+
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.45 }}
-                    className="relative w-16 h-16 mx-auto mb-2"
+                    transition={{ type: "spring", stiffness: 400, damping: 20, delay: 0.4 }}
+                    className="px-4"
                   >
-                    {awayTeamData && (
-                      <Image
-                        src={awayTeamData.logo}
-                        alt={awayTeam}
-                        fill
-                        className="object-contain"
-                      />
-                    )}
-                  </motion.div>
-                  <div className="text-sm font-medium text-white/80 truncate">{awayTeam}</div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Man of the Match */}
-            {isWin && (
-              <ManOfTheMatch 
-                playerName={motmName}
-                playerRating={motmRating}
-                teamColor={homeTeamData?.primaryColor || '#009739'}
-              />
-            )}
-            
-            {/* Events Timeline */}
-            <div className="px-6 py-4 border-t border-white/10">
-              <div className="space-y-2 max-h-32 overflow-y-auto">
-                {result.events.slice(0, 5).map((event, idx) => (
-                  <motion.div
-                    key={`${event.id}-${idx}`}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.5 + idx * 0.1 }}
-                    className="flex items-center gap-3 text-sm"
-                  >
-                    <div className="w-8 text-right font-mono text-white/40">
-                      {event.minute}'
+                    <div className="flex items-center gap-3 text-5xl font-[family-name:var(--font-pixel)] font-black gold-glow-text">
+                      <AnimatedCounter value={homeScore} />
+                      <span className="text-white/30">x</span>
+                      <AnimatedCounter value={awayScore} />
                     </div>
-                    <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center">
-                      {event.type === 'goal' ? (
-                        <Circle className="w-3 h-3 fill-white text-white" />
-                      ) : (
-                        <AlertCircle className="w-3 h-3 text-yellow-400" />
+                  </motion.div>
+
+                  <div className="flex-1 text-center">
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.45 }}
+                      className="relative w-16 h-16 mx-auto mb-2"
+                    >
+                      {awayTeamData && (
+                        <Image
+                          src={awayTeamData.logo}
+                          alt={awayTeam}
+                          fill
+                          className="object-contain"
+                        />
                       )}
-                    </div>
-                    
-                    <div className="flex-1 text-white/80 truncate">{event.commentary}</div>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-            
-            {/* Expandable Stats */}
-            <ExpandableStats events={result.events} />
-            
-            {/* Points Earned */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8 }}
-              className="px-6 py-4 bg-[#FEDD00]/20 border-t-2 border-[#FEDD00]"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-yellow-400" />
-                  <span className="text-white/80">Socios Points</span>
-                </div>
-                <div className="text-2xl font-bold text-yellow-400">
-                  +{pointsChange}
+                    </motion.div>
+                    <div className="text-sm font-medium text-white/80 truncate">{awayTeam}</div>
+                  </div>
                 </div>
               </div>
-              
-              <div className="mt-2 text-xs text-white/50">
-                {pointsEarned === 3 ? 'Vitória: +3 pontos na tabela' : 
-                 pointsEarned === 1 ? 'Empate: +1 ponto na tabela' : 
-                 'Derrota: +0 pontos na tabela'}
+
+              {isWin && (
+                <ManOfTheMatch
+                  playerName={motmName}
+                  playerRating={motmRating}
+                  teamColor={homeTeamData?.primaryColor || '#00A859'}
+                />
+              )}
+
+              <div className="px-6 py-4">
+                <Divider label="Eventos" />
+                <div className="space-y-2 max-h-32 overflow-y-auto">
+                  {result.events.slice(0, 5).map((event, idx) => (
+                    <motion.div
+                      key={`${event.id}-${idx}`}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.5 + idx * 0.1 }}
+                      className="flex items-center gap-3 text-sm"
+                    >
+                      <div className="w-8 text-right font-[family-name:var(--font-pixel)] text-white/40">
+                        {event.minute}'
+                      </div>
+                      <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                        {event.type === 'goal' ? (
+                          <Circle className="w-3 h-3 fill-[#FFDF00] text-[#FFDF00]" />
+                        ) : (
+                          <AlertCircle className="w-3 h-3 text-[#FF3333]" />
+                        )}
+                      </div>
+
+                      <div className="flex-1 text-white/80 truncate">{event.commentary}</div>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
-            </motion.div>
-            
-            {/* Action Buttons */}
-            <div className="p-6 space-y-3">
-              {/* Share Button */}
-              <motion.button
-                initial={{ opacity: 0, y: 10 }}
+
+              <ExpandableStats events={result.events} />
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.9 }}
-                onClick={handleShare}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-white/10 hover:bg-white/20 rounded-lg text-white font-medium transition-colors"
+                transition={{ delay: 0.8 }}
+                className="mx-4 my-3"
               >
-                <Share2 className="w-4 h-4" />
-                Compartilhar Resultado
-              </motion.button>
-              
-              {/* Continue Button */}
-              <Button
-                onClick={onClose}
-                className="w-full h-12 rounded bg-[#009739] text-white hover:bg-[#00b342] font-bold pixel-text border-2 border-[#FEDD00] pixel-btn"
-              >
-                Continuar
-              </Button>
-            </div>
+                <GlassCard className="p-4 border-t-2 border-[#FFDF00]/40">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-[#FFDF00]" />
+                      <span className="text-white/80 font-[family-name:var(--font-pixel)] text-xs">Socios Points</span>
+                    </div>
+                    <div className="text-2xl font-bold gold-glow-text font-[family-name:var(--font-pixel)]">
+                      +{pointsChange}
+                    </div>
+                  </div>
+
+                  <div className="mt-2 text-xs text-white/50 font-[family-name:var(--font-pixel)]">
+                    {pointsEarned === 3 ? 'Vitoria: +3 pontos na tabela' :
+                     pointsEarned === 1 ? 'Empate: +1 ponto na tabela' :
+                     'Derrota: +0 pontos na tabela'}
+                  </div>
+                </GlassCard>
+              </motion.div>
+
+              <div className="p-4 space-y-3">
+                <CrtButton
+                  variant="outline"
+                  onClick={handleShare}
+                  className="w-full flex items-center justify-center gap-2 py-3"
+                >
+                  <Share2 className="w-4 h-4" />
+                  Compartilhar Resultado
+                </CrtButton>
+
+                <CrtButton
+                  variant="primary"
+                  onClick={onClose}
+                  pulse
+                  className="w-full py-3"
+                >
+                  Continuar
+                </CrtButton>
+              </div>
+            </GlassCard>
           </motion.div>
         </motion.div>
       )}

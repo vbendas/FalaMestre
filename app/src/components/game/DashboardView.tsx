@@ -4,16 +4,20 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { GameState } from '@/lib/types';
 import { ViewType } from '@/hooks/useGameState';
-import {
-  TrendingUp,
-  Trophy,
-  Calendar,
-} from 'lucide-react';
 import { SquadHealthPanel } from '@/components/dashboard/SquadHealthPanel';
 import { TopPlayersCarousel } from '@/components/dashboard/TopPlayersCarousel';
 import { PredictionMarketCard } from '@/components/predictions/PredictionMarketCard';
 import { FanClubInvestmentCard } from '@/components/investment/FanClubInvestmentCard';
 import type { Prediction, PredictionHistory, FanClubInvestment, InvestmentYield } from '@/lib/types';
+import {
+  GlassCard,
+  CrtButton,
+  StatCard,
+  SectionTitle,
+  CoinDisplay,
+  ProgressBar,
+  ViewContainer,
+} from '@/components/crt';
 
 interface DashboardViewProps {
   gameState: GameState;
@@ -27,8 +31,8 @@ interface DashboardViewProps {
   onClaimYields?: () => Promise<void>;
 }
 
-export function DashboardView({ 
-  gameState, 
+export function DashboardView({
+  gameState,
   onViewChange,
   predictions = [],
   userPredictionHistory,
@@ -36,196 +40,128 @@ export function DashboardView({
   yields = [],
   onPlaceBet,
   onInvest,
-  onClaimYields
+  onClaimYields,
 }: DashboardViewProps) {
   const { squad, season, user } = gameState;
   const [selectedPrediction, setSelectedPrediction] = useState<Prediction | null>(null);
 
   return (
-    <div className="space-y-4 pb-20">
-      {/* 2. League Position Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="bg-[#006400] rounded-xl p-4 border-2 border-[#FEDD00]/50"
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-[#004d00] flex items-center justify-center">
-              <Trophy className="w-6 h-6 text-[#FEDD00]" />
-            </div>
-            <div>
-              <p className="text-white/40 text-xs uppercase tracking-wider">Posição no Campeonato</p>
-              <p className="text-3xl font-bold text-white">{season.position}º</p>
+    <ViewContainer>
+      {/* Next Match Card */}
+      <GlassCard className="p-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            <SectionTitle>PRÓXIMA PARTIDA</SectionTitle>
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
+              <span className="text-[0.6rem] gold-glow-text font-[family-name:var(--font-pixel)] truncate max-w-[100px] sm:max-w-none">
+                {season.nextMatch.isHome ? user.team : season.nextMatch.opponent}
+              </span>
+              <span className="text-xs text-[rgba(255,223,0,0.4)] font-[family-name:var(--font-pixel)]">VS</span>
+              <span className="text-[0.6rem] text-white/70 font-[family-name:var(--font-pixel)] truncate max-w-[100px] sm:max-w-none">
+                {season.nextMatch.isHome ? season.nextMatch.opponent : user.team}
+              </span>
+              <span className="text-[0.5rem] text-[#55e0a0] font-[family-name:var(--font-pixel)]">
+                {season.nextMatch.isHome ? 'MANDANTE' : 'VISITANTE'}
+              </span>
             </div>
           </div>
-          <div className="text-right">
-            <p className="text-white/40 text-xs uppercase tracking-wider">Pontos</p>
-            <p className="text-2xl font-bold text-[#FEDD00]">{season.points}</p>
-          </div>
+          <CrtButton
+            pulse
+            className="px-4 py-2 text-[0.5rem] font-[family-name:var(--font-pixel)] flex-shrink-0 self-start sm:self-center"
+            onClick={() => onViewChange('match')}
+          >
+            ⚡ JOGAR
+          </CrtButton>
         </div>
 
-        {/* Record */}
-        <div className="flex gap-4 mt-4 pt-4 border-t border-[#004d00]">
-          <div className="flex-1 text-center">
-            <p className="text-2xl font-bold text-green-400">{season.wins}</p>
-            <p className="text-xs text-white/40">Vitórias</p>
+        {/* Win probability bar */}
+        <div className="mt-2">
+          <div className="flex justify-between text-[0.5rem] text-[rgba(255,223,0,0.4)] font-[family-name:var(--font-pixel)] mb-1">
+            <span>VITÓRIA</span>
+            <span>EMPATE</span>
+            <span>DERROTA</span>
           </div>
-          <div className="flex-1 text-center">
-            <p className="text-2xl font-bold text-yellow-400">{season.draws}</p>
-            <p className="text-xs text-white/40">Empates</p>
-          </div>
-          <div className="flex-1 text-center">
-            <p className="text-2xl font-bold text-red-400">{season.losses}</p>
-            <p className="text-xs text-white/40">Derrotas</p>
-          </div>
-        </div>
-
-        {/* Season progress */}
-        <div className="mt-3 pt-3 border-t border-[#004d00]">
-          <div className="flex justify-between text-[10px] text-white/40 mb-1">
-            <span>Temporada</span>
-            <span>Semana {season.week}/38</span>
-          </div>
-          <div className="h-1.5 bg-[#004d00] rounded-full overflow-hidden">
+          <div className="h-1.5 rounded-sm overflow-hidden flex bg-[rgba(0,0,0,0.3)]">
             <motion.div
               initial={{ width: 0 }}
-              animate={{ width: `${(season.week / 38) * 100}%` }}
-              transition={{ duration: 1, ease: 'easeOut' }}
-              className="h-full rounded-full bg-[#009739]"
-            />
-          </div>
-        </div>
-      </motion.div>
-
-      {/* 4. Next Match Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15 }}
-        className="bg-[#006400] rounded-xl p-4 border-2 border-[#FEDD00]/50"
-      >
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-[#009739]" />
-            <span className="text-xs text-white/40 uppercase tracking-wider">Próximo Jogo</span>
-          </div>
-          <span className="text-xs text-white/40">{season.nextMatch.competition}</span>
-        </div>
-
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex-1">
-            <p className="text-lg font-bold text-white">
-              {season.nextMatch.isHome ? user.team : season.nextMatch.opponent}
-            </p>
-            <p className="text-sm text-white/40">
-              {season.nextMatch.isHome ? 'Casa' : 'Fora'}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-white/30 text-sm">vs</span>
-            <p className="text-lg font-bold text-white">
-              {season.nextMatch.isHome ? season.nextMatch.opponent : user.team}
-            </p>
-          </div>
-        </div>
-
-        {/* Win probability */}
-        <div className="mb-3">
-          <div className="flex justify-between text-[10px] text-white/40 mb-1">
-            <span>Prob. de Vitória</span>
-            <span>{season.nextMatch.isHome ? '58%' : '42%'}</span>
-          </div>
-          <div className="h-2 bg-[#004d00] rounded-full overflow-hidden flex">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: season.nextMatch.isHome ? '58%' : '42%' }}
+              animate={{ width: season.nextMatch.isHome ? '55%' : '35%' }}
               transition={{ duration: 0.8 }}
-              className="h-full bg-green-500"
+              className="bg-[#00A859] rounded-l-sm"
             />
             <motion.div
               initial={{ width: 0 }}
-              animate={{ width: '15%' }}
+              animate={{ width: '20%' }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="h-full bg-yellow-500"
+              className="bg-[rgba(255,223,0,0.5)]"
             />
-            <div className="h-full flex-1 bg-red-500/50" />
-          </div>
-          <div className="flex justify-between text-[10px] text-white/30 mt-1">
-            <span>Vitória</span>
-            <span>Empate</span>
-            <span>Derrota</span>
+            <div className="flex-1 bg-[#3EA0D4] rounded-r-sm" />
           </div>
         </div>
-      </motion.div>
+      </GlassCard>
 
-      {/* 5. Squad Health Panel */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
-        <SquadHealthPanel squad={squad} onViewSquad={() => onViewChange('squad')} />
-      </motion.div>
+      {/* Stats Row */}
+      <div className="grid grid-cols-3 gap-2">
+        <StatCard
+          value={`${season.wins}V ${season.draws}E ${season.losses}D`}
+          label="CAMPEONATO"
+        />
+        <StatCard
+          value={`#${season.position}`}
+          label="POSIÇÃO"
+        />
+        <StatCard
+          value={`${season.points}`}
+          label="PONTOS"
+        />
+      </div>
 
-      {/* 6. Top Players Carousel */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.25 }}
-      >
-        <TopPlayersCarousel players={squad.players} onViewSquad={() => onViewChange('squad')} />
-      </motion.div>
-
-      {/* 7. Recent Form */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.35 }}
-        className="bg-[#006400] rounded-xl p-4 border-2 border-[#FEDD00]/50"
-      >
-        <div className="flex items-center gap-2 mb-3">
-          <TrendingUp className="w-4 h-4 text-[#FEDD00]" />
-          <span className="text-sm font-medium text-white">Forma Recente</span>
+      {/* Season Progress */}
+      <GlassCard className="p-2">
+        <div className="flex justify-between items-center">
+          <SectionTitle>TEMPORADA</SectionTitle>
+          <span className="text-[0.5rem] text-[rgba(255,223,0,0.4)] font-[family-name:var(--font-pixel)]">
+            RODADA {season.week}/38
+          </span>
         </div>
+        <ProgressBar value={season.week} max={38} height={4} color="#00A859" />
+      </GlassCard>
 
-        <div className="flex gap-2">
+      {/* Recent Form */}
+      <GlassCard className="p-2">
+        <SectionTitle>FORMA RECENTE</SectionTitle>
+        <div className="flex gap-1.5 mt-1">
           {(() => {
             const total = season.wins + season.draws + season.losses;
-            const results: Array<{ type: string; color: string; label: string }> = [];
-            const w = season.wins;
-            const d = season.draws;
-
-            // Generate last 5 results based on stats
+            const results: Array<{ color: string; label: string }> = [];
             for (let i = 0; i < Math.min(5, total); i++) {
-              if (i < w && w > 0) {
-                results.push({ type: 'W', color: 'bg-green-500', label: 'V' });
-              } else if (i < w + d) {
-                results.push({ type: 'D', color: 'bg-yellow-500', label: 'E' });
-              } else {
-                results.push({ type: 'L', color: 'bg-red-500', label: 'D' });
-              }
+              if (i < season.wins) results.push({ color: 'bg-[#00A859]', label: 'V' });
+              else if (i < season.wins + season.draws) results.push({ color: 'bg-[rgba(255,223,0,0.5)]', label: 'E' });
+              else results.push({ color: 'bg-[#FF3333]', label: 'D' });
             }
-
-            // Fill remaining with dashes
             while (results.length < 5) {
-              results.unshift({ type: '-', color: 'bg-[#004d00]', label: '-' });
+              results.unshift({ color: 'bg-[rgba(255,223,0,0.1)]', label: '-' });
             }
-
             return results.map((r, i) => (
               <div
                 key={i}
-                className={`w-10 h-10 rounded-lg ${r.color} flex items-center justify-center`}
+                className={`w-8 h-8 rounded-sm ${r.color} flex items-center justify-center`}
               >
-                <span className="text-white text-xs font-bold">{r.label}</span>
+                <span className="text-white text-[0.5rem] font-[family-name:var(--font-pixel)]">
+                  {r.label}
+                </span>
               </div>
             ));
           })()}
         </div>
-      </motion.div>
+      </GlassCard>
 
-      {/* NEW: Prediction Market Card */}
+      {/* Squad Health */}
+      <SquadHealthPanel squad={squad} onViewSquad={() => onViewChange('squad')} />
+
+      {/* Top Players */}
+      <TopPlayersCarousel players={squad.players} onViewSquad={() => onViewChange('squad')} />
+
+      {/* Prediction Market */}
       {predictions.length > 0 && onPlaceBet && (
         <PredictionMarketCard
           predictions={predictions}
@@ -234,7 +170,7 @@ export function DashboardView({
         />
       )}
 
-      {/* NEW: Fan Club Investment Card */}
+      {/* Fan Club Investment */}
       {onInvest && onClaimYields && (
         <FanClubInvestmentCard
           userBalance={user.money}
@@ -248,6 +184,6 @@ export function DashboardView({
           }}
         />
       )}
-    </div>
+    </ViewContainer>
   );
 }

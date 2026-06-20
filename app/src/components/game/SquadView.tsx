@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { User, Star } from 'lucide-react';
 import { GameState, Player } from '@/lib/types';
 import { ViewType } from '@/hooks/useGameState';
 import { PlayerCard } from '@/components/squad/PlayerCard';
@@ -10,6 +9,9 @@ import { PlayerDetailModal } from '@/components/squad/PlayerDetailModal';
 import { SquadStats } from '@/components/squad/SquadStats';
 import { FormationSelector } from '@/components/squad/FormationSelector';
 import { SquadViewSkeleton } from '@/components/ui/SkeletonLoader';
+import { ViewContainer, GlassCard, PositionBadge, CrtButton } from '@/components/crt';
+
+const MotionGlassCard = motion(GlassCard);
 
 interface SquadViewProps {
   gameState: GameState;
@@ -25,13 +27,11 @@ export function SquadView({ gameState, onViewChange, onTrainPlayer, userId, isLo
   if (isLoading) {
     return <SquadViewSkeleton />;
   }
-  
-  // State for modals
+
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [showFormationSelector, setShowFormationSelector] = useState(false);
   const [captainId, setCaptainId] = useState<string | null>(null);
 
-  // Group players by position
   const playersByPosition = {
     GK: squad.players.filter(p => p.position === 'GK'),
     DEF: squad.players.filter(p => p.position === 'DEF'),
@@ -46,43 +46,37 @@ export function SquadView({ gameState, onViewChange, onTrainPlayer, userId, isLo
     FWD: 'Atacantes'
   };
 
-  // Handle player selection (open detail modal)
   const handlePlayerSelect = (player: Player) => {
     setSelectedPlayer(player);
   };
 
-  // Handle training
   const handleTrain = async (playerId: string, focus: 'technical' | 'physical' | 'tactical' | 'rest') => {
     if (onTrainPlayer) {
       await onTrainPlayer(playerId, focus);
     }
   };
 
-  // Handle rest
   const handleRest = async (playerId: string) => {
     if (onTrainPlayer) {
       await onTrainPlayer(playerId, 'rest');
     }
   };
 
-  // Handle set captain
   const handleSetCaptain = (playerId: string) => {
     setCaptainId(playerId);
   };
 
-  // Handle formation change
   const handleFormationChange = async (formationId: string) => {
     if (!userId) return;
-    
+
     try {
       const response = await fetch('/api/squad/formation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, formation: formationId }),
       });
-      
+
       if (response.ok) {
-        // Update local state
         gameState.squad.formation = formationId;
         setShowFormationSelector(false);
       }
@@ -92,49 +86,38 @@ export function SquadView({ gameState, onViewChange, onTrainPlayer, userId, isLo
   };
 
   return (
-    <div className="space-y-4 pb-20">
-      {/* Squad Stats Dashboard */}
-      <SquadStats 
+    <ViewContainer className="pb-20 gap-3">
+      <SquadStats
         gameState={gameState}
         onFormationClick={() => setShowFormationSelector(true)}
       />
 
-      {/* Players List with position groups */}
       {(Object.keys(playersByPosition) as Array<keyof typeof playersByPosition>).map((pos) => (
-        <motion.div
+        <MotionGlassCard
           key={pos}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white/5 rounded-xl p-3 border border-white/10"
+          className="p-3"
         >
-          {/* Position Header */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <span className={`
-                px-2 py-0.5 rounded text-xs font-bold text-white
-                ${pos === 'GK' ? 'bg-purple-500' : ''}
-                ${pos === 'DEF' ? 'bg-blue-500' : ''}
-                ${pos === 'MID' ? 'bg-green-500' : ''}
-                ${pos === 'FWD' ? 'bg-red-500' : ''}
-              `}>
-                {positionLabels[pos]}
-              </span>
-              <span className="text-xs text-white/40">
+              <PositionBadge position={pos} className="text-white font-bold" />
+              <span className="text-xs text-[#55e0a0]/60 font-[family-name:var(--font-pixel)]">
                 {playersByPosition[pos].length} jogadores
               </span>
             </div>
             {pos === 'FWD' && (
-              <button
+              <CrtButton
+                variant="outline"
                 onClick={() => onViewChange('dashboard')}
-                className="text-xs text-[#FEDD00] hover:underline"
+                className="text-[0.55rem] px-2 py-0.5"
               >
                 Ver início →
-              </button>
+              </CrtButton>
             )}
           </div>
 
-          {/* Players Grid */}
           <div className="grid grid-cols-1 gap-2">
             {playersByPosition[pos].map((player, idx) => (
               <PlayerCard
@@ -146,16 +129,14 @@ export function SquadView({ gameState, onViewChange, onTrainPlayer, userId, isLo
             ))}
           </div>
 
-          {/* Empty state */}
           {playersByPosition[pos].length === 0 && (
-            <div className="text-center py-4 text-white/30 text-sm">
+            <div className="text-center py-4 text-[#55e0a0]/30 text-sm font-[family-name:var(--font-pixel)]">
               Nenhum jogador nesta posição
             </div>
           )}
-        </motion.div>
+        </MotionGlassCard>
       ))}
 
-      {/* Player Detail Modal */}
       <PlayerDetailModal
         player={selectedPlayer}
         isOpen={!!selectedPlayer}
@@ -167,7 +148,6 @@ export function SquadView({ gameState, onViewChange, onTrainPlayer, userId, isLo
         isCaptain={selectedPlayer ? captainId === selectedPlayer.id : false}
       />
 
-      {/* Formation Selector Modal */}
       <FormationSelector
         isOpen={showFormationSelector}
         onClose={() => setShowFormationSelector(false)}
@@ -175,6 +155,6 @@ export function SquadView({ gameState, onViewChange, onTrainPlayer, userId, isLo
         players={squad.players}
         onSelectFormation={handleFormationChange}
       />
-    </div>
+    </ViewContainer>
   );
 }

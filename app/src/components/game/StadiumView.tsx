@@ -1,11 +1,17 @@
 'use client';
 
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import React from 'react';
 import { GameState } from '@/lib/types';
 import { ViewType } from '@/hooks/useGameState';
 import { STADIUM_UPGRADES } from '@/lib/constants';
-import { Building, DollarSign, Users, ArrowRight, ChevronLeft, TrendingUp } from 'lucide-react';
+import {
+  GlassCard,
+  CrtButton,
+  StatCard,
+  SectionTitle,
+  CoinDisplay,
+  ManagementLayout,
+} from '@/components/crt';
 
 interface StadiumViewProps {
   gameState: GameState;
@@ -53,148 +59,117 @@ export function StadiumView({ gameState, onViewChange }: StadiumViewProps) {
     : 0;
 
   return (
-    <div className="p-4 space-y-4">
-      {/* Back button */}
-      <button
-        onClick={() => onViewChange('dashboard')}
-        className="flex items-center gap-2 text-white/60 hover:text-white"
-      >
-        <ChevronLeft className="w-5 h-5" />
-        Voltar
-      </button>
-
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-[#006400] rounded-xl p-4 border-2 border-[#FEDD00]/50"
-      >
-        <div className="flex items-center gap-3 mb-4">
-          <Building className="w-8 h-8 text-[#FEDD00]" />
-          <div>
-            <h2 className="text-xl font-bold text-white">Estádio</h2>
-            <p className="text-sm text-white/60">Nível {stadium.level}</p>
-          </div>
+    <ManagementLayout
+      title="ESTÁDIO"
+      icon="🏟️"
+      money={user.money || 0}
+      onBack={() => onViewChange('dashboard')}
+    >
+      {/* Stadium Level Header */}
+      <GlassCard className="p-3">
+        <div className="flex items-center justify-between mb-2">
+          <SectionTitle>NÍVEL {stadium.level}</SectionTitle>
+          <span className="text-[0.5rem] text-[#55e0a0] font-[family-name:var(--font-pixel)]">
+            {isMaxLevel ? 'NÍVEL MÁXIMO' : `PRÓXIMO: NÍVEL ${stadium.level + 1}`}
+          </span>
         </div>
 
         {/* Current Stats */}
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="bg-[#004d00] rounded-lg p-3">
-            <div className="flex items-center gap-2 text-white/60 mb-1">
-              <Users className="w-4 h-4" />
-              <span className="text-xs">Capacidade</span>
-            </div>
-            <p className="text-2xl font-bold text-[#FEDD00]">{stadium.capacity.toLocaleString()}</p>
-          </div>
-          <div className="bg-[#004d00] rounded-lg p-3">
-            <div className="flex items-center gap-2 text-white/60 mb-1">
-              <DollarSign className="w-4 h-4" />
-              <span className="text-xs">Preço Ingresso</span>
-            </div>
-            <p className="text-2xl font-bold text-[#FEDD00]">$ {stadium.ticketPrice}</p>
-          </div>
+        <div className="grid grid-cols-2 gap-2">
+          <StatCard
+            value={stadium.capacity.toLocaleString()}
+            label="CAPACIDADE"
+          />
+          <StatCard
+            value={`$ ${stadium.ticketPrice}`}
+            label="PREÇO INGRESSO"
+          />
         </div>
+      </GlassCard>
 
-        {/* Revenue estimate */}
-        {stadium.capacity > 0 && (
-          <div className="bg-[#004d00] rounded-lg p-3">
-            <div className="flex items-center gap-2 text-green-400 mb-1">
-              <TrendingUp className="w-4 h-4" />
-              <span className="text-sm font-medium">Receita Estimada por Partida</span>
-            </div>
-            <p className="text-xl font-bold text-white">$ {estimatedMatchRevenue.toLocaleString()}</p>
-            <p className="text-xs text-white/40">70% da renda com cupons</p>
-          </div>
-        )}
-      </motion.div>
-
-      {/* Upgrade section */}
-      {!isMaxLevel && nextStadium && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-[#006400] rounded-xl p-4 border-2 border-green-500/50"
-        >
-          <h3 className="text-lg font-bold text-white mb-3">Próxima Ampliação</h3>
-          
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div className="bg-[#004d00] rounded-lg p-3">
-              <div className="text-white/60 text-xs mb-1">Nova Capacidade</div>
-              <p className="text-xl font-bold text-white">{nextStadium.capacity.toLocaleString()}</p>
-            </div>
-            <div className="bg-[#004d00] rounded-lg p-3">
-              <div className="text-white/60 text-xs mb-1">Novo Preço</div>
-              <p className="text-xl font-bold text-white">$ {nextStadium.ticketPrice}</p>
-            </div>
-          </div>
-
+      {/* Revenue Estimate */}
+      {stadium.capacity > 0 && (
+        <GlassCard className="p-3">
+          <SectionTitle>RECEITA ESTIMADA POR PARTIDA</SectionTitle>
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-white/60 text-sm">Custo da Upgrade</p>
-              <p className={`text-xl font-bold ${canAffordUpgrade ? 'text-green-400' : 'text-red-400'}`}>
-                $ {nextStadium.cost.toLocaleString()}
-              </p>
-            </div>
-            <button
-              onClick={handleUpgrade}
-              disabled={!canAffordUpgrade}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold ${
-                canAffordUpgrade
-                  ? 'bg-[#FEDD00] text-black hover:bg-[#ffea4d]'
-                  : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-              }`}
-            >
-              {canAffordUpgrade ? 'Upgrade' : 'Saldo Insuficiente'}
-              <ArrowRight className="w-4 h-4" />
-            </button>
+            <CoinDisplay amount={estimatedMatchRevenue} size="lg" />
+            <span className="text-[0.5rem] text-[rgba(255,223,0,0.4)] font-[family-name:var(--font-pixel)]">
+              70% DA RENDA COM CUPONS
+            </span>
           </div>
-        </motion.div>
-      )}
-
-      {/* Max level reached */}
-      {isMaxLevel && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-[#006400] rounded-xl p-4 border-2 border-yellow-500/50 text-center"
-        >
-          <p className="text-yellow-400 font-bold text-lg">Estádio no nível máximo!</p>
-          <p className="text-white/60">Você alcançou a capacidade máxima</p>
-        </motion.div>
+        </GlassCard>
       )}
 
       {/* No stadium yet */}
       {stadium.capacity === 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-red-900/50 rounded-xl p-4 border-2 border-red-500/50"
-        >
-          <p className="text-red-300 font-medium mb-2">Você não tem um estádio ainda!</p>
-          <p className="text-white/60 text-sm mb-3">
-            Sem estádio, você só recebe receitas de jogos fora de casa. 
-            Construa seu estádio para receber torcedores e aumentar seus lucros!
+        <GlassCard className="p-3 border border-[#FF3333]/50">
+          <SectionTitle>
+            <span className="text-[#FF3333]">SEM ESTÁDIO</span>
+          </SectionTitle>
+          <p className="text-[0.5rem] text-white/60 font-[family-name:var(--font-pixel)] mb-3">
+            SEM ESTÁDIO, VOCÊ SÓ RECEBE RECEITAS DE JOGOS FORA DE CASA.
+            CONSTRUA SEU ESTÁDIO PARA RECEBER TORCEDORES E AUMENTAR SEUS LUCROS!
           </p>
-          <button
+          <CrtButton
             onClick={handleUpgrade}
             disabled={!canAffordUpgrade}
-            className={`w-full py-3 rounded-lg font-bold ${
-              canAffordUpgrade
-                ? 'bg-[#FEDD00] text-black hover:bg-[#ffea4d]'
-                : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-            }`}
+            pulse={!!canAffordUpgrade}
+            className="w-full py-3 text-[0.5rem]"
           >
-            Construir Estádio - $ {nextStadium?.cost.toLocaleString()}
-          </button>
-        </motion.div>
+            CONSTRUIR ESTÁDIO - $ {nextStadium?.cost.toLocaleString()}
+          </CrtButton>
+        </GlassCard>
       )}
 
-      {/* Current Balance */}
-      <div className="bg-[#004d00] rounded-lg p-3 text-center">
-        <p className="text-white/60 text-sm">Saldo Atual</p>
-        <p className="text-2xl font-bold text-[#FEDD00]">$ {(user.money || 0).toLocaleString()}</p>
-      </div>
-    </div>
+      {/* Upgrade Section */}
+      {!isMaxLevel && nextStadium && (
+        <GlassCard className="p-3" glow>
+          <SectionTitle>PRÓXIMA AMPLIAÇÃO</SectionTitle>
+
+          <div className="grid grid-cols-2 gap-2 mb-3">
+            <StatCard
+              value={nextStadium.capacity.toLocaleString()}
+              label="NOVA CAPACIDADE"
+            />
+            <StatCard
+              value={`$ ${nextStadium.ticketPrice}`}
+              label="NOVO PREÇO"
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-[0.5rem] text-[rgba(255,223,0,0.4)] font-[family-name:var(--font-pixel)]">
+                CUSTO
+              </div>
+              <CoinDisplay
+                amount={nextStadium.cost.toLocaleString()}
+                size="md"
+              />
+            </div>
+            <CrtButton
+              onClick={handleUpgrade}
+              disabled={!canAffordUpgrade}
+              pulse={!!canAffordUpgrade}
+              className="px-4 py-2 text-[0.5rem]"
+            >
+              {canAffordUpgrade ? 'UPGRADE →' : 'SALDO INSUFICIENTE'}
+            </CrtButton>
+          </div>
+        </GlassCard>
+      )}
+
+      {/* Max level reached */}
+      {isMaxLevel && (
+        <GlassCard className="p-4 text-center">
+          <p className="text-[0.6rem] gold-glow-text font-[family-name:var(--font-pixel)] mb-1">
+            ESTÁDIO NO NÍVEL MÁXIMO!
+          </p>
+          <p className="text-[0.5rem] text-[rgba(255,223,0,0.4)] font-[family-name:var(--font-pixel)]">
+            VOCÊ ALCANÇOU A CAPACIDADE MÁXIMA
+          </p>
+        </GlassCard>
+      )}
+    </ManagementLayout>
   );
 }

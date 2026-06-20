@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
     }
     
     // If auth is required but no session and no userId provided
-    if (process.env.REQUIRE_AUTH === 'true' && !sessionUserId && !userId) {
+    if (process.env.AUTH_DISABLED !== 'true' && !sessionUserId && !userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }

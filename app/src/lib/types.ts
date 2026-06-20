@@ -509,3 +509,86 @@ export interface PhaseUnlock {
   priority: 'high' | 'medium';
   message: string;
 }
+
+// =====================================================
+// DECISION TURN TYPES
+// =====================================================
+
+export type TurnMentality = 'attacking' | 'balanced' | 'defensive';
+export type TurnAction = 'change_formation' | 'change_mentality' | 'substitution' | 'tactical_instruction' | 'keep_setup';
+export type DecisionCategory = 'formation' | 'mentality' | 'substitution' | 'tactical' | 'instruction';
+
+export type TacticalInstructionType =
+  | 'high_press' | 'park_the_bus' | 'tiki_taka' | 'counter_attack'
+  | 'long_balls' | 'wing_play' | 'shoot_on_sight' | 'time_wasting'
+  | 'target_man' | 'free_role' | 'man_mark' | 'overlap';
+
+export interface TacticalInstruction {
+  type: TacticalInstructionType;
+  targetPlayerId?: string;
+  statModifiers: { pac?: number; sho?: number; pas?: number; dri?: number; def?: number; phy?: number };
+  teamPowerMultiplier: number;
+  opponentPowerMultiplier: number;
+  description: string;
+  riskFactor: number;
+}
+
+export interface DecisionOption {
+  id: string;
+  label: string;
+  description: string;
+  icon: string;
+  action: TurnAction;
+  category: DecisionCategory;
+  formation?: string;
+  mentality?: TurnMentality;
+  substituteOut?: string;
+  substituteIn?: string;
+  tacticalInstruction?: TacticalInstructionType;
+}
+
+export interface TurnResult {
+  turnNumber: number;
+  minute: number;
+  decision: DecisionOption | null;
+  wasDefault: boolean;
+  mentalityShift?: TurnMentality;
+  formationChange?: string;
+  substitution?: { out: string; in: string };
+  tacticalInstruction?: TacticalInstruction;
+}
+
+export interface DecisionTurn {
+  turnNumber: number;
+  minute: number;
+  label: string;
+  options: DecisionOption[];
+  defaultOption: DecisionOption;
+  timerSeconds: number;
+}
+
+export interface MatchSegment {
+  fromMinute: number;
+  toMinute: number;
+  events: MatchEvent[];
+  homeScoreAtStart: number;
+  awayScoreAtStart: number;
+  homeScoreAtEnd: number;
+  awayScoreAtEnd: number;
+  turnResult?: TurnResult;
+}
+
+export interface DecisionPromptState {
+  isActive: boolean;
+  currentTurn: DecisionTurn | null;
+  timeRemaining: number;
+  segmentSummary: string;
+  priorSegment: MatchSegment | null;
+}
+
+export interface TurnConfig {
+  minute: number;
+  label: string;
+  defaultAction: TurnAction;
+  defaultLabel: string;
+}

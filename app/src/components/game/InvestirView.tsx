@@ -1,9 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import { GameState } from '@/lib/types';
 import { formatMoney } from '@/lib/economy';
+import {
+  ViewContainer,
+  GlassCard,
+  CrtButton,
+  CoinDisplay,
+  SectionTitle,
+} from '@/components/crt';
 
 interface InvestirViewProps {
   gameState: GameState;
@@ -145,116 +151,136 @@ export function InvestirView({ gameState, userId, onViewChange, onMoneyUpdate }:
     }
   };
 
-  // Active investments (mock for now - in real app would come from DB)
   const activeInvestments: any[] = [];
 
   return (
-    <div className="space-y-4 pb-24">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-[#006400] rounded-xl p-4 border-2 border-[#FEDD00]/50"
-      >
-        <h2 className="text-white font-bold text-xl">💰 Investimentos</h2>
-        <p className="text-white/70 text-sm">Invista no seu clube para ganhar vantagens estratégicas</p>
-        <div className="mt-3 flex items-center justify-between">
+    <ViewContainer className="pb-24">
+      <GlassCard glow className="p-4 space-y-3">
+        <h2 className="font-[family-name:var(--font-pixel)] text-[0.7rem] gold-glow-text">
+          💰 INVESTIMENTOS
+        </h2>
+        <p className="text-[0.5rem] text-[#55e0a0]/70 font-[family-name:var(--font-pixel)]">
+          Invista no seu clube para ganhar vantagens estratégicas
+        </p>
+        <div className="flex items-center justify-between pt-1">
           <div>
-            <p className="text-white/50 text-xs">Seu Saldo</p>
-            <p className="text-yellow-400 font-bold text-xl">{formatMoney(gameState.user.money)}</p>
+            <div className="section-title">Seu Saldo</div>
+            <CoinDisplay amount={gameState.user.money} size="md" />
           </div>
           <div className="text-right">
-            <p className="text-white/50 text-xs">Investimentos Ativos</p>
-            <p className="text-white font-bold text-xl">{activeInvestments.length}</p>
+            <div className="section-title">Investimentos Ativos</div>
+            <span className="font-[family-name:var(--font-pixel)] text-[0.6rem] text-[#FFDF00]">
+              {activeInvestments.length}
+            </span>
           </div>
         </div>
-      </motion.div>
+      </GlassCard>
 
-      {/* Active Investments */}
       {activeInvestments.length > 0 && (
-        <div className="bg-green-900/20 rounded-xl p-4 border border-green-500/30">
-          <p className="text-green-400 font-bold mb-3">Seus Investimentos Ativos</p>
+        <GlassCard className="p-3 space-y-2">
+          <p className="font-[family-name:var(--font-pixel)] text-[0.6rem] text-[#00A859]">
+            Seus Investimentos Ativos
+          </p>
           <div className="space-y-2">
             {activeInvestments.map((inv, i) => (
-              <div key={i} className="bg-white/10 rounded-lg p-3 flex justify-between items-center">
+              <div key={i} className="frosted-card p-3 flex justify-between items-center">
                 <div>
-                  <p className="text-white font-bold">{inv.name}</p>
-                  <p className="text-white/50 text-xs">{inv.daysRemaining} dias restantes</p>
+                  <p className="font-[family-name:var(--font-pixel)] text-[0.55rem] text-[#FFDF00]">
+                    {inv.name}
+                  </p>
+                  <p className="text-xs text-[#55e0a0]/60 font-[family-name:var(--font-pixel)]">
+                    {inv.daysRemaining} dias restantes
+                  </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-green-400">+{formatMoney(inv.dailyYield)}/dia</p>
+                  <span className="text-[0.5rem] text-[#00A859] font-[family-name:var(--font-pixel)]">
+                    +{formatMoney(inv.dailyYield)}/dia
+                  </span>
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        </GlassCard>
       )}
 
-      {/* Available Investments */}
-      <div className="space-y-3">
-        <h3 className="text-white font-bold px-2">Opções de Investimento</h3>
-        
-        {INVESTMENT_TYPES.map(investment => (
-          <div key={investment.id} className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
-            <button
-              onClick={() => setExpandedId(expandedId === investment.id ? null : investment.id)}
-              className="w-full p-4 flex items-center justify-between text-left"
+      <div className="space-y-2">
+        <SectionTitle>Opções de Investimento</SectionTitle>
+
+        {INVESTMENT_TYPES.map(investment => {
+          const canAfford = gameState.user.money >= investment.cost;
+          const isExpanded = expandedId === investment.id;
+
+          return (
+            <GlassCard
+              key={investment.id}
+              className="overflow-hidden"
             >
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">{investment.icon}</span>
-                <div>
-                  <p className="text-white font-bold">{investment.name}</p>
-                  <p className="text-white/50 text-xs">Custo: {formatMoney(investment.cost)}</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-green-400 font-bold text-sm">
-                  +{investment.strategicBonusValue}%
-                </p>
-                <p className="text-white/30 text-xs">{investment.durationDays} dias</p>
-              </div>
-            </button>
-
-            {/* Expanded Details */}
-            {expandedId === investment.id && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                className="px-4 pb-4 border-t border-white/10"
+              <button
+                onClick={() => setExpandedId(isExpanded ? null : investment.id)}
+                className="w-full p-3 flex items-center justify-between text-left"
               >
-                <p className="text-white/70 text-sm mt-3">{investment.description}</p>
-                
-                <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-                  <div className="bg-white/10 rounded p-2">
-                    <p className="text-white/50">Rendimento Diário</p>
-                    <p className="text-green-400">{investment.dailyYield > 0 ? formatMoney(investment.dailyYield) + '/dia' : 'N/A'}</p>
-                  </div>
-                  <div className="bg-white/10 rounded p-2">
-                    <p className="text-white/50">Bônus Estratégico</p>
-                    <p className="text-yellow-400">+{investment.strategicBonusValue}% {investment.strategicBonusType}</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">{investment.icon}</span>
+                  <div>
+                    <p className="font-[family-name:var(--font-pixel)] text-[0.55rem] gold-glow-text">
+                      {investment.name}
+                    </p>
+                    <CoinDisplay amount={investment.cost} size="sm" />
                   </div>
                 </div>
+                <div className="text-right">
+                  <p className="font-[family-name:var(--font-pixel)] text-[0.5rem] text-[#00A859]">
+                    +{investment.strategicBonusValue}%
+                  </p>
+                  <p className="text-[0.5rem] text-[#55e0a0]/50 font-[family-name:var(--font-pixel)]">
+                    {investment.durationDays} dias
+                  </p>
+                </div>
+              </button>
 
-                <button
-                  onClick={() => handleInvest(investment)}
-                  disabled={gameState.user.money < investment.cost || investing === investment.id}
-                  className={`w-full mt-3 py-3 rounded-lg font-bold transition-colors ${
-                    gameState.user.money >= investment.cost
-                      ? 'bg-yellow-500 hover:bg-yellow-400 text-black'
-                      : 'bg-white/20 text-white/50 cursor-not-allowed'
-                  }`}
-                >
-                  {investing === investment.id 
-                    ? 'Investindo...' 
-                    : gameState.user.money < investment.cost 
-                      ? 'Saldo Insuficiente' 
-                      : `Investir ${formatMoney(investment.cost)}`}
-                </button>
-              </motion.div>
-            )}
-          </div>
-        ))}
+              {isExpanded && (
+                <div className="px-3 pb-3 border-t border-[#55e0a0]/20">
+                  <p className="text-[0.5rem] text-[#55e0a0]/70 font-[family-name:var(--font-pixel)] mt-3">
+                    {investment.description}
+                  </p>
+
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <div className="frosted-card p-2">
+                      <p className="text-[0.5rem] text-[#55e0a0]/60 font-[family-name:var(--font-pixel)]">
+                        Rendimento Diário
+                      </p>
+                      <p className="text-[0.5rem] text-[#00A859] font-[family-name:var(--font-pixel)]">
+                        {investment.dailyYield > 0 ? formatMoney(investment.dailyYield) + '/dia' : 'N/A'}
+                      </p>
+                    </div>
+                    <div className="frosted-card p-2">
+                      <p className="text-[0.5rem] text-[#55e0a0]/60 font-[family-name:var(--font-pixel)]">
+                        Bônus Estratégico
+                      </p>
+                      <p className="text-[0.5rem] text-[#FFDF00] font-[family-name:var(--font-pixel)]">
+                        +{investment.strategicBonusValue}% {investment.strategicBonusType}
+                      </p>
+                    </div>
+                  </div>
+
+                  <CrtButton
+                    onClick={() => handleInvest(investment)}
+                    disabled={!canAfford || investing === investment.id}
+                    variant={canAfford ? 'primary' : 'outline'}
+                    className="w-full mt-3 py-2 text-[0.55rem]"
+                  >
+                    {investing === investment.id
+                      ? 'Investindo...'
+                      : !canAfford
+                        ? 'Saldo Insuficiente'
+                        : `Investir ${formatMoney(investment.cost)}`}
+                  </CrtButton>
+                </div>
+              )}
+            </GlassCard>
+          );
+        })}
       </div>
-    </div>
+    </ViewContainer>
   );
 }

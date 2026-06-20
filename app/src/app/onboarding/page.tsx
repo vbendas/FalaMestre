@@ -4,8 +4,19 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { TeamCreationForm, type TeamFormData } from '@/components/onboarding/TeamCreationForm';
 import { TeamPreviewCard } from '@/components/onboarding/TeamPreviewCard';
+import { CrtCabinet } from '@/components/crt/CrtCabinet';
+import { ViewContainer } from '@/components/crt/ViewContainer';
+import { CrtButton } from '@/components/crt/CrtButton';
+import { GlassCard } from '@/components/crt/GlassCard';
+import { Divider } from '@/components/crt/Divider';
 
 type Step = 'create' | 'preview' | 'confirm';
+
+const STEP_LABELS: Record<Step, string> = {
+  create: 'Crie Seu Time',
+  preview: 'Confirme Seu Time',
+  confirm: 'Bem-vindo!',
+};
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -26,12 +37,9 @@ export default function OnboardingPage() {
     setError('');
 
     try {
-      // Call API to create team
       const response = await fetch('/api/onboarding/create-team', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           teamName: teamData.name,
           primaryColor: teamData.primaryColor,
@@ -47,13 +55,11 @@ export default function OnboardingPage() {
 
       const result = await response.json();
 
-      // Store userId in localStorage
       if (result.userId) {
         localStorage.setItem('falaMestreUserId', result.userId);
         localStorage.setItem('falaMestreJustOnboarded', 'true');
       }
 
-      // Redirect to game
       router.push('/');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
@@ -69,103 +75,93 @@ export default function OnboardingPage() {
     }
   };
 
+  const stepIndex = step === 'create' ? 0 : step === 'preview' ? 1 : 2;
+
   return (
-    <div className="min-h-screen text-white">
-      {/* Header */}
-      <div className="bg-black bg-opacity-50 border-b-4 border-yellow-400 py-6">
-        <div className="max-w-4xl mx-auto px-4">
-          <h1 className="text-4xl font-bold text-center mb-2">🏟️ Fala Mestre!</h1>
-          <p className="text-center text-gray-300 text-lg">
-            {step === 'create' && 'Crie Seu Time Personalizado'}
-            {step === 'preview' && 'Confirme Seu Time'}
-            {step === 'confirm' && 'Bem-vindo ao Jogo!'}
-          </p>
-        </div>
-      </div>
+    <CrtCabinet>
+      <div className="flex flex-col w-full h-full">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-2 border-b border-[rgba(255,223,0,0.20)]">
+          <span className="text-[0.6rem] gold-glow-text font-[family-name:var(--font-pixel)]">
+            🏟️ FALA MESTRE!
+          </span>
+          <span className="text-xs text-[#55e0a0] font-[family-name:var(--font-pixel)]">
+            {STEP_LABELS[step]}
+          </span>
 
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 py-12">
-        {/* Progress Indicator */}
-        <div className="flex justify-between mb-12 max-w-md mx-auto">
-          <div
-            className={`flex-1 h-1 rounded mr-2 transition ${
-              step === 'create' || step === 'preview' || step === 'confirm'
-                ? 'bg-yellow-400'
-                : 'bg-gray-600'
-            }`}
-          />
-          <div
-            className={`flex-1 h-1 rounded mr-2 transition ${
-              step === 'preview' || step === 'confirm' ? 'bg-yellow-400' : 'bg-gray-600'
-            }`}
-          />
-          <div
-            className={`flex-1 h-1 rounded transition ${
-              step === 'confirm' ? 'bg-yellow-400' : 'bg-gray-600'
-            }`}
-          />
-        </div>
-
-        {/* Step: Create Team */}
-        {step === 'create' && (
-          <div className="flex flex-col items-center">
-            <TeamCreationForm onSubmit={handleCreateTeam} isLoading={isLoading} />
-            <p className="mt-8 text-center text-gray-400 text-sm">
-              💡 Dica: Escolha cores que representem sua personalidade como treinador!
-            </p>
+          {/* Step dots */}
+          <div className="flex gap-1.5">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="rounded-full transition-all"
+                style={{
+                  width: i === stepIndex ? 12 : 6,
+                  height: 6,
+                  backgroundColor: i <= stepIndex ? '#FFDF00' : 'rgba(255,223,0,0.2)',
+                  boxShadow: i === stepIndex ? '0 0 6px rgba(255,223,0,0.5)' : 'none',
+                }}
+              />
+            ))}
           </div>
-        )}
+        </div>
 
-        {/* Step: Preview */}
-        {step === 'preview' && teamData && (
-          <div className="flex flex-col items-center gap-8">
-            <TeamPreviewCard teamData={teamData} />
-
-            <div className="flex gap-4 max-w-md w-full">
-              <button
-                onClick={handleGoBack}
-                disabled={isLoading}
-                className="flex-1 py-3 px-4 bg-gray-600 hover:bg-gray-700 text-white font-bold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                ← Voltar
-              </button>
-              <button
-                onClick={handleConfirmTeam}
-                disabled={isLoading}
-                className="flex-1 py-3 px-4 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? '⏳ Confirmando...' : '✅ Confirmar'}
-              </button>
+        {/* Content */}
+        <ViewContainer className="flex-1 flex items-center justify-center">
+          {step === 'create' && (
+            <div className="w-full max-w-lg">
+              <TeamCreationForm onSubmit={handleCreateTeam} isLoading={isLoading} />
             </div>
+          )}
 
-            {error && (
-              <div className="max-w-md w-full bg-red-900 bg-opacity-70 border-2 border-red-500 rounded-lg p-4 text-center text-red-200">
-                {error}
+          {step === 'preview' && teamData && !isLoading && (
+            <div className="flex flex-col items-center gap-4 w-full max-w-lg">
+              <TeamPreviewCard teamData={teamData} />
+
+              <div className="flex gap-3 w-full max-w-md">
+                <CrtButton
+                  variant="outline"
+                  onClick={handleGoBack}
+                  disabled={isLoading}
+                  className="flex-1 py-2 text-[0.5rem]"
+                >
+                  ← VOLTAR
+                </CrtButton>
+                <CrtButton
+                  variant="primary"
+                  onClick={handleConfirmTeam}
+                  disabled={isLoading}
+                  pulse
+                  className="flex-1 py-2 text-[0.5rem]"
+                >
+                  ✅ CONFIRMAR
+                </CrtButton>
               </div>
-            )}
 
-            <p className="text-center text-gray-400 text-sm">
-              Satisfeito com seu time? Clique em "Confirmar" para começar a jogar!
-            </p>
-          </div>
-        )}
+              {error && (
+                <GlassCard className="w-full max-w-md p-3 text-center border-[#FF3333]">
+                  <p className="text-xs text-[#FF3333] font-[family-name:var(--font-pixel)]">
+                    {error}
+                  </p>
+                </GlassCard>
+              )}
 
-        {/* Loading State */}
-        {isLoading && step === 'preview' && (
-          <div className="flex flex-col items-center gap-6">
-            <div className="animate-spin">
-              <div className="w-16 h-16 border-4 border-yellow-400 border-t-transparent rounded-full" />
+              <p className="text-[0.5rem] text-[rgba(255,223,0,0.4)] font-[family-name:var(--font-pixel)]">
+                Satisfeito com seu time? Clique em CONFIRMAR para começar!
+              </p>
             </div>
-            <p className="text-xl font-bold text-yellow-400">Criando seu time...</p>
-            <p className="text-gray-400">Por favor aguarde um momento</p>
-          </div>
-        )}
-      </div>
+          )}
 
-      {/* Footer */}
-      <div className="fixed bottom-0 left-0 right-0 bg-black bg-opacity-50 border-t border-yellow-400 py-4 text-center text-gray-400 text-sm">
-        <p>Fala Mestre! © 2024 • Powered by Claude AI</p>
+          {isLoading && step === 'preview' && (
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-10 h-10 border-2 border-[#FFDF00] border-t-transparent rounded-full animate-spin" />
+              <p className="text-[0.55rem] gold-glow-text font-[family-name:var(--font-pixel)]">
+                Criando seu time...
+              </p>
+            </div>
+          )}
+        </ViewContainer>
       </div>
-    </div>
+    </CrtCabinet>
   );
 }

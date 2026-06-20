@@ -13,6 +13,9 @@
  */
 
 import { SegmentId, SEGMENT_DEFINITIONS } from '../segment-definitions';
+import { db } from '@/db';
+import { audienceSyncLog } from '@/db/schema';
+import { eq, and, desc } from 'drizzle-orm';
 
 const TIKTOK_API_VERSION = 'v1.3';
 const TIKTOK_BUSINESS_API = `https://business-api.tiktok.com/open_api/${TIKTOK_API_VERSION}`;
@@ -77,14 +80,31 @@ export async function syncToTikTokAudience(
   const segmentDef = SEGMENT_DEFINITIONS[segmentId];
   const audienceName = `FM_${segmentId}`;
   const audienceDescription = segmentDef.description;
-  
+
+  let audienceId: string | null = null;
+  const errors: string[] = [];
+
   try {
-    // Step 1: Find existing audience or create new one
-    let audienceId: string;
-    
-    try {
-      // Search for existing audience with this name
-      const searchUrl = `${TIKTOK_BUSINESS_API}/dmp/custom_audience/list/`;
+    // Check for existing audience ID from previous syncs
+    const existingSync = await db.select({ platformAudienceId: audienceSyncLog.platformAudienceId })
+      .from(audienceSyncLog)
+      .where(and(
+        eq(audienceSyncLog.segmentId, segmentId),
+        eq(audienceSyncLog.platform, 'tiktok'),
+        eq(audienceSyncLog.success, true),
+      ))
+      .orderBy(desc(audienceSyncLog.syncedAt))
+      .limit(1);
+
+    if (existingSync[0]?.platformAudienceId) {
+      audienceId = existingSync[0].platformAudienceId;
+      console.log(`Reusing existing TikTok audience: ${audienceId}`);
+    }
+
+    // Only create new audience if we don't have an existing one
+    if (!audienceId) {
+      try {
+        const searchUrl = `${TIKTOK_BUSINESS_API}/dmp/custom_audience/list/`;
       const searchResponse = await fetch(searchUrl, {
         method: 'GET',
         headers: {
@@ -92,21 +112,17 @@ export async function syncToTikTokAudience(
           'Content-Type': 'application/json',
         },
       });
-      
+
       if (!searchResponse.ok) {
         throw new Error(`Failed to search audiences: ${searchResponse.statusText}`);
       }
-      
+
       const searchData: TikTokAudienceResponse = await searchResponse.json();
-      
+
       if (searchData.code !== 0) {
         throw new Error(`TikTok API error: ${searchData.message}`);
       }
-      
-      // TikTok doesn't have a direct search by name, so we'll always create a new audience
-      // In production, you might want to store audience IDs in a database to reuse them
-      
-      // Create new audience
+
       const createUrl = `${TIKTOK_BUSINESS_API}/dmp/custom_audience/create/`;
       const createResponse = await fetch(createUrl, {
         method: 'POST',
@@ -119,10 +135,10 @@ export async function syncToTikTokAudience(
           custom_audience_name: audienceName,
           audience_description: audienceDescription,
           audience_type: 'EMAIL',
-          file_paths: [], // Will upload file separately
+          file_paths: [],
         }),
       });
-      
+
       if (!createResponse.ok) {
         const errorText = await createResponse.text();
         throw new Error(`Failed to create audience: ${errorText}`);
@@ -136,15 +152,15 @@ export async function syncToTikTokAudience(
       
       audienceId = createData.data.custom_audience_id;
       console.log(`Created new TikTok audience: ${audienceId}`);
-      
-    } catch (error) {
-      console.error('Error creating TikTok audience:', error);
-      return {
-        success: false,
-        audienceId: null,
-        added: 0,
-        errors: [error instanceof Error ? error.message : 'Failed to create audience'],
-      };
+      } catch (error) {
+        console.error('Error creating TikTok audience:', error);
+        return {
+          success: false,
+          audienceId: null,
+          added: 0,
+          errors: [error instanceof Error ? error.message : 'Failed to create audience'],
+        };
+      }
     }
     
     // Step 2: Upload users via file (TikTok uses file-based upload for large batches)

@@ -97,7 +97,11 @@ export async function resolveIdentity(
     // 3. Profile the wallet on-chain
     const walletProfile = await profileWallet(walletAddress as `0x${string}`);
 
-    // 4. Update user_profiles with wallet archetype and balances
+    if (!walletProfile) {
+      console.warn('[identity-resolver] Wallet profiler returned null (stub mode)');
+      return null;
+    }
+
     await db.update(userProfiles)
       .set({
         walletArchetype: walletProfile.archetype,

@@ -19,6 +19,14 @@
     {
       "path": "/api/cron/snapshot-profiles",
       "schedule": "0 2 * * 0"
+    },
+    {
+      "path": "/api/cron/daily-yield",
+      "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/api/cron/expire-yields",
+      "schedule": "0 2 * * *"
     }
   ]
 }

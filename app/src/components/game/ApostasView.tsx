@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useState } from 'react';
 import { GameState } from '@/lib/types';
 import { formatMoney } from '@/lib/economy';
+import { GlassCard, CrtButton, CoinDisplay, SectionTitle, ViewContainer } from '@/components/crt';
 
 interface ApostasViewProps {
   gameState: GameState;
@@ -30,9 +30,8 @@ export function ApostasView({ gameState, userId, onViewChange }: ApostasViewProp
   const [selectedBets, setSelectedBets] = useState<Map<string, { type: string; optionId: string; amount: number }>>(new Map());
   const [betAmount, setBetAmount] = useState(50000);
 
-  // Rotating prediction types - select 3-4 randomly
   const allPredictionTypes: PredictionType[] = [
-    'resultado', 'intervalo_final', 'total_gols', 'ambos_marcam', 
+    'resultado', 'intervalo_final', 'total_gols', 'ambos_marcam',
     'primeiro_gol', 'escantios', 'cartoes', 'placar_exato'
   ];
 
@@ -47,7 +46,6 @@ export function ApostasView({ gameState, userId, onViewChange }: ApostasViewProp
     placar_exato: 'Placar Exato'
   };
 
-  // For MVP, use a simple selection of 4 popular prediction types
   const activePredictions: MatchPrediction[] = [
     {
       type: 'resultado',
@@ -100,7 +98,7 @@ export function ApostasView({ gameState, userId, onViewChange }: ApostasViewProp
 
   const handlePlaceBet = async () => {
     if (selectedBets.size === 0) return;
-    
+
     for (const [, bet] of selectedBets) {
       try {
         const response = await fetch('/api/predictions/bet', {
@@ -113,7 +111,7 @@ export function ApostasView({ gameState, userId, onViewChange }: ApostasViewProp
             userId
           }),
         });
-        
+
         const data = await response.json();
         if (!response.ok) {
           alert(data.error || 'Erro ao fazer aposta');
@@ -122,7 +120,7 @@ export function ApostasView({ gameState, userId, onViewChange }: ApostasViewProp
         console.error('Bet error:', error);
       }
     }
-    
+
     alert(`Apostas realizadas com sucesso! ${selectedBets.size} apostas.`);
     setSelectedBets(new Map());
   };
@@ -130,54 +128,44 @@ export function ApostasView({ gameState, userId, onViewChange }: ApostasViewProp
   const totalPotentialWin = Array.from(selectedBets.values()).reduce((sum, bet) => sum + bet.amount * 1.8, 0);
 
   return (
-    <div className="space-y-4 pb-24">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-[#006400] rounded-xl p-4 border-2 border-[#FEDD00]/50"
-      >
+    <ViewContainer className="pb-24">
+      <GlassCard glow className="p-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-white font-bold text-xl">📊 Apostas</h2>
-            <p className="text-white/70 text-sm">Aposte nos próximos jogos</p>
+            <h2 className="text-[#FFDF00] font-bold text-lg font-[family-name:var(--font-pixel)]">📊 Apostas</h2>
+            <p className="text-[#55e0a0] text-xs font-[family-name:var(--font-pixel)]">Aposte nos próximos jogos</p>
           </div>
           <div className="text-right">
-            <p className="text-white/50 text-xs">Seu Saldo</p>
-            <p className="text-yellow-400 font-bold text-xl">{formatMoney(gameState.user.money)}</p>
+            <p className="text-white/50 text-xs font-[family-name:var(--font-pixel)]">Seu Saldo</p>
+            <CoinDisplay amount={gameState.user.money} size="lg" />
           </div>
         </div>
-      </motion.div>
+      </GlassCard>
 
-      {/* Next Match Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="bg-white/10 rounded-xl p-4 border border-white/20"
-      >
-        <p className="text-white/50 text-xs uppercase">Próxima Partida - Rodada {gameState.season.week}</p>
+      <GlassCard className="p-4">
+        <p className="text-white/50 text-xs uppercase font-[family-name:var(--font-pixel)]">
+          Próxima Partida - Rodada {gameState.season.week}
+        </p>
         <div className="flex items-center justify-between mt-2">
           <div className="text-center flex-1">
-            <p className="text-white font-bold">{gameState.user.team}</p>
-            <p className="text-green-400 text-xs">Casa</p>
+            <p className="text-white font-bold font-[family-name:var(--font-pixel)]">{gameState.user.team}</p>
+            <p className="text-[#00A859] text-xs font-[family-name:var(--font-pixel)]">Casa</p>
           </div>
           <div className="px-4">
-            <p className="text-white/30 text-2xl">VS</p>
+            <p className="text-white/30 text-2xl font-[family-name:var(--font-pixel)]">VS</p>
           </div>
           <div className="text-center flex-1">
-            <p className="text-white font-bold">{nextMatch.opponent}</p>
-            <p className="text-red-400 text-xs">{nextMatch.isHome ? 'Fora' : 'Casa'}</p>
+            <p className="text-white font-bold font-[family-name:var(--font-pixel)]">{nextMatch.opponent}</p>
+            <p className="text-[#FF3333] text-xs font-[family-name:var(--font-pixel)]">{nextMatch.isHome ? 'Fora' : 'Casa'}</p>
           </div>
         </div>
-        <p className="text-white/50 text-xs text-center mt-2">{nextMatch.competition}</p>
-      </motion.div>
+        <p className="text-white/50 text-xs text-center mt-2 font-[family-name:var(--font-pixel)]">{nextMatch.competition}</p>
+      </GlassCard>
 
-      {/* Bet Amount Slider */}
-      <div className="bg-white/5 rounded-xl p-4">
+      <GlassCard className="p-4">
         <div className="flex justify-between items-center mb-2">
-          <span className="text-white/70 text-sm">Valor da Aposta</span>
-          <span className="text-yellow-400 font-bold">{formatMoney(betAmount)}</span>
+          <span className="text-white/70 text-sm font-[family-name:var(--font-pixel)]">Valor da Aposta</span>
+          <CoinDisplay amount={betAmount} size="md" />
         </div>
         <input
           type="range"
@@ -186,57 +174,51 @@ export function ApostasView({ gameState, userId, onViewChange }: ApostasViewProp
           step={10000}
           value={betAmount}
           onChange={e => setBetAmount(Number(e.target.value))}
-          className="w-full"
+          className="w-full accent-[#FFDF00]"
         />
-      </div>
+      </GlassCard>
 
-      {/* Available Predictions */}
-      <div className="space-y-3">
-        <h3 className="text-white font-bold px-2">Mercados Disponíveis</h3>
-        
-        {activePredictions.map(pred => (
-          <div key={pred.type} className="bg-white/5 rounded-xl p-4 border border-white/10">
-            <p className="text-white font-bold mb-3">{pred.label}</p>
-            <div className="grid grid-cols-3 gap-2">
-              {pred.options.map(opt => {
-                const isSelected = selectedBets.has(pred.type);
-                return (
-                  <button
-                    key={opt.id}
-                    onClick={() => handleSelectBet(pred.type, opt.id, opt.odds)}
-                    className={`p-3 rounded-lg text-center transition-colors ${
-                      isSelected 
-                        ? 'bg-yellow-600/30 border-2 border-yellow-500' 
-                        : 'bg-white/10 border border-white/20 hover:bg-white/20'
-                    }`}
-                  >
-                    <p className="text-white text-xs">{opt.label}</p>
-                    <p className="text-yellow-400 font-bold">{opt.odds}x</p>
-                  </button>
-                );
-              })}
-            </div>
+      <SectionTitle>Mercados Disponíveis</SectionTitle>
+
+      {activePredictions.map(pred => (
+        <GlassCard key={pred.type} className="p-4">
+          <p className="text-[#FFDF00] font-bold mb-3 font-[family-name:var(--font-pixel)]">{pred.label}</p>
+          <div className="grid grid-cols-3 gap-2">
+            {pred.options.map(opt => {
+              const isSelected = selectedBets.has(pred.type);
+              return (
+                <CrtButton
+                  key={opt.id}
+                  onClick={() => handleSelectBet(pred.type, opt.id, opt.odds)}
+                  variant={isSelected ? 'control-active' : 'control'}
+                  className="flex flex-col items-center gap-1 p-2"
+                >
+                  <span className="text-xs">{opt.label}</span>
+                  <span className="text-[#FFDF00] font-bold text-xs">{opt.odds}x</span>
+                </CrtButton>
+              );
+            })}
           </div>
-        ))}
-      </div>
+        </GlassCard>
+      ))}
 
-      {/* Bet Slip - Fixed at Bottom */}
       {selectedBets.size > 0 && (
-        <div className="fixed bottom-20 left-0 right-0 bg-[#012169] p-4 border-t-2 border-[#FEDD00]/50 z-[90]">
+        <div className="fixed bottom-20 left-0 right-0 bg-[#00381a]/95 p-4 border-t-2 border-[#FFDF00]/50 z-[90]">
           <div className="max-w-4xl mx-auto flex items-center justify-between">
             <div>
-              <p className="text-white/70 text-sm">{selectedBets.size} aposta(s) selecionada(s)</p>
-              <p className="text-yellow-400 font-bold">Retorno: {formatMoney(totalPotentialWin)}</p>
+              <p className="text-white/70 text-sm font-[family-name:var(--font-pixel)]">
+                {selectedBets.size} aposta(s) selecionada(s)
+              </p>
+              <p className="gold-glow-text font-bold font-[family-name:var(--font-pixel)]">
+                Retorno: {formatMoney(totalPotentialWin)}
+              </p>
             </div>
-            <button
-              onClick={handlePlaceBet}
-              className="bg-yellow-500 hover:bg-yellow-400 text-black px-6 py-2 rounded-lg font-bold"
-            >
+            <CrtButton onClick={handlePlaceBet} pulse>
               APOSTAR
-            </button>
+            </CrtButton>
           </div>
         </div>
       )}
-    </div>
+    </ViewContainer>
   );
 }

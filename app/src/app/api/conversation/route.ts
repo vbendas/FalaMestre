@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
     }
     
     // If auth is required but no session and no userId provided
-    if (process.env.REQUIRE_AUTH === 'true' && !sessionUserId && !userId) {
+    if (process.env.AUTH_DISABLED !== 'true' && !sessionUserId && !userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
@@ -378,12 +378,11 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
-  
+
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
-    // Validate userId
     if (!userId) {
       return NextResponse.json(
         { error: 'userId is required' },
@@ -397,6 +396,13 @@ export async function GET(request: NextRequest) {
         { error: 'Invalid userId format' },
         { status: 400 }
       );
+    }
+
+    if (process.env.AUTH_DISABLED !== 'true') {
+      const sessionUserId = await getAuthenticatedUser();
+      if (sessionUserId && sessionUserId !== userId) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
     }
 
     // Fetch game state with timeout

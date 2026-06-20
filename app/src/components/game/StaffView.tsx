@@ -1,10 +1,15 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
-import { GameState, StaffMember, StaffRole } from '@/lib/types';
+import { GameState, StaffRole } from '@/lib/types';
 import { ViewType } from '@/hooks/useGameState';
-import { User, DollarSign, ChevronLeft, Cross, Search, Trophy, Trash2 } from 'lucide-react';
+import {
+  GlassCard,
+  CrtButton,
+  CoinDisplay,
+  SectionTitle,
+  ManagementLayout,
+} from '@/components/crt';
 
 interface StaffViewProps {
   gameState: GameState;
@@ -12,13 +17,13 @@ interface StaffViewProps {
   onViewChange: (view: ViewType) => void;
 }
 
-const STAFF_ICONS = {
-  headCoach: Trophy,
-  scout: Search,
-  medicalStaff: Cross,
+const STAFF_ICONS: Record<StaffRole, string> = {
+  headCoach: '🏆',
+  scout: '🔍',
+  medicalStaff: '🏥',
 };
 
-const STAFF_LABELS = {
+const STAFF_LABELS: Record<StaffRole, string> = {
   headCoach: 'Técnico Principal',
   scout: 'Scout',
   medicalStaff: 'Staff Médico',
@@ -26,9 +31,9 @@ const STAFF_LABELS = {
 
 export function StaffView({ gameState, userId, onViewChange }: StaffViewProps) {
   const { user, staff } = gameState;
-  
+
   const roles: StaffRole[] = ['headCoach', 'scout', 'medicalStaff'];
-  
+
   const getTotalWeeklyWage = () => {
     let total = 0;
     roles.forEach(role => {
@@ -41,7 +46,7 @@ export function StaffView({ gameState, userId, onViewChange }: StaffViewProps) {
 
   const handleHire = async (role: StaffRole, tier: 'rookie' | 'professional' | 'elite') => {
     const cost = tier === 'rookie' ? 50000 : tier === 'professional' ? 200000 : 1000000;
-    
+
     if ((user.money || 0) < cost) return;
 
     try {
@@ -76,122 +81,98 @@ export function StaffView({ gameState, userId, onViewChange }: StaffViewProps) {
   };
 
   return (
-    <div className="p-4 space-y-4">
-      <button
-        onClick={() => onViewChange('dashboard')}
-        className="flex items-center gap-2 text-white/60 hover:text-white"
-      >
-        <ChevronLeft className="w-5 h-5" />
-        Voltar
-      </button>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-[#006400] rounded-xl p-4 border-2 border-[#FEDD00]/50"
-      >
-        <div className="flex items-center gap-3">
-          <User className="w-8 h-8 text-blue-400" />
-          <div>
-            <h2 className="text-xl font-bold text-white">Staff Técnico</h2>
-            <p className="text-sm text-white/60">Contrate funcionários para melhorar seu time</p>
-          </div>
-        </div>
-      </motion.div>
-
+    <ManagementLayout
+      title="COMISSÃO TÉCNICA"
+      icon="👔"
+      money={user.money || 0}
+      onBack={() => onViewChange('dashboard')}
+    >
       <div className="space-y-3">
-        <h3 className="text-lg font-bold text-white">Staff Atual</h3>
-        
-        {roles.map((role, index) => {
+        <SectionTitle>Staff Atual</SectionTitle>
+
+        {roles.map((role) => {
           const currentStaff = staff[role];
-          const IconComponent = STAFF_ICONS[role];
-          
+
           return (
-            <motion.div
-              key={role}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="bg-[#006400] rounded-xl p-4 border-2 border-[#FEDD00]/30"
-            >
-              <div className="flex items-center gap-3 mb-3">
-                <IconComponent className="w-6 h-6 text-green-400" />
-                <div>
-                  <h4 className="font-bold text-white">{STAFF_LABELS[role]}</h4>
+            <GlassCard key={role} className="p-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">{STAFF_ICONS[role]}</span>
+                <div className="flex-1">
+                  <div className="font-[family-name:var(--font-pixel)] text-[0.6rem] gold-glow-text">
+                    {STAFF_LABELS[role]}
+                  </div>
                   {currentStaff ? (
-                    <p className="text-sm text-white/60">Nível {currentStaff.level} • {currentStaff.specialty}</p>
+                    <div className="section-title">
+                      Nível {currentStaff.level} • {currentStaff.specialty}
+                    </div>
                   ) : (
-                    <p className="text-sm text-red-400">Vago - Contrate alguém!</p>
+                    <div className="section-title text-[#FF3333]">Vago - Contrate alguém!</div>
                   )}
                 </div>
               </div>
 
               {currentStaff ? (
-                <div className="bg-[#004d00] rounded-lg p-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-bold text-white">{currentStaff.name}</p>
-                      <p className="text-sm text-green-400">
-                        Salário semanal: $ {currentStaff.weeklyWage.toLocaleString()}
-                      </p>
+                <div className="flex items-center justify-between pt-1">
+                  <div>
+                    <div className="font-[family-name:var(--font-pixel)] text-[0.6rem] text-[#FFDF00]">
+                      {currentStaff.name}
                     </div>
-                    <button
-                      onClick={() => handleFire(role)}
-                      className="p-2 bg-red-900/50 hover:bg-red-800/50 rounded-lg"
-                    >
-                      <Trash2 className="w-5 h-5 text-red-400" />
-                    </button>
+                    <CoinDisplay amount={currentStaff.weeklyWage} size="sm" />
                   </div>
+                  <CrtButton
+                    onClick={() => handleFire(role)}
+                    variant="control-red"
+                    className="text-[0.5rem] px-2 py-1"
+                  >
+                    DEMITIR
+                  </CrtButton>
                 </div>
               ) : (
                 <div className="grid grid-cols-3 gap-2">
-                  <button
+                  <CrtButton
                     onClick={() => handleHire(role, 'rookie')}
                     disabled={(user.money || 0) < 50000}
-                    className="p-2 bg-[#004d00] hover:bg-[#005500] rounded-lg text-xs disabled:opacity-50"
+                    variant="control-cyan"
+                    className="flex flex-col items-center py-2 px-1"
                   >
-                    <p className="font-bold text-white">Iniciante</p>
-                    <p className="text-green-400">$$ 50K</p>
-                    <p className="text-white/50">Nív 1-10</p>
-                  </button>
-                  <button
+                    <span className="text-[0.5rem] text-[#FFDF00]">Iniciante</span>
+                    <span className="text-xs text-[#55e0a0]">50K</span>
+                    <span className="text-[0.5rem] text-white/50">Nív 1-10</span>
+                  </CrtButton>
+                  <CrtButton
                     onClick={() => handleHire(role, 'professional')}
                     disabled={(user.money || 0) < 200000}
-                    className="p-2 bg-[#004d00] hover:bg-[#005500] rounded-lg text-xs disabled:opacity-50"
+                    variant="control-cyan"
+                    className="flex flex-col items-center py-2 px-1"
                   >
-                    <p className="font-bold text-white">Profissional</p>
-                    <p className="text-yellow-400">$$ 200K</p>
-                    <p className="text-white/50">Nív 11-30</p>
-                  </button>
-                  <button
+                    <span className="text-[0.5rem] text-[#FFDF00]">Profissional</span>
+                    <span className="text-xs text-[#55e0a0]">200K</span>
+                    <span className="text-[0.5rem] text-white/50">Nív 11-30</span>
+                  </CrtButton>
+                  <CrtButton
                     onClick={() => handleHire(role, 'elite')}
                     disabled={(user.money || 0) < 1000000}
-                    className="p-2 bg-[#004d00] hover:bg-[#005500] rounded-lg text-xs disabled:opacity-50"
+                    variant="control-cyan"
+                    className="flex flex-col items-center py-2 px-1"
                   >
-                    <p className="font-bold text-white">Elite</p>
-                    <p className="text-red-400">$$ 1M</p>
-                    <p className="text-white/50">Nív 31-50</p>
-                  </button>
+                    <span className="text-[0.5rem] text-[#FFDF00]">Elite</span>
+                    <span className="text-xs text-[#55e0a0]">1M</span>
+                    <span className="text-[0.5rem] text-white/50">Nív 31-50</span>
+                  </CrtButton>
                 </div>
               )}
-            </motion.div>
+            </GlassCard>
           );
         })}
-      </div>
 
-      <div className="bg-[#004d00] rounded-lg p-3 text-center">
-        <div className="flex items-center justify-center gap-2 text-white/60 mb-1">
-          <DollarSign className="w-4 h-4" />
-          <span className="text-sm">Folha Semanal</span>
-        </div>
-        <p className="text-2xl font-bold text-[#FEDD00]">$$ {getTotalWeeklyWage().toLocaleString()}</p>
-        <p className="text-xs text-white/40">Dedução automática semanal</p>
+        <GlassCard className="p-3 text-center space-y-1">
+          <div className="section-title">Folha Semanal</div>
+          <CoinDisplay amount={getTotalWeeklyWage()} size="lg" />
+          <div className="text-xs text-white/40 font-[family-name:var(--font-pixel)]">
+            Dedução automática semanal
+          </div>
+        </GlassCard>
       </div>
-
-      <div className="bg-[#004d00] rounded-lg p-3 text-center">
-        <p className="text-white/60 text-sm">Saldo Atual</p>
-        <p className="text-2xl font-bold text-[#FEDD00]">$$ {(user.money || 0).toLocaleString()}</p>
-      </div>
-    </div>
+    </ManagementLayout>
   );
 }

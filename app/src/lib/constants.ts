@@ -3,7 +3,7 @@
  * Centralized configuration values to avoid magic numbers
  */
 
-import { MatchSettings, TierDivision, StaffSpecialty, InvestmentTier, PredictionType } from './types';
+import { MatchSettings, TierDivision, StaffSpecialty, InvestmentTier, PredictionType, TurnConfig, TurnMentality, TacticalInstruction, TacticalInstructionType } from './types';
 
 // Match simulation constants
 export const MATCH_CONSTANTS = {
@@ -557,3 +557,194 @@ export const PHASE_CONFIG = {
     description: 'Obtenha um ticket de torneo',
   },
 } as const;
+
+// =====================================================
+// DECISION TURN CONSTANTS
+// =====================================================
+
+export const DECISION_TURN_CONFIG = {
+  TIMER_SECONDS: 30,
+  MAX_OPTIONS: 8,
+  TOTAL_TURNS: 6,
+} as const;
+
+export const DECISION_TURNS: TurnConfig[] = [
+  {
+    minute: 0,
+    label: 'Pré-jogo',
+    defaultAction: 'keep_setup',
+    defaultLabel: 'Manter escalação',
+  },
+  {
+    minute: 15,
+    label: 'Primeiros 15 minutos',
+    defaultAction: 'keep_setup',
+    defaultLabel: 'Manter como está',
+  },
+  {
+    minute: 30,
+    label: 'Avaliação tática',
+    defaultAction: 'keep_setup',
+    defaultLabel: 'Manter estratégia',
+  },
+  {
+    minute: 45,
+    label: 'Intervalo',
+    defaultAction: 'keep_setup',
+    defaultLabel: 'Voltar igual',
+  },
+  {
+    minute: 60,
+    label: 'Segundo tempo',
+    defaultAction: 'keep_setup',
+    defaultLabel: 'Manter como está',
+  },
+  {
+    minute: 75,
+    label: 'Retas finais',
+    defaultAction: 'keep_setup',
+    defaultLabel: 'Segurar resultado',
+  },
+] as const;
+
+export const DEFAULT_ACTIONS_BY_CONTEXT = {
+  LOSING_BY_2PLUS: {
+    action: 'change_mentality' as const,
+    mentality: 'attacking' as const,
+    label: 'Partir para o ataque',
+  },
+  WINNING_BY_2PLUS: {
+    action: 'change_mentality' as const,
+    mentality: 'defensive' as const,
+    label: 'Proteger o resultado',
+  },
+  LOW_FITNESS: {
+    action: 'substitution' as const,
+    label: 'Trocar jogador cansado',
+  },
+  RED_CARD: {
+    action: 'substitution' as const,
+    label: 'Preencher vaga',
+  },
+  NORMAL: {
+    action: 'keep_setup' as const,
+    label: 'Manter como está',
+  },
+} as const;
+
+export const MENTALITY_MODIFIERS = {
+  attacking: {
+    homeGoalMultiplier: 1.3,
+    awayGoalMultiplier: 1.15,
+    description: 'Mais ofensivo, mas vulnerável no contra-ataque',
+  },
+  balanced: {
+    homeGoalMultiplier: 1.0,
+    awayGoalMultiplier: 1.0,
+    description: 'Equilíbrio entre ataque e defesa',
+  },
+  defensive: {
+    homeGoalMultiplier: 0.7,
+    awayGoalMultiplier: 0.8,
+    description: 'Prioriza a defesa, menos chances de gol',
+  },
+} as const;
+
+export const TACTICAL_INSTRUCTIONS: Record<TacticalInstructionType, TacticalInstruction> = {
+  high_press: {
+    type: 'high_press',
+    statModifiers: { phy: 5, def: 3 },
+    teamPowerMultiplier: 1.05,
+    opponentPowerMultiplier: 0.93,
+    description: 'Pressão alta — recupera a bola rápido, mas gasta energia',
+    riskFactor: 0.3,
+  },
+  park_the_bus: {
+    type: 'park_the_bus',
+    statModifiers: { def: 10, phy: 5 },
+    teamPowerMultiplier: 0.95,
+    opponentPowerMultiplier: 0.85,
+    description: 'Bloco baixo — máxima proteção defensiva',
+    riskFactor: 0.05,
+  },
+  tiki_taka: {
+    type: 'tiki_taka',
+    statModifiers: { pas: 10, dri: 5 },
+    teamPowerMultiplier: 1.04,
+    opponentPowerMultiplier: 1.0,
+    description: 'Tique-taque — controle o ritmo do jogo com passes curtos',
+    riskFactor: 0.15,
+  },
+  counter_attack: {
+    type: 'counter_attack',
+    statModifiers: { pac: 10, sho: 5 },
+    teamPowerMultiplier: 1.02,
+    opponentPowerMultiplier: 1.0,
+    description: 'Contra-ataque rápido — velocidade e oportunismo',
+    riskFactor: 0.4,
+  },
+  long_balls: {
+    type: 'long_balls',
+    statModifiers: { phy: 8, sho: 3 },
+    teamPowerMultiplier: 1.0,
+    opponentPowerMultiplier: 1.0,
+    description: 'Bolas longas — jogo direto e físico',
+    riskFactor: 0.2,
+  },
+  wing_play: {
+    type: 'wing_play',
+    statModifiers: { pac: 8, dri: 5 },
+    teamPowerMultiplier: 1.03,
+    opponentPowerMultiplier: 1.0,
+    description: 'Jogo pelas laterais — cruzamentos e velocidade',
+    riskFactor: 0.25,
+  },
+  shoot_on_sight: {
+    type: 'shoot_on_sight',
+    statModifiers: { sho: 10, pas: 3 },
+    teamPowerMultiplier: 1.02,
+    opponentPowerMultiplier: 1.0,
+    description: 'Finalizar de qualquer posição — mais chutes, menos precisão',
+    riskFactor: 0.35,
+  },
+  time_wasting: {
+    type: 'time_wasting',
+    statModifiers: { pas: 5, dri: 3 },
+    teamPowerMultiplier: 0.92,
+    opponentPowerMultiplier: 0.95,
+    description: 'Cera — segurar o resultado consumindo tempo',
+    riskFactor: 0.0,
+  },
+  target_man: {
+    type: 'target_man',
+    statModifiers: { phy: 8, sho: 5 },
+    teamPowerMultiplier: 1.02,
+    opponentPowerMultiplier: 1.0,
+    description: 'Jogo no pivô — bola no atacante e tabelas',
+    riskFactor: 0.2,
+  },
+  free_role: {
+    type: 'free_role',
+    statModifiers: { dri: 8, pac: 5, sho: 3 },
+    teamPowerMultiplier: 1.03,
+    opponentPowerMultiplier: 1.0,
+    description: 'Liberdade total — criatividade e imprevisibilidade',
+    riskFactor: 0.3,
+  },
+  man_mark: {
+    type: 'man_mark',
+    statModifiers: { def: 8, phy: 5 },
+    teamPowerMultiplier: 0.98,
+    opponentPowerMultiplier: 0.90,
+    description: 'Marcação individual — neutralizar o principal atacante rival',
+    riskFactor: 0.1,
+  },
+  overlap: {
+    type: 'overlap',
+    statModifiers: { pac: 6, pas: 6 },
+    teamPowerMultiplier: 1.04,
+    opponentPowerMultiplier: 1.0,
+    description: 'Sobreposição — laterais avançando no ataque',
+    riskFactor: 0.35,
+  },
+};

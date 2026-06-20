@@ -1,6 +1,7 @@
 'use client';
 
 import { TeamFormData } from './TeamCreationForm';
+import { GlassCard } from '@/components/crt/GlassCard';
 
 interface TeamPreviewCardProps {
   teamData: TeamFormData;
@@ -23,19 +24,18 @@ export function TeamPreviewCard({ teamData }: TeamPreviewCardProps) {
   };
 
   return (
-    <div className="w-full max-w-md">
-      <h2 className="text-center text-lg font-bold text-yellow-400 mb-6">Sua Prévia do Time 👀</h2>
-
-      <div className="bg-gradient-to-b from-[#1a1a2e] to-[#16213e] rounded-xl p-8 border-2 border-[#00d9ff] shadow-lg">
+    <div className="w-full max-w-sm">
+      <GlassCard strong className="p-5">
         {/* Badge */}
-        <div className="flex justify-center mb-6">
+        <div className="flex justify-center mb-4">
           <div
-            className={`w-24 h-24 flex items-center justify-center font-bold text-2xl border-4 border-yellow-400 ${getBadgeShapeClass(
+            className={`w-20 h-20 flex items-center justify-center font-bold text-xl border-4 border-[#FFDF00] ${getBadgeShapeClass(
               teamData.badgeStyle
             )}`}
             style={{
               backgroundColor: teamData.primaryColor,
               color: teamData.secondaryColor,
+              boxShadow: '0 0 12px rgba(255,223,0,0.3)',
             }}
           >
             {teamData.name.substring(0, 3).toUpperCase()}
@@ -43,54 +43,47 @@ export function TeamPreviewCard({ teamData }: TeamPreviewCardProps) {
         </div>
 
         {/* Team Name */}
-        <div className="text-center mb-6">
-          <h3 className="text-2xl font-bold text-white mb-2">{teamData.name}</h3>
-          <div className="flex justify-center gap-4">
-            <div className="flex items-center gap-2">
+        <div className="text-center mb-4">
+          <h3 className="text-[0.65rem] gold-glow-text font-[family-name:var(--font-pixel)] mb-2">
+            {teamData.name}
+          </h3>
+          <div className="flex justify-center gap-3">
+            <div className="flex items-center gap-1">
               <div
-                className="w-4 h-4 rounded-full border-2 border-white"
+                className="w-3 h-3 rounded-full border border-white/30"
                 style={{ backgroundColor: teamData.primaryColor }}
               />
-              <span className="text-xs text-gray-300">Primária</span>
+              <span className="text-[0.5rem] text-[rgba(255,223,0,0.55)] font-[family-name:var(--font-pixel)]">PRIMÁRIA</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <div
-                className="w-4 h-4 rounded-full border-2 border-white"
+                className="w-3 h-3 rounded-full border border-white/30"
                 style={{ backgroundColor: teamData.secondaryColor }}
               />
-              <span className="text-xs text-gray-300">Secundária</span>
+              <span className="text-[0.5rem] text-[rgba(255,223,0,0.55)] font-[family-name:var(--font-pixel)]">SECUNDÁRIA</span>
             </div>
           </div>
-        </div>
-
-        {/* Badge Style Info */}
-        <div className="bg-[#0f3460] p-4 rounded-lg text-center">
-          <p className="text-xs text-gray-400 mb-1">Estilo do Brasão</p>
-          <p className="text-sm font-bold text-[#00d9ff] capitalize">{teamData.badgeStyle}</p>
         </div>
 
         {/* Divider */}
-        <div className="my-6 border-t border-[#00d9ff] opacity-30" />
+        <div className="h-px bg-[rgba(255,223,0,0.15)] my-3" />
 
-        {/* Info Cards */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-[#0f3460] p-3 rounded text-center">
-            <p className="text-xs text-gray-400">Esquema</p>
-            <p className="text-sm font-bold text-white mt-1">Customizado</p>
+        {/* Info row */}
+        <div className="grid grid-cols-2 gap-2">
+          <div className="bg-[rgba(0,0,0,0.3)] p-2 rounded text-center">
+            <p className="text-[0.5rem] text-[rgba(255,223,0,0.4)] font-[family-name:var(--font-pixel)]">BRASÃO</p>
+            <p className="text-[0.5rem] text-[#55e0a0] font-[family-name:var(--font-pixel)] mt-0.5 capitalize">{teamData.badgeStyle}</p>
           </div>
-          <div className="bg-[#0f3460] p-3 rounded text-center">
-            <p className="text-xs text-gray-400">Status</p>
-            <p className="text-sm font-bold text-green-400 mt-1">Pronto!</p>
+          <div className="bg-[rgba(0,0,0,0.3)] p-2 rounded text-center">
+            <p className="text-[0.5rem] text-[rgba(255,223,0,0.4)] font-[family-name:var(--font-pixel)]">STATUS</p>
+            <p className="text-[0.5rem] text-[#00A859] font-[family-name:var(--font-pixel)] mt-0.5">PRONTO!</p>
           </div>
         </div>
-      </div>
+      </GlassCard>
 
-      {/* Flavor Text */}
-      <div className="mt-6 text-center">
-        <p className="text-sm text-gray-300 italic">
-          "Este é o brasão que representará seu time!" ⚽
-        </p>
-      </div>
+      <p className="mt-3 text-center text-[0.5rem] text-[rgba(255,223,0,0.4)] font-[family-name:var(--font-pixel)]">
+        Este é o brasão que representará seu time! ⚽
+      </p>
     </div>
   );
 }

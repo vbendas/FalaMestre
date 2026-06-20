@@ -4,7 +4,7 @@
  */
 
 import { db } from '@/db';
-import { analyticsEvents, conversations, gameStates } from '@/db/schema';
+import { analyticsEvents, conversations, gameStates, userProfiles } from '@/db/schema';
 import { and, eq, gte, sql } from 'drizzle-orm';
 import { BehavioralFeatures } from './types';
 
@@ -242,12 +242,15 @@ export async function getActiveUserIds(hoursAgo: number): Promise<string[]> {
  * @returns Array of user IDs
  */
 export async function getUsersNeedingFeatureUpdate(hoursAgo: number): Promise<string[]> {
+  const activeUserIds = await getActiveUserIds(48);
+
   const cutoffTime = new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
-  
-  // Get users who were active recently but haven't been updated recently
-  const activeUserIds = await getActiveUserIds(48); // Active in last 48h
-  
-  // For now, return all active users
-  // In production, you'd also check userProfiles.updatedAt
-  return activeUserIds;
+
+  const recentlyUpdated = await db.select({ userId: userProfiles.userId })
+    .from(userProfiles)
+    .where(gte(userProfiles.updatedAt, cutoffTime));
+
+  const recentlyUpdatedIds = new Set(recentlyUpdated.map((r: { userId: string }) => r.userId));
+
+  return activeUserIds.filter(id => !recentlyUpdatedIds.has(id));
 }

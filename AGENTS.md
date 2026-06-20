@@ -16,3 +16,10 @@
 
 - **Always test builds**: After completing any build, test it using Playwright to verify functionality
 - **Run tests before considering the task complete**: No task is complete until Playwright tests pass
+
+### Knowledge Graph (graphify)
+
+- **Check the graph before answering codebase questions**: If `graphify-out/graph.json` exists, query it for architecture, dependencies, and relationships before answering questions about codebase structure
+- **Rebuild after significant code changes**: Run `/graphify --update` after adding/removing modules or major refactors
+- **Use graph context for impact analysis**: Before making changes, query the graph to understand what else might be affected
+- **Graph commands**: `/graphify`, `/graphify query "..."`, `/graphify path "A" "B"`, `/graphify explain "Node"`

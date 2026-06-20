@@ -11,14 +11,21 @@ export async function POST(request: NextRequest) {
     if (authError) {
       return authError;
     }
-    
+
     const sessionUserId = await getAuthenticatedUser();
     if (!sessionUserId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
-    
-    // This endpoint is typically called by admin/cron after match completion
-    // But also allows users to check their settled predictions
+
+    const authHeader = request.headers.get('authorization');
+    const cronSecret = process.env.CRON_SECRET;
+    const adminSecret = process.env.ADMIN_SECRET;
+    const isCron = cronSecret && authHeader === `Bearer ${cronSecret}`;
+    const isAdmin = adminSecret && authHeader === `Bearer ${adminSecret}`;
+
+    if (!isCron && !isAdmin) {
+      return NextResponse.json({ error: 'Admin or cron auth required to settle predictions' }, { status: 403 });
+    }
     
     let body;
     try {

@@ -82,6 +82,48 @@
       linear-gradient(90deg, rgba(254, 221, 0, 0.05) 1px, transparent 1px);
     background-size: 16px 16px;
   }
+  
+  /* Timer bar color classes */
+  .timer-bar-green { background: linear-gradient(90deg, #22c55e, #16a34a); }
+  .timer-bar-yellow { background: linear-gradient(90deg, #eab308, #ca8a04); }
+  .timer-bar-red { background: linear-gradient(90deg, #ef4444, #dc2626); }
+
+  /* Timer pulse when ≤10s */
+  @keyframes timer-pulse {
+    0%, 100% { transform: scaleX(1); opacity: 1; }
+    50% { transform: scaleX(1.02); opacity: 0.85; }
+  }
+  .timer-pulse { animation: timer-pulse 0.8s ease-in-out infinite; }
+
+  /* Decision prompt slide-up */
+  @keyframes prompt-slide-up {
+    from { transform: translateY(60px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .prompt-enter { animation: prompt-slide-up 0.35s ease-out; }
+
+  /* Timeout default flash */
+  @keyframes default-flash {
+    0%, 100% { border-color: #FEDD00; box-shadow: none; }
+    50% { border-color: #FFD700; box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
+  }
+  .default-flash { animation: default-flash 0.5s ease-in-out 2; }
+
+  /* Score change pulse */
+  @keyframes score-pulse {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.3); color: #FFD700; }
+    100% { transform: scale(1); }
+  }
+  .score-pulse { animation: score-pulse 0.6s ease-out; }
+
+  /* Option button press feedback */
+  @keyframes option-press {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.96); }
+    100% { transform: scale(1); }
+  }
+  .option-press { animation: option-press 0.15s ease-out; }
 }
 
 @layer utilities {
@@ -95,6 +137,11 @@
   @media (prefers-reduced-motion: reduce) {
     .pixel-btn,
     .pixel-card,
+    .timer-pulse,
+    .prompt-enter,
+    .default-flash,
+    .score-pulse,
+    .option-press,
     [class*="animate-"] {
       animation: none !important;
       transition: none !important;
@@ -106,5 +153,7 @@
     .pixel-card {
       box-shadow: 0 2px 0 0 #B8860B;
     }
+    .prompt-enter { animation-duration: 0.25s; }
+    .timer-bar-green, .timer-bar-yellow, .timer-bar-red { height: 6px; }
   }
 }

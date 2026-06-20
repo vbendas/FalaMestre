@@ -37,6 +37,7 @@ interface UseGameStateReturn {
   setView: (view: ViewType) => void;
   playMatch: () => Promise<void>;
   playMatchAndGetResult: () => Promise<MatchAPIResult | null>;
+  showMatchResult: (result: MatchResult, pointsEarned: number, pointsChange: number, updatedState?: GameState) => void;
   lastMatchResult: { result: MatchResult; pointsEarned: number; pointsChange: number } | null;
   showMatchModal: boolean;
   closeMatchModal: () => void;
@@ -349,7 +350,13 @@ export function useGameState(): UseGameStateReturn {
     setGameState(data.updatedGameState);
   }, [playMatchAndGetResult, cachedMatchResult]);
 
-   return {
+  const showMatchResult = useCallback((result: MatchResult, pointsEarned: number, pointsChange: number, updatedState?: GameState) => {
+    setLastMatchResult({ result, pointsEarned, pointsChange });
+    setShowMatchModal(true);
+    if (updatedState) setGameState(updatedState);
+  }, []);
+
+  return {
     gameState,
     userId,
     isNewUser,
@@ -358,6 +365,7 @@ export function useGameState(): UseGameStateReturn {
     setView,
     playMatch,
     playMatchAndGetResult,
+    showMatchResult,
     lastMatchResult,
     showMatchModal,
     closeMatchModal,

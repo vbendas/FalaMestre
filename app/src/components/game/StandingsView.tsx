@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Table, Trophy, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { GameState } from '@/lib/types';
 import { TEAMS } from '@/lib/team-data';
+import { GlassCard, SectionTitle, ViewContainer } from '@/components/crt';
 
 interface StandingsViewProps {
   gameState: GameState;
@@ -97,11 +98,11 @@ export function StandingsView({ gameState }: StandingsViewProps) {
     [user.team, season.position, season.points, season.wins, season.draws, season.losses, season.week]
   );
 
-  const getZoneColor = (position: number): string => {
-    if (position <= 4) return 'border-l-green-500';
-    if (position <= 6) return 'border-l-blue-500';
+  const getZoneBorder = (position: number): string => {
+    if (position <= 4) return 'border-l-[#00A859]';
+    if (position <= 6) return 'border-l-[#3EA0D4]';
     if (position <= 12) return 'border-l-white/20';
-    return 'border-l-red-500';
+    return 'border-l-[#FF3333]';
   };
 
   const getZoneLabel = (position: number): string => {
@@ -112,51 +113,47 @@ export function StandingsView({ gameState }: StandingsViewProps) {
   };
 
   const FormIcon = ({ form }: { form: 'up' | 'down' | 'stable' }) => {
-    if (form === 'up') return <TrendingUp className="w-3.5 h-3.5 text-green-400" />;
-    if (form === 'down') return <TrendingDown className="w-3.5 h-3.5 text-red-400" />;
+    if (form === 'up') return <TrendingUp className="w-3.5 h-3.5 text-[#00A859]" />;
+    if (form === 'down') return <TrendingDown className="w-3.5 h-3.5 text-[#FF3333]" />;
     return <Minus className="w-3.5 h-3.5 text-white/30" />;
   };
 
   return (
-    <div className="space-y-4 pb-20">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-[#006400] rounded-xl p-4 border-2 border-[#FEDD00]/50"
-      >
+    <ViewContainer>
+      <GlassCard glow className="p-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-[#004d00] flex items-center justify-center">
-            <Table className="w-5 h-5 text-[#FEDD00]" />
+          <div className="w-10 h-10 rounded-full bg-[#00381a] flex items-center justify-center">
+            <Table className="w-5 h-5 text-[#FFDF00]" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-white">Classificação</h1>
+            <h1 className="text-xl font-bold text-[#FFDF00] font-[family-name:var(--font-pixel)]">
+              Classificação
+            </h1>
             <p className="text-white/60 text-sm">{season.league} • Semana {season.week}</p>
           </div>
         </div>
-      </motion.div>
+      </GlassCard>
 
-      {/* Zone legend */}
       <div className="flex flex-wrap gap-3 text-[10px] text-white/50 px-1">
         <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded-sm bg-green-500/30 border-l-2 border-green-500" />
+          <div className="w-3 h-3 rounded-sm bg-[#00A859]/20 border-l-2 border-[#00A859]" />
           <span>Libertadores</span>
         </div>
         <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded-sm bg-blue-500/30 border-l-2 border-blue-500" />
+          <div className="w-3 h-3 rounded-sm bg-[#3EA0D4]/20 border-l-2 border-[#3EA0D4]" />
           <span>Sul-Americana</span>
         </div>
         <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded-sm bg-red-500/30 border-l-2 border-red-500" />
+          <div className="w-3 h-3 rounded-sm bg-[#FF3333]/20 border-l-2 border-[#FF3333]" />
           <span>Rebaixamento</span>
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-[#006400] rounded-xl border-2 border-[#FEDD00]/50 overflow-hidden">
-        <table className="w-full text-sm">
+      <GlassCard className="p-0">
+        <div className="overflow-x-auto">
+        <table className="w-full text-sm min-w-[500px]">
           <thead>
-            <tr className="bg-[#004d00] text-white/40 text-xs">
+            <tr className="bg-[#00381a] text-white/40 text-xs font-[family-name:var(--font-pixel)]">
               <th className="text-left py-3 px-3 w-8">#</th>
               <th className="text-left py-3 px-2">Time</th>
               <th className="text-center py-3 px-1 w-8">PJ</th>
@@ -179,41 +176,42 @@ export function StandingsView({ gameState }: StandingsViewProps) {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.04 }}
-                  className={`border-t border-[#004d00] ${getZoneColor(pos)} border-l-2 ${
-                    entry.isUser ? 'bg-[#009739]/30' : 'hover:bg-[#009739]/10'
+                  className={`border-t border-[#00381a] ${getZoneBorder(pos)} border-l-2 ${
+                    entry.isUser ? 'bg-[#FFDF00]/10' : 'hover:bg-[#00A859]/5'
                   } transition-colors`}
                 >
                   <td className="py-2.5 px-3 text-white/60 font-medium">{pos}º</td>
                   <td className="py-2.5 px-2">
                     <div className="flex items-center gap-1.5">
-                      <span className={`font-medium truncate max-w-[120px] ${entry.isUser ? 'text-[#FEDD00]' : 'text-white'}`}>
+                      <span className={`font-medium truncate max-w-[120px] ${entry.isUser ? 'text-[#FFDF00] gold-glow-text' : 'text-white'}`}>
                         {entry.name}
                       </span>
-                      {pos <= 3 && <Trophy className="w-3 h-3 text-[#FEDD00] flex-shrink-0" />}
+                      {pos <= 3 && <Trophy className="w-3 h-3 text-[#FFDF00] flex-shrink-0" />}
                     </div>
                     {getZoneLabel(pos) && (
                       <span className="text-[10px] text-white/30">{getZoneLabel(pos)}</span>
                     )}
                   </td>
                   <td className="py-2.5 px-1 text-center text-white/50">{entry.played}</td>
-                  <td className="py-2.5 px-1 text-center text-green-400">{entry.won}</td>
-                  <td className="py-2.5 px-1 text-center text-yellow-400">{entry.drawn}</td>
-                  <td className="py-2.5 px-1 text-center text-red-400">{entry.lost}</td>
+                  <td className="py-2.5 px-1 text-center text-[#00A859]">{entry.won}</td>
+                  <td className="py-2.5 px-1 text-center text-[#FFDF00]">{entry.drawn}</td>
+                  <td className="py-2.5 px-1 text-center text-[#FF3333]">{entry.lost}</td>
                   <td className="py-2.5 px-1 text-center text-white/50">{entry.gf}</td>
                   <td className="py-2.5 px-1 text-center text-white/50">{entry.ga}</td>
-                  <td className={`py-2.5 px-1 text-center font-medium ${entry.gd > 0 ? 'text-green-400' : entry.gd < 0 ? 'text-red-400' : 'text-white/50'}`}>
+                  <td className={`py-2.5 px-1 text-center font-medium ${entry.gd > 0 ? 'text-[#00A859]' : entry.gd < 0 ? 'text-[#FF3333]' : 'text-white/50'}`}>
                     {entry.gd > 0 ? '+' : ''}{entry.gd}
                   </td>
                   <td className="py-2.5 px-1 text-center">
                     <FormIcon form={entry.form} />
                   </td>
-                  <td className="py-2.5 px-3 text-right font-bold text-[#FEDD00]">{entry.points}</td>
+                  <td className="py-2.5 px-3 text-right font-bold text-[#FFDF00]">{entry.points}</td>
                 </motion.tr>
               );
             })}
           </tbody>
         </table>
-      </div>
-    </div>
+        </div>
+      </GlassCard>
+    </ViewContainer>
   );
 }

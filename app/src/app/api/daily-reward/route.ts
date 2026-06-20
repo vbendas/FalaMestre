@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    if (process.env.REQUIRE_AUTH === 'true' && !sessionUserId && !userId) {
+    if (process.env.AUTH_DISABLED !== 'true' && !sessionUserId && !userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 

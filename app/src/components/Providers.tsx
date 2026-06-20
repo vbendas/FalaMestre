@@ -2,6 +2,7 @@
 
 import { SessionProvider } from 'next-auth/react';
 import { ReactNode } from 'react';
+import { MotionConfig } from 'framer-motion';
 import { FriendsProvider } from '@/contexts/FriendsContext';
 
 interface Props {
@@ -11,9 +12,11 @@ interface Props {
 export function Providers({ children }: Props) {
   return (
     <SessionProvider>
-      <FriendsProvider>
-        {children}
-      </FriendsProvider>
+      <MotionConfig reducedMotion="user">
+        <FriendsProvider>
+          {children}
+        </FriendsProvider>
+      </MotionConfig>
     </SessionProvider>
   );
 }
