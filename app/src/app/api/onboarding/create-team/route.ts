@@ -97,11 +97,7 @@ export async function POST(request: NextRequest) {
         },
       });
     } catch (gameStateError) {
-      console.error('Failed to create game state:', gameStateError);
-      return NextResponse.json(
-        { error: 'Failed to create game state' },
-        { status: 500 }
-      );
+      console.warn('Failed to persist game state to DB, continuing with client-only mode:', gameStateError);
     }
 
     // Return success with userId (client will store in localStorage)

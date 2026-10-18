@@ -37,3 +37,9 @@ lerna-debug.log*
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# Agent tooling and generated indexes
+.swarm/
+graphify-out/
+opencode.json
+Documentation/.obsidian/workspace.json

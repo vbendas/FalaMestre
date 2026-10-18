@@ -1,0 +1,6620 @@
+[
+  {
+    "label": "desktop",
+    "ctx": "dashboard",
+    "url": "http://localhost:3001/",
+    "overlaps": [],
+    "overflowX": [],
+    "tinyFonts": [
+      {
+        "tag": "div",
+        "cls": "text-[0.35rem] text-[#55e0a0] font-[family-name:va",
+        "size": 5.6,
+        "text": "SÉRIE D · RD.1"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "JOGO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ELENCO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "MERCADO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "LIGA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ESTÁDIO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INSTALAÇÕES"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ACADEMIA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "STAFF"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "APOSTAS"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INVESTIR"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "100.000"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.45rem] text-[rgba(255,223,0,0.4)] font-[fa",
+        "size": 7.2,
+        "text": "VS"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.35rem] text-[#55e0a0] font-[family-name:va",
+        "size": 5.6,
+        "text": "MANDANTE"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 4.8,
+        "text": "VITÓRIA"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 4.8,
+        "text": "EMPATE"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 4.8,
+        "text": "DERROTA"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.35rem] text-[rgba(255,223,0,0.4)] font-[fa",
+        "size": 5.6,
+        "text": "RODADA 1/38"
+      },
+      {
+        "tag": "span",
+        "cls": "text-white text-[0.4rem] font-[family-name:var(--f",
+        "size": 6.4,
+        "text": "-"
+      },
+      {
+        "tag": "span",
+        "cls": "text-white text-[0.4rem] font-[family-name:var(--f",
+        "size": 6.4,
+        "text": "-"
+      },
+      {
+        "tag": "span",
+        "cls": "text-white text-[0.4rem] font-[family-name:var(--f",
+        "size": 6.4,
+        "text": "-"
+      },
+      {
+        "tag": "span",
+        "cls": "text-white text-[0.4rem] font-[family-name:var(--f",
+        "size": 6.4,
+        "text": "-"
+      },
+      {
+        "tag": "span",
+        "cls": "text-white text-[0.4rem] font-[family-name:var(--f",
+        "size": 6.4,
+        "text": "-"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      }
+    ],
+    "undefinedVars": [],
+    "fixedEls": [],
+    "missingAlts": [],
+    "bodyScroll": false,
+    "resolvedFontPixel": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\"",
+    "errors": []
+  },
+  {
+    "label": "desktop",
+    "ctx": "squad",
+    "url": "http://localhost:3001/",
+    "overlaps": [],
+    "overflowX": [],
+    "tinyFonts": [
+      {
+        "tag": "div",
+        "cls": "text-[0.35rem] text-[#55e0a0] font-[family-name:va",
+        "size": 5.6,
+        "text": "SÉRIE D · RD.1"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "JOGO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ELENCO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "MERCADO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "LIGA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ESTÁDIO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INSTALAÇÕES"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ACADEMIA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "STAFF"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "APOSTAS"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INVESTIR"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "100.000"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "GK"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "DEF"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "MID"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      }
+    ],
+    "undefinedVars": [],
+    "fixedEls": [],
+    "missingAlts": [],
+    "bodyScroll": false,
+    "resolvedFontPixel": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\"",
+    "errors": []
+  },
+  {
+    "label": "desktop",
+    "ctx": "transfers",
+    "url": "http://localhost:3001/",
+    "overlaps": [],
+    "overflowX": [],
+    "tinyFonts": [
+      {
+        "tag": "div",
+        "cls": "text-[0.35rem] text-[#55e0a0] font-[family-name:va",
+        "size": 5.6,
+        "text": "SÉRIE D · RD.1"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "JOGO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ELENCO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "MERCADO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "LIGA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ESTÁDIO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INSTALAÇÕES"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ACADEMIA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "STAFF"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "APOSTAS"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INVESTIR"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "100.000"
+      },
+      {
+        "tag": "button",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "Todos"
+      },
+      {
+        "tag": "button",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "GK"
+      },
+      {
+        "tag": "button",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "DEF"
+      },
+      {
+        "tag": "button",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "MID"
+      },
+      {
+        "tag": "button",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Leões do Norte"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 560K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Falcões de Aço"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 634K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Trovão FC"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 756K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Falcões de Aço"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 532K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Falcões de Aço"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 362K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Trovão FC"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 521K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Estrela do Sul"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 664K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "MID"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Serra Brava"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 508K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "MID"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Serra Brava"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 656K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Estrela do Sul"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 448K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Maré Alta"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 609K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "MID"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Serra Brava"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 320K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Estrela do Sul"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 465K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "DEF"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Falcões de Aço"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 489K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "MID"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Falcões de Aço"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 435K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Trovão FC"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 467K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Serra Brava"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 422K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Serra Brava"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 617K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "DEF"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Estrela do Sul"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 322K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "DEF"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Leões do Norte"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 589K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "MID"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Maré Alta"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 596K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Maré Alta"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 633K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "DEF"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Estrela do Sul"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 558K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "DEF"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Falcões de Aço"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 562K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "DEF"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Trovão FC"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 452K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Serra Brava"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 527K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "MID"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Estrela do Sul"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 555K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "MID"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Estrela do Sul"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 605K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Leões do Norte"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 474K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "MID"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Trovão FC"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 536K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "MID"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Leões do Norte"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 482K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Leões do Norte"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 558K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "MID"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Falcões de Aço"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 470K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "GK"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Trovão FC"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 446K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "DEF"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Maré Alta"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 511K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "DEF"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Maré Alta"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 424K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "DEF"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Serra Brava"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 425K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "MID"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Leões do Norte"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 503K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "GK"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Falcões de Aço"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 388K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "MID"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Falcões de Aço"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 460K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      }
+    ],
+    "undefinedVars": [],
+    "fixedEls": [],
+    "missingAlts": [],
+    "bodyScroll": false,
+    "resolvedFontPixel": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\"",
+    "errors": []
+  },
+  {
+    "label": "desktop",
+    "ctx": "standings",
+    "url": "http://localhost:3001/",
+    "overlaps": [],
+    "overflowX": [],
+    "tinyFonts": [
+      {
+        "tag": "div",
+        "cls": "text-[0.35rem] text-[#55e0a0] font-[family-name:va",
+        "size": 5.6,
+        "text": "SÉRIE D · RD.1"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "JOGO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ELENCO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "MERCADO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "LIGA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ESTÁDIO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INSTALAÇÕES"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ACADEMIA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "STAFF"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "APOSTAS"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INVESTIR"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "100.000"
+      }
+    ],
+    "undefinedVars": [],
+    "fixedEls": [],
+    "missingAlts": [],
+    "bodyScroll": false,
+    "resolvedFontPixel": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\"",
+    "errors": []
+  },
+  {
+    "label": "desktop",
+    "ctx": "stadium",
+    "url": "http://localhost:3001/",
+    "overlaps": [],
+    "overflowX": [],
+    "tinyFonts": [
+      {
+        "tag": "div",
+        "cls": "text-[0.35rem] text-[#55e0a0] font-[family-name:va",
+        "size": 5.6,
+        "text": "SÉRIE D · RD.1"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "JOGO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ELENCO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "MERCADO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "LIGA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ESTÁDIO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INSTALAÇÕES"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ACADEMIA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "STAFF"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "APOSTAS"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INVESTIR"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "100.000"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "100.000"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.4rem] text-[#55e0a0] font-[family-name:var",
+        "size": 6.4,
+        "text": "PRÓXIMO: NÍVEL 1"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.4rem] text-white/60 font-[family-name:var(",
+        "size": 6.4,
+        "text": "SEM ESTÁDIO, VOCÊ SÓ RECEBE RECEITAS DE "
+      },
+      {
+        "tag": "div",
+        "cls": "text-[0.35rem] text-[rgba(255,223,0,0.4)] font-[fa",
+        "size": 5.6,
+        "text": "CUSTO"
+      }
+    ],
+    "undefinedVars": [],
+    "fixedEls": [],
+    "missingAlts": [],
+    "bodyScroll": false,
+    "resolvedFontPixel": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\"",
+    "errors": []
+  },
+  {
+    "label": "desktop",
+    "ctx": "facilities",
+    "url": "http://localhost:3001/",
+    "overlaps": [],
+    "overflowX": [],
+    "tinyFonts": [
+      {
+        "tag": "div",
+        "cls": "text-[0.35rem] text-[#55e0a0] font-[family-name:va",
+        "size": 5.6,
+        "text": "SÉRIE D · RD.1"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "JOGO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ELENCO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "MERCADO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "LIGA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ESTÁDIO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INSTALAÇÕES"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ACADEMIA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "STAFF"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "APOSTAS"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INVESTIR"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "100.000"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "100.000"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "500.000"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "300.000"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "1.000.000"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "500.000"
+      }
+    ],
+    "undefinedVars": [],
+    "fixedEls": [],
+    "missingAlts": [],
+    "bodyScroll": false,
+    "resolvedFontPixel": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\"",
+    "errors": []
+  },
+  {
+    "label": "desktop",
+    "ctx": "youth",
+    "url": "http://localhost:3001/",
+    "overlaps": [],
+    "overflowX": [],
+    "tinyFonts": [
+      {
+        "tag": "div",
+        "cls": "text-[0.35rem] text-[#55e0a0] font-[family-name:va",
+        "size": 5.6,
+        "text": "SÉRIE D · RD.1"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "JOGO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ELENCO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "MERCADO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "LIGA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ESTÁDIO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INSTALAÇÕES"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ACADEMIA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "STAFF"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "APOSTAS"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INVESTIR"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "100.000"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "100.000"
+      }
+    ],
+    "undefinedVars": [],
+    "fixedEls": [],
+    "missingAlts": [],
+    "bodyScroll": false,
+    "resolvedFontPixel": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\"",
+    "errors": []
+  },
+  {
+    "label": "desktop",
+    "ctx": "staff",
+    "url": "http://localhost:3001/",
+    "overlaps": [],
+    "overflowX": [],
+    "tinyFonts": [
+      {
+        "tag": "div",
+        "cls": "text-[0.35rem] text-[#55e0a0] font-[family-name:va",
+        "size": 5.6,
+        "text": "SÉRIE D · RD.1"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "JOGO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ELENCO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "MERCADO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "LIGA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ESTÁDIO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INSTALAÇÕES"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ACADEMIA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "STAFF"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "APOSTAS"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INVESTIR"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "100.000"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "100.000"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.45rem] text-[#55e0a0]",
+        "size": 7.2,
+        "text": "50K"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.4rem] text-white/50",
+        "size": 6.4,
+        "text": "Nív 1-10"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.45rem] text-[#55e0a0]",
+        "size": 7.2,
+        "text": "200K"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.4rem] text-white/50",
+        "size": 6.4,
+        "text": "Nív 11-30"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.45rem] text-[#55e0a0]",
+        "size": 7.2,
+        "text": "1M"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.4rem] text-white/50",
+        "size": 6.4,
+        "text": "Nív 31-50"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.45rem] text-[#55e0a0]",
+        "size": 7.2,
+        "text": "50K"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.4rem] text-white/50",
+        "size": 6.4,
+        "text": "Nív 1-10"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.45rem] text-[#55e0a0]",
+        "size": 7.2,
+        "text": "200K"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.4rem] text-white/50",
+        "size": 6.4,
+        "text": "Nív 11-30"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.45rem] text-[#55e0a0]",
+        "size": 7.2,
+        "text": "1M"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.4rem] text-white/50",
+        "size": 6.4,
+        "text": "Nív 31-50"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.45rem] text-[#55e0a0]",
+        "size": 7.2,
+        "text": "50K"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.4rem] text-white/50",
+        "size": 6.4,
+        "text": "Nív 1-10"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.45rem] text-[#55e0a0]",
+        "size": 7.2,
+        "text": "200K"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.4rem] text-white/50",
+        "size": 6.4,
+        "text": "Nív 11-30"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.45rem] text-[#55e0a0]",
+        "size": 7.2,
+        "text": "1M"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.4rem] text-white/50",
+        "size": 6.4,
+        "text": "Nív 31-50"
+      },
+      {
+        "tag": "div",
+        "cls": "text-[0.45rem] text-white/40 font-[family-name:var",
+        "size": 7.2,
+        "text": "Dedução automática semanal"
+      }
+    ],
+    "undefinedVars": [],
+    "fixedEls": [],
+    "missingAlts": [],
+    "bodyScroll": false,
+    "resolvedFontPixel": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\"",
+    "errors": []
+  },
+  {
+    "label": "desktop",
+    "ctx": "apostas",
+    "url": "http://localhost:3001/",
+    "overlaps": [],
+    "overflowX": [],
+    "tinyFonts": [
+      {
+        "tag": "div",
+        "cls": "text-[0.35rem] text-[#55e0a0] font-[family-name:va",
+        "size": 5.6,
+        "text": "SÉRIE D · RD.1"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "JOGO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ELENCO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "MERCADO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "LIGA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ESTÁDIO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INSTALAÇÕES"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ACADEMIA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "STAFF"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "APOSTAS"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INVESTIR"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "100.000"
+      }
+    ],
+    "undefinedVars": [],
+    "fixedEls": [],
+    "missingAlts": [],
+    "bodyScroll": false,
+    "resolvedFontPixel": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\"",
+    "errors": []
+  },
+  {
+    "label": "desktop",
+    "ctx": "investir",
+    "url": "http://localhost:3001/",
+    "overlaps": [],
+    "overflowX": [],
+    "tinyFonts": [
+      {
+        "tag": "div",
+        "cls": "text-[0.35rem] text-[#55e0a0] font-[family-name:va",
+        "size": 5.6,
+        "text": "SÉRIE D · RD.1"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "JOGO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ELENCO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "MERCADO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "LIGA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ESTÁDIO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INSTALAÇÕES"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ACADEMIA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "STAFF"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "APOSTAS"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INVESTIR"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "100.000"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "50.000"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.4rem] text-[#55e0a0]/50 font-[family-name:",
+        "size": 6.4,
+        "text": "3 dias"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "200.000"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.4rem] text-[#55e0a0]/50 font-[family-name:",
+        "size": 6.4,
+        "text": "7 dias"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "150.000"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.4rem] text-[#55e0a0]/50 font-[family-name:",
+        "size": 6.4,
+        "text": "14 dias"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "300.000"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.4rem] text-[#55e0a0]/50 font-[family-name:",
+        "size": 6.4,
+        "text": "30 dias"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "400.000"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.4rem] text-[#55e0a0]/50 font-[family-name:",
+        "size": 6.4,
+        "text": "14 dias"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "250.000"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.4rem] text-[#55e0a0]/50 font-[family-name:",
+        "size": 6.4,
+        "text": "21 dias"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "500.000"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.4rem] text-[#55e0a0]/50 font-[family-name:",
+        "size": 6.4,
+        "text": "30 dias"
+      }
+    ],
+    "undefinedVars": [],
+    "fixedEls": [],
+    "missingAlts": [],
+    "bodyScroll": false,
+    "resolvedFontPixel": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\"",
+    "errors": []
+  },
+  {
+    "label": "desktop",
+    "ctx": "jogo",
+    "url": "http://localhost:3001/",
+    "overlaps": [],
+    "overflowX": [],
+    "tinyFonts": [
+      {
+        "tag": "div",
+        "cls": "text-[0.35rem] text-[#55e0a0] font-[family-name:va",
+        "size": 5.6,
+        "text": "SÉRIE D · RD.1"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "JOGO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ELENCO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "MERCADO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "LIGA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ESTÁDIO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INSTALAÇÕES"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ACADEMIA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "STAFF"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "APOSTAS"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INVESTIR"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "100.000"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.45rem] text-[rgba(255,223,0,0.4)] font-[fa",
+        "size": 7.2,
+        "text": "VS"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.35rem] text-[#55e0a0] font-[family-name:va",
+        "size": 5.6,
+        "text": "MANDANTE"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 4.8,
+        "text": "VITÓRIA"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 4.8,
+        "text": "EMPATE"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 4.8,
+        "text": "DERROTA"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.35rem] text-[rgba(255,223,0,0.4)] font-[fa",
+        "size": 5.6,
+        "text": "RODADA 1/38"
+      },
+      {
+        "tag": "span",
+        "cls": "text-white text-[0.4rem] font-[family-name:var(--f",
+        "size": 6.4,
+        "text": "-"
+      },
+      {
+        "tag": "span",
+        "cls": "text-white text-[0.4rem] font-[family-name:var(--f",
+        "size": 6.4,
+        "text": "-"
+      },
+      {
+        "tag": "span",
+        "cls": "text-white text-[0.4rem] font-[family-name:var(--f",
+        "size": 6.4,
+        "text": "-"
+      },
+      {
+        "tag": "span",
+        "cls": "text-white text-[0.4rem] font-[family-name:var(--f",
+        "size": 6.4,
+        "text": "-"
+      },
+      {
+        "tag": "span",
+        "cls": "text-white text-[0.4rem] font-[family-name:var(--f",
+        "size": 6.4,
+        "text": "-"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      }
+    ],
+    "undefinedVars": [],
+    "fixedEls": [],
+    "missingAlts": [],
+    "bodyScroll": false,
+    "resolvedFontPixel": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\"",
+    "errors": []
+  },
+  {
+    "label": "mobile",
+    "ctx": "dashboard",
+    "url": "http://localhost:3001/",
+    "overlaps": [],
+    "overflowX": [
+      {
+        "tag": "button",
+        "cls": "tracking-wide transition-all active:scale-[0.97] bg-[#FFDF00",
+        "right": 413,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "flex gap-3 text-xs text-white/40",
+        "right": 386,
+        "vw": 375
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "right": 386,
+        "vw": 375
+      }
+    ],
+    "tinyFonts": [
+      {
+        "tag": "div",
+        "cls": "text-[0.35rem] text-[#55e0a0] font-[family-name:va",
+        "size": 5.6,
+        "text": "SÉRIE D · RD.1"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "JOGO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ELENCO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "MERCADO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "LIGA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ESTÁDIO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INSTALAÇÕES"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ACADEMIA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "STAFF"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "APOSTAS"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INVESTIR"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "100.000"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.45rem] text-[rgba(255,223,0,0.4)] font-[fa",
+        "size": 7.2,
+        "text": "VS"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.35rem] text-[#55e0a0] font-[family-name:va",
+        "size": 5.6,
+        "text": "MANDANTE"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 4.8,
+        "text": "VITÓRIA"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 4.8,
+        "text": "EMPATE"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 4.8,
+        "text": "DERROTA"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.35rem] text-[rgba(255,223,0,0.4)] font-[fa",
+        "size": 5.6,
+        "text": "RODADA 1/38"
+      },
+      {
+        "tag": "span",
+        "cls": "text-white text-[0.4rem] font-[family-name:var(--f",
+        "size": 6.4,
+        "text": "-"
+      },
+      {
+        "tag": "span",
+        "cls": "text-white text-[0.4rem] font-[family-name:var(--f",
+        "size": 6.4,
+        "text": "-"
+      },
+      {
+        "tag": "span",
+        "cls": "text-white text-[0.4rem] font-[family-name:var(--f",
+        "size": 6.4,
+        "text": "-"
+      },
+      {
+        "tag": "span",
+        "cls": "text-white text-[0.4rem] font-[family-name:var(--f",
+        "size": 6.4,
+        "text": "-"
+      },
+      {
+        "tag": "span",
+        "cls": "text-white text-[0.4rem] font-[family-name:var(--f",
+        "size": 6.4,
+        "text": "-"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "MID"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "MID"
+      }
+    ],
+    "undefinedVars": [],
+    "fixedEls": [],
+    "missingAlts": [],
+    "bodyScroll": false,
+    "resolvedFontPixel": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\"",
+    "errors": []
+  },
+  {
+    "label": "mobile",
+    "ctx": "squad",
+    "url": "http://localhost:3001/",
+    "overlaps": [],
+    "overflowX": [
+      {
+        "tag": "div",
+        "cls": "flex-1",
+        "right": 387,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "text-lg font-bold text-white",
+        "right": 387,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "flex gap-2 mt-1",
+        "right": 387,
+        "vw": 375
+      },
+      {
+        "tag": "span",
+        "cls": "\n                    px-1.5 py-0.5 rounded text-[10px] font-",
+        "right": 387,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "flex-1 rounded-lg p-2 text-center bg-[#004d00]",
+        "right": 395,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "text-lg font-bold text-white",
+        "right": 387,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "text-[10px] text-white/50",
+        "right": 387,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "flex-1 bg-[#004d00] rounded-lg p-2 text-center",
+        "right": 446,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "text-lg font-bold text-white text-2xl",
+        "right": 438,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "text-[10px] text-white/50",
+        "right": 438,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "flex-1 max-w-[60px]",
+        "right": 384,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "flex justify-between text-[9px] text-white/50 mb-0.5",
+        "right": 384,
+        "vw": 375
+      },
+      {
+        "tag": "span",
+        "cls": "text-white/70",
+        "right": 384,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "h-1.5 bg-[#004d00] rounded-full overflow-hidden",
+        "right": 384,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "flex-1 max-w-[60px]",
+        "right": 384,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "flex justify-between text-[9px] text-white/50 mb-0.5",
+        "right": 384,
+        "vw": 375
+      },
+      {
+        "tag": "span",
+        "cls": "text-white/70",
+        "right": 384,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "h-1.5 bg-[#004d00] rounded-full overflow-hidden",
+        "right": 384,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "flex-1 max-w-[60px]",
+        "right": 384,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "flex justify-between text-[9px] text-white/50 mb-0.5",
+        "right": 384,
+        "vw": 375
+      },
+      {
+        "tag": "span",
+        "cls": "text-white/70",
+        "right": 384,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "h-1.5 bg-[#004d00] rounded-full overflow-hidden",
+        "right": 384,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "flex-1 max-w-[60px]",
+        "right": 381,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "flex justify-between text-[9px] text-white/50 mb-0.5",
+        "right": 381,
+        "vw": 375
+      },
+      {
+        "tag": "span",
+        "cls": "text-white/70",
+        "right": 381,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "h-1.5 bg-[#004d00] rounded-full overflow-hidden",
+        "right": 381,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "flex-1 max-w-[60px]",
+        "right": 381,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "flex justify-between text-[9px] text-white/50 mb-0.5",
+        "right": 381,
+        "vw": 375
+      },
+      {
+        "tag": "span",
+        "cls": "text-white/70",
+        "right": 381,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "h-1.5 bg-[#004d00] rounded-full overflow-hidden",
+        "right": 381,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "flex-1 max-w-[60px]",
+        "right": 380,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "flex justify-between text-[9px] text-white/50 mb-0.5",
+        "right": 380,
+        "vw": 375
+      },
+      {
+        "tag": "span",
+        "cls": "text-white/70",
+        "right": 380,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "h-1.5 bg-[#004d00] rounded-full overflow-hidden",
+        "right": 380,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "flex-1 max-w-[60px]",
+        "right": 382,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "flex justify-between text-[9px] text-white/50 mb-0.5",
+        "right": 382,
+        "vw": 375
+      },
+      {
+        "tag": "span",
+        "cls": "text-white/70",
+        "right": 382,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "h-1.5 bg-[#004d00] rounded-full overflow-hidden",
+        "right": 382,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "flex-1 max-w-[60px]",
+        "right": 380,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "flex justify-between text-[9px] text-white/50 mb-0.5",
+        "right": 380,
+        "vw": 375
+      },
+      {
+        "tag": "span",
+        "cls": "text-white/70",
+        "right": 380,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "h-1.5 bg-[#004d00] rounded-full overflow-hidden",
+        "right": 380,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "flex-1 max-w-[60px]",
+        "right": 384,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "flex justify-between text-[9px] text-white/50 mb-0.5",
+        "right": 384,
+        "vw": 375
+      },
+      {
+        "tag": "span",
+        "cls": "text-white/70",
+        "right": 384,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "h-1.5 bg-[#004d00] rounded-full overflow-hidden",
+        "right": 384,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "flex-1 max-w-[60px]",
+        "right": 381,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "flex justify-between text-[9px] text-white/50 mb-0.5",
+        "right": 381,
+        "vw": 375
+      },
+      {
+        "tag": "span",
+        "cls": "text-white/70",
+        "right": 381,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "h-1.5 bg-[#004d00] rounded-full overflow-hidden",
+        "right": 381,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "flex-1 max-w-[60px]",
+        "right": 384,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "flex justify-between text-[9px] text-white/50 mb-0.5",
+        "right": 384,
+        "vw": 375
+      },
+      {
+        "tag": "span",
+        "cls": "text-white/70",
+        "right": 384,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "h-1.5 bg-[#004d00] rounded-full overflow-hidden",
+        "right": 384,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "h-full rounded-full bg-green-500",
+        "right": 378,
+        "vw": 375
+      }
+    ],
+    "tinyFonts": [
+      {
+        "tag": "div",
+        "cls": "text-[0.35rem] text-[#55e0a0] font-[family-name:va",
+        "size": 5.6,
+        "text": "SÉRIE D · RD.1"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "JOGO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ELENCO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "MERCADO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "LIGA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ESTÁDIO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INSTALAÇÕES"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ACADEMIA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "STAFF"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "APOSTAS"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INVESTIR"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "100.000"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "GK"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "DEF"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "MID"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      }
+    ],
+    "undefinedVars": [],
+    "fixedEls": [],
+    "missingAlts": [],
+    "bodyScroll": false,
+    "resolvedFontPixel": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\"",
+    "errors": []
+  },
+  {
+    "label": "mobile",
+    "ctx": "transfers",
+    "url": "http://localhost:3001/",
+    "overlaps": [],
+    "overflowX": [
+      {
+        "tag": "div",
+        "cls": "",
+        "right": 381,
+        "vw": 375
+      },
+      {
+        "tag": "h1",
+        "cls": "text-xl font-bold font-[family-name:var(--font-pixel)] gold-",
+        "right": 381,
+        "vw": 375
+      },
+      {
+        "tag": "p",
+        "cls": "text-[#55e0a0]/60 text-sm font-[family-name:var(--font-pixel",
+        "right": 381,
+        "vw": 375
+      }
+    ],
+    "tinyFonts": [
+      {
+        "tag": "div",
+        "cls": "text-[0.35rem] text-[#55e0a0] font-[family-name:va",
+        "size": 5.6,
+        "text": "SÉRIE D · RD.1"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "JOGO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ELENCO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "MERCADO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "LIGA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ESTÁDIO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INSTALAÇÕES"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ACADEMIA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "STAFF"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "APOSTAS"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INVESTIR"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "100.000"
+      },
+      {
+        "tag": "button",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "Todos"
+      },
+      {
+        "tag": "button",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "GK"
+      },
+      {
+        "tag": "button",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "DEF"
+      },
+      {
+        "tag": "button",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "MID"
+      },
+      {
+        "tag": "button",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Leões do Norte"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 632K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Trovão FC"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 683K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Maré Alta"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 656K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Estrela do Sul"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 516K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Falcões de Aço"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 691K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Trovão FC"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 683K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "MID"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Trovão FC"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 623K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Trovão FC"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 590K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Serra Brava"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 462K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Estrela do Sul"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 519K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Falcões de Aço"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 290K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "MID"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Maré Alta"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 525K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "MID"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Serra Brava"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 515K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "MID"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Trovão FC"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 401K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Maré Alta"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 564K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "GK"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Serra Brava"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 469K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "MID"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Estrela do Sul"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 554K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "DEF"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Leões do Norte"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 612K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "MID"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Leões do Norte"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 563K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "GK"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Falcões de Aço"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 414K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "MID"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Serra Brava"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 593K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Estrela do Sul"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 539K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Leões do Norte"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 497K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Leões do Norte"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 335K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "DEF"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Falcões de Aço"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 590K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "MID"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Maré Alta"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 592K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "DEF"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Trovão FC"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 444K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "DEF"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Trovão FC"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 599K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "GK"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Estrela do Sul"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 516K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "MID"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Falcões de Aço"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 465K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Falcões de Aço"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 499K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Maré Alta"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 530K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "DEF"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Serra Brava"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 563K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "MID"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Serra Brava"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 432K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Serra Brava"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 596K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Serra Brava"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 490K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "DEF"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Estrela do Sul"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 417K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "DEF"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Leões do Norte"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 418K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "DEF"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Maré Alta"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 575K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "DEF"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.45rem] text-[#55e0a0]/50 mt-0.5 font-[fami",
+        "size": 7.2,
+        "text": "Estrela do Sul"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "$ 377K"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.35rem] text-[#55e0a0]/30 font-[family-name",
+        "size": 5.6,
+        "text": "Valor"
+      }
+    ],
+    "undefinedVars": [],
+    "fixedEls": [],
+    "missingAlts": [],
+    "bodyScroll": false,
+    "resolvedFontPixel": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\"",
+    "errors": []
+  },
+  {
+    "label": "mobile",
+    "ctx": "standings",
+    "url": "http://localhost:3001/",
+    "overlaps": [],
+    "overflowX": [
+      {
+        "tag": "table",
+        "cls": "w-full text-sm",
+        "right": 603,
+        "vw": 375
+      },
+      {
+        "tag": "thead",
+        "cls": "",
+        "right": 603,
+        "vw": 375
+      },
+      {
+        "tag": "tr",
+        "cls": "bg-[#00381a] text-white/40 text-xs font-[family-name:var(--f",
+        "right": 603,
+        "vw": 375
+      },
+      {
+        "tag": "th",
+        "cls": "text-center py-3 px-1 w-8",
+        "right": 390,
+        "vw": 375
+      },
+      {
+        "tag": "th",
+        "cls": "text-center py-3 px-1 w-8",
+        "right": 407,
+        "vw": 375
+      },
+      {
+        "tag": "th",
+        "cls": "text-center py-3 px-1 w-8",
+        "right": 424,
+        "vw": 375
+      },
+      {
+        "tag": "th",
+        "cls": "text-center py-3 px-1 w-8",
+        "right": 441,
+        "vw": 375
+      },
+      {
+        "tag": "th",
+        "cls": "text-center py-3 px-1 w-10",
+        "right": 469,
+        "vw": 375
+      },
+      {
+        "tag": "th",
+        "cls": "text-center py-3 px-1 w-10",
+        "right": 494,
+        "vw": 375
+      },
+      {
+        "tag": "th",
+        "cls": "text-center py-3 px-1 w-8",
+        "right": 520,
+        "vw": 375
+      },
+      {
+        "tag": "th",
+        "cls": "text-center py-3 px-1 w-10",
+        "right": 559,
+        "vw": 375
+      },
+      {
+        "tag": "th",
+        "cls": "text-right py-3 px-3 w-10",
+        "right": 603,
+        "vw": 375
+      },
+      {
+        "tag": "tbody",
+        "cls": "",
+        "right": 603,
+        "vw": 375
+      },
+      {
+        "tag": "tr",
+        "cls": "border-t border-[#00381a] border-l-[#00A859] border-l-2 hove",
+        "right": 603,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-white/50",
+        "right": 390,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-[#00A859]",
+        "right": 407,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-[#FFDF00]",
+        "right": 424,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-[#FF3333]",
+        "right": 441,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-white/50",
+        "right": 469,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-white/50",
+        "right": 494,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center font-medium text-[#00A859]",
+        "right": 520,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center",
+        "right": 559,
+        "vw": 375
+      },
+      {
+        "tag": "svg",
+        "cls": "[object SVGAnimatedString]",
+        "right": 538,
+        "vw": 375
+      },
+      {
+        "tag": "path",
+        "cls": "[object SVGAnimatedString]",
+        "right": 537,
+        "vw": 375
+      },
+      {
+        "tag": "path",
+        "cls": "[object SVGAnimatedString]",
+        "right": 537,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-3 text-right font-bold text-[#FFDF00]",
+        "right": 603,
+        "vw": 375
+      },
+      {
+        "tag": "tr",
+        "cls": "border-t border-[#00381a] border-l-[#00A859] border-l-2 hove",
+        "right": 603,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-white/50",
+        "right": 390,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-[#00A859]",
+        "right": 407,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-[#FFDF00]",
+        "right": 424,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-[#FF3333]",
+        "right": 441,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-white/50",
+        "right": 469,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-white/50",
+        "right": 494,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center font-medium text-[#00A859]",
+        "right": 520,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center",
+        "right": 559,
+        "vw": 375
+      },
+      {
+        "tag": "svg",
+        "cls": "[object SVGAnimatedString]",
+        "right": 538,
+        "vw": 375
+      },
+      {
+        "tag": "path",
+        "cls": "[object SVGAnimatedString]",
+        "right": 537,
+        "vw": 375
+      },
+      {
+        "tag": "path",
+        "cls": "[object SVGAnimatedString]",
+        "right": 537,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-3 text-right font-bold text-[#FFDF00]",
+        "right": 603,
+        "vw": 375
+      },
+      {
+        "tag": "tr",
+        "cls": "border-t border-[#00381a] border-l-[#00A859] border-l-2 hove",
+        "right": 603,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-white/50",
+        "right": 390,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-[#00A859]",
+        "right": 407,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-[#FFDF00]",
+        "right": 424,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-[#FF3333]",
+        "right": 441,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-white/50",
+        "right": 469,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-white/50",
+        "right": 494,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center font-medium text-[#00A859]",
+        "right": 520,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center",
+        "right": 559,
+        "vw": 375
+      },
+      {
+        "tag": "svg",
+        "cls": "[object SVGAnimatedString]",
+        "right": 538,
+        "vw": 375
+      },
+      {
+        "tag": "path",
+        "cls": "[object SVGAnimatedString]",
+        "right": 537,
+        "vw": 375
+      },
+      {
+        "tag": "path",
+        "cls": "[object SVGAnimatedString]",
+        "right": 537,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-3 text-right font-bold text-[#FFDF00]",
+        "right": 603,
+        "vw": 375
+      },
+      {
+        "tag": "tr",
+        "cls": "border-t border-[#00381a] border-l-[#00A859] border-l-2 bg-[",
+        "right": 603,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-white/50",
+        "right": 390,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-[#00A859]",
+        "right": 407,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-[#FFDF00]",
+        "right": 424,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-[#FF3333]",
+        "right": 441,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-white/50",
+        "right": 469,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-white/50",
+        "right": 494,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center font-medium text-white/50",
+        "right": 520,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center",
+        "right": 559,
+        "vw": 375
+      },
+      {
+        "tag": "svg",
+        "cls": "[object SVGAnimatedString]",
+        "right": 538,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-3 text-right font-bold text-[#FFDF00]",
+        "right": 603,
+        "vw": 375
+      },
+      {
+        "tag": "tr",
+        "cls": "border-t border-[#00381a] border-l-[#3EA0D4] border-l-2 hove",
+        "right": 603,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-white/50",
+        "right": 390,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-[#00A859]",
+        "right": 407,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-[#FFDF00]",
+        "right": 424,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-[#FF3333]",
+        "right": 441,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-white/50",
+        "right": 469,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-white/50",
+        "right": 494,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center font-medium text-white/50",
+        "right": 520,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center",
+        "right": 559,
+        "vw": 375
+      },
+      {
+        "tag": "svg",
+        "cls": "[object SVGAnimatedString]",
+        "right": 538,
+        "vw": 375
+      },
+      {
+        "tag": "path",
+        "cls": "[object SVGAnimatedString]",
+        "right": 537,
+        "vw": 375
+      },
+      {
+        "tag": "path",
+        "cls": "[object SVGAnimatedString]",
+        "right": 537,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-3 text-right font-bold text-[#FFDF00]",
+        "right": 603,
+        "vw": 375
+      },
+      {
+        "tag": "tr",
+        "cls": "border-t border-[#00381a] border-l-[#3EA0D4] border-l-2 hove",
+        "right": 603,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-white/50",
+        "right": 390,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-[#00A859]",
+        "right": 407,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-[#FFDF00]",
+        "right": 424,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-[#FF3333]",
+        "right": 441,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-white/50",
+        "right": 469,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-white/50",
+        "right": 494,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center font-medium text-white/50",
+        "right": 520,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center",
+        "right": 559,
+        "vw": 375
+      },
+      {
+        "tag": "svg",
+        "cls": "[object SVGAnimatedString]",
+        "right": 538,
+        "vw": 375
+      },
+      {
+        "tag": "path",
+        "cls": "[object SVGAnimatedString]",
+        "right": 537,
+        "vw": 375
+      },
+      {
+        "tag": "path",
+        "cls": "[object SVGAnimatedString]",
+        "right": 537,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-3 text-right font-bold text-[#FFDF00]",
+        "right": 603,
+        "vw": 375
+      },
+      {
+        "tag": "tr",
+        "cls": "border-t border-[#00381a] border-l-white/20 border-l-2 hover",
+        "right": 603,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-white/50",
+        "right": 390,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-[#00A859]",
+        "right": 407,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-[#FFDF00]",
+        "right": 424,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-[#FF3333]",
+        "right": 441,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-white/50",
+        "right": 469,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center text-white/50",
+        "right": 494,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center font-medium text-white/50",
+        "right": 520,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-1 text-center",
+        "right": 559,
+        "vw": 375
+      },
+      {
+        "tag": "svg",
+        "cls": "[object SVGAnimatedString]",
+        "right": 538,
+        "vw": 375
+      },
+      {
+        "tag": "path",
+        "cls": "[object SVGAnimatedString]",
+        "right": 537,
+        "vw": 375
+      },
+      {
+        "tag": "path",
+        "cls": "[object SVGAnimatedString]",
+        "right": 537,
+        "vw": 375
+      },
+      {
+        "tag": "td",
+        "cls": "py-2.5 px-3 text-right font-bold text-[#FFDF00]",
+        "right": 603,
+        "vw": 375
+      }
+    ],
+    "tinyFonts": [
+      {
+        "tag": "div",
+        "cls": "text-[0.35rem] text-[#55e0a0] font-[family-name:va",
+        "size": 5.6,
+        "text": "SÉRIE D · RD.1"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "JOGO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ELENCO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "MERCADO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "LIGA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ESTÁDIO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INSTALAÇÕES"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ACADEMIA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "STAFF"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "APOSTAS"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INVESTIR"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "100.000"
+      }
+    ],
+    "undefinedVars": [],
+    "fixedEls": [],
+    "missingAlts": [],
+    "bodyScroll": false,
+    "resolvedFontPixel": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\"",
+    "errors": []
+  },
+  {
+    "label": "mobile",
+    "ctx": "stadium",
+    "url": "http://localhost:3001/",
+    "overlaps": [],
+    "overflowX": [],
+    "tinyFonts": [
+      {
+        "tag": "div",
+        "cls": "text-[0.35rem] text-[#55e0a0] font-[family-name:va",
+        "size": 5.6,
+        "text": "SÉRIE D · RD.1"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "JOGO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ELENCO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "MERCADO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "LIGA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ESTÁDIO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INSTALAÇÕES"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ACADEMIA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "STAFF"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "APOSTAS"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INVESTIR"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "100.000"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "100.000"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.4rem] text-[#55e0a0] font-[family-name:var",
+        "size": 6.4,
+        "text": "PRÓXIMO: NÍVEL 1"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.4rem] text-white/60 font-[family-name:var(",
+        "size": 6.4,
+        "text": "SEM ESTÁDIO, VOCÊ SÓ RECEBE RECEITAS DE "
+      },
+      {
+        "tag": "div",
+        "cls": "text-[0.35rem] text-[rgba(255,223,0,0.4)] font-[fa",
+        "size": 5.6,
+        "text": "CUSTO"
+      }
+    ],
+    "undefinedVars": [],
+    "fixedEls": [],
+    "missingAlts": [],
+    "bodyScroll": false,
+    "resolvedFontPixel": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\"",
+    "errors": []
+  },
+  {
+    "label": "mobile",
+    "ctx": "facilities",
+    "url": "http://localhost:3001/",
+    "overlaps": [],
+    "overflowX": [],
+    "tinyFonts": [
+      {
+        "tag": "div",
+        "cls": "text-[0.35rem] text-[#55e0a0] font-[family-name:va",
+        "size": 5.6,
+        "text": "SÉRIE D · RD.1"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "JOGO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ELENCO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "MERCADO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "LIGA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ESTÁDIO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INSTALAÇÕES"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ACADEMIA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "STAFF"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "APOSTAS"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INVESTIR"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "100.000"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "100.000"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "500.000"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "300.000"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "1.000.000"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "500.000"
+      }
+    ],
+    "undefinedVars": [],
+    "fixedEls": [],
+    "missingAlts": [],
+    "bodyScroll": false,
+    "resolvedFontPixel": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\"",
+    "errors": []
+  },
+  {
+    "label": "mobile",
+    "ctx": "youth",
+    "url": "http://localhost:3001/",
+    "overlaps": [],
+    "overflowX": [],
+    "tinyFonts": [
+      {
+        "tag": "div",
+        "cls": "text-[0.35rem] text-[#55e0a0] font-[family-name:va",
+        "size": 5.6,
+        "text": "SÉRIE D · RD.1"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "JOGO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ELENCO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "MERCADO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "LIGA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ESTÁDIO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INSTALAÇÕES"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ACADEMIA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "STAFF"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "APOSTAS"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INVESTIR"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "100.000"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "100.000"
+      }
+    ],
+    "undefinedVars": [],
+    "fixedEls": [],
+    "missingAlts": [],
+    "bodyScroll": false,
+    "resolvedFontPixel": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\"",
+    "errors": []
+  },
+  {
+    "label": "mobile",
+    "ctx": "staff",
+    "url": "http://localhost:3001/",
+    "overlaps": [],
+    "overflowX": [],
+    "tinyFonts": [
+      {
+        "tag": "div",
+        "cls": "text-[0.35rem] text-[#55e0a0] font-[family-name:va",
+        "size": 5.6,
+        "text": "SÉRIE D · RD.1"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "JOGO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ELENCO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "MERCADO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "LIGA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ESTÁDIO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INSTALAÇÕES"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ACADEMIA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "STAFF"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "APOSTAS"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INVESTIR"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "100.000"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "100.000"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.45rem] text-[#55e0a0]",
+        "size": 7.2,
+        "text": "50K"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.4rem] text-white/50",
+        "size": 6.4,
+        "text": "Nív 1-10"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.45rem] text-[#55e0a0]",
+        "size": 7.2,
+        "text": "200K"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.4rem] text-white/50",
+        "size": 6.4,
+        "text": "Nív 11-30"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.45rem] text-[#55e0a0]",
+        "size": 7.2,
+        "text": "1M"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.4rem] text-white/50",
+        "size": 6.4,
+        "text": "Nív 31-50"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.45rem] text-[#55e0a0]",
+        "size": 7.2,
+        "text": "50K"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.4rem] text-white/50",
+        "size": 6.4,
+        "text": "Nív 1-10"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.45rem] text-[#55e0a0]",
+        "size": 7.2,
+        "text": "200K"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.4rem] text-white/50",
+        "size": 6.4,
+        "text": "Nív 11-30"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.45rem] text-[#55e0a0]",
+        "size": 7.2,
+        "text": "1M"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.4rem] text-white/50",
+        "size": 6.4,
+        "text": "Nív 31-50"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.45rem] text-[#55e0a0]",
+        "size": 7.2,
+        "text": "50K"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.4rem] text-white/50",
+        "size": 6.4,
+        "text": "Nív 1-10"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.45rem] text-[#55e0a0]",
+        "size": 7.2,
+        "text": "200K"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.4rem] text-white/50",
+        "size": 6.4,
+        "text": "Nív 11-30"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.45rem] text-[#55e0a0]",
+        "size": 7.2,
+        "text": "1M"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.4rem] text-white/50",
+        "size": 6.4,
+        "text": "Nív 31-50"
+      },
+      {
+        "tag": "div",
+        "cls": "text-[0.45rem] text-white/40 font-[family-name:var",
+        "size": 7.2,
+        "text": "Dedução automática semanal"
+      }
+    ],
+    "undefinedVars": [],
+    "fixedEls": [],
+    "missingAlts": [],
+    "bodyScroll": false,
+    "resolvedFontPixel": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\"",
+    "errors": []
+  },
+  {
+    "label": "mobile",
+    "ctx": "apostas",
+    "url": "http://localhost:3001/",
+    "overlaps": [],
+    "overflowX": [
+      {
+        "tag": "div",
+        "cls": "text-center flex-1",
+        "right": 385,
+        "vw": 375
+      },
+      {
+        "tag": "p",
+        "cls": "text-white font-bold font-[family-name:var(--font-pixel)]",
+        "right": 385,
+        "vw": 375
+      },
+      {
+        "tag": "p",
+        "cls": "text-[#FF3333] text-xs font-[family-name:var(--font-pixel)]",
+        "right": 385,
+        "vw": 375
+      }
+    ],
+    "tinyFonts": [
+      {
+        "tag": "div",
+        "cls": "text-[0.35rem] text-[#55e0a0] font-[family-name:va",
+        "size": 5.6,
+        "text": "SÉRIE D · RD.1"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "JOGO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ELENCO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "MERCADO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "LIGA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ESTÁDIO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INSTALAÇÕES"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ACADEMIA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "STAFF"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "APOSTAS"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INVESTIR"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "100.000"
+      }
+    ],
+    "undefinedVars": [],
+    "fixedEls": [],
+    "missingAlts": [],
+    "bodyScroll": false,
+    "resolvedFontPixel": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\"",
+    "errors": []
+  },
+  {
+    "label": "mobile",
+    "ctx": "investir",
+    "url": "http://localhost:3001/",
+    "overlaps": [],
+    "overflowX": [],
+    "tinyFonts": [
+      {
+        "tag": "div",
+        "cls": "text-[0.35rem] text-[#55e0a0] font-[family-name:va",
+        "size": 5.6,
+        "text": "SÉRIE D · RD.1"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "JOGO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ELENCO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "MERCADO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "LIGA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ESTÁDIO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INSTALAÇÕES"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ACADEMIA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "STAFF"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "APOSTAS"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INVESTIR"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "100.000"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "50.000"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.4rem] text-[#55e0a0]/50 font-[family-name:",
+        "size": 6.4,
+        "text": "3 dias"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "200.000"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.4rem] text-[#55e0a0]/50 font-[family-name:",
+        "size": 6.4,
+        "text": "7 dias"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "150.000"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.4rem] text-[#55e0a0]/50 font-[family-name:",
+        "size": 6.4,
+        "text": "14 dias"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "300.000"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.4rem] text-[#55e0a0]/50 font-[family-name:",
+        "size": 6.4,
+        "text": "30 dias"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "400.000"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.4rem] text-[#55e0a0]/50 font-[family-name:",
+        "size": 6.4,
+        "text": "14 dias"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "250.000"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.4rem] text-[#55e0a0]/50 font-[family-name:",
+        "size": 6.4,
+        "text": "21 dias"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "500.000"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[0.4rem] text-[#55e0a0]/50 font-[family-name:",
+        "size": 6.4,
+        "text": "30 dias"
+      }
+    ],
+    "undefinedVars": [],
+    "fixedEls": [],
+    "missingAlts": [],
+    "bodyScroll": false,
+    "resolvedFontPixel": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\"",
+    "errors": []
+  },
+  {
+    "label": "mobile",
+    "ctx": "jogo",
+    "url": "http://localhost:3001/",
+    "overlaps": [],
+    "overflowX": [
+      {
+        "tag": "button",
+        "cls": "tracking-wide transition-all active:scale-[0.97] bg-[#FFDF00",
+        "right": 413,
+        "vw": 375
+      },
+      {
+        "tag": "div",
+        "cls": "flex gap-3 text-xs text-white/40",
+        "right": 386,
+        "vw": 375
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "right": 386,
+        "vw": 375
+      }
+    ],
+    "tinyFonts": [
+      {
+        "tag": "div",
+        "cls": "text-[0.35rem] text-[#55e0a0] font-[family-name:va",
+        "size": 5.6,
+        "text": "SÉRIE D · RD.1"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "JOGO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ELENCO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "MERCADO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "LIGA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ESTÁDIO"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INSTALAÇÕES"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "ACADEMIA"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "STAFF"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "APOSTAS"
+      },
+      {
+        "tag": "span",
+        "cls": "font-[family-name:var(--font-pixel)] text-[0.4rem]",
+        "size": 6.4,
+        "text": "INVESTIR"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "💰"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 7.2,
+        "text": "100.000"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.45rem] text-[rgba(255,223,0,0.4)] font-[fa",
+        "size": 7.2,
+        "text": "VS"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.35rem] text-[#55e0a0] font-[family-name:va",
+        "size": 5.6,
+        "text": "MANDANTE"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 4.8,
+        "text": "VITÓRIA"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 4.8,
+        "text": "EMPATE"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "size": 4.8,
+        "text": "DERROTA"
+      },
+      {
+        "tag": "span",
+        "cls": "text-[0.35rem] text-[rgba(255,223,0,0.4)] font-[fa",
+        "size": 5.6,
+        "text": "RODADA 1/38"
+      },
+      {
+        "tag": "span",
+        "cls": "text-white text-[0.4rem] font-[family-name:var(--f",
+        "size": 6.4,
+        "text": "-"
+      },
+      {
+        "tag": "span",
+        "cls": "text-white text-[0.4rem] font-[family-name:var(--f",
+        "size": 6.4,
+        "text": "-"
+      },
+      {
+        "tag": "span",
+        "cls": "text-white text-[0.4rem] font-[family-name:var(--f",
+        "size": 6.4,
+        "text": "-"
+      },
+      {
+        "tag": "span",
+        "cls": "text-white text-[0.4rem] font-[family-name:var(--f",
+        "size": 6.4,
+        "text": "-"
+      },
+      {
+        "tag": "span",
+        "cls": "text-white text-[0.4rem] font-[family-name:var(--f",
+        "size": 6.4,
+        "text": "-"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "FWD"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "MID"
+      },
+      {
+        "tag": "span",
+        "cls": "inline-flex items-center justify-center rounded-sm",
+        "size": 6.4,
+        "text": "MID"
+      }
+    ],
+    "undefinedVars": [],
+    "fixedEls": [],
+    "missingAlts": [],
+    "bodyScroll": false,
+    "resolvedFontPixel": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\"",
+    "errors": []
+  }
+]

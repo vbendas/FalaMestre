@@ -1,0 +1,22 @@
+{
+  "consoleErrors": [
+    {
+      "label": "aux",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://localhost:3001/admin"
+    }
+  ],
+  "pageErrors": [],
+  "failedRequests": [
+    {
+      "label": "desktop",
+      "url": "http://localhost:3001/?_rsc=l2yg0",
+      "failure": "net::ERR_ABORTED"
+    },
+    {
+      "label": "mobile",
+      "url": "http://localhost:3001/?_rsc=l2yg0",
+      "failure": "net::ERR_ABORTED"
+    }
+  ]
+}

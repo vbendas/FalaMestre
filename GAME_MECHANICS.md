@@ -676,6 +676,87 @@ function applyWinningConservative(team: Team, scoreDiff: number, minute: number)
 }
 ```
 
+### 4.4 Tactical Instructions
+
+During each decision turn, the player can choose a **tactical instruction** that temporarily modifies their team's stats and affects the match simulation outcome for the upcoming 15-minute segment.
+
+#### 4.4.1 Available Instructions
+
+| Instruction | Icon | Description (PT-BR) | Stat Modifiers | Team × | Opponent × | Risk |
+|---|---|---|---|---|---|---|
+| **Pressão alta** | 🔥 | Pressão alta — recupera a bola rápido, mas gasta energia | phy+5, def+3 | 1.05 | 0.93 | 0.30 |
+| **Bloco baixo** | 🚌 | Bloco baixo — máxima proteção defensiva | def+10, phy+5 | 0.95 | 0.85 | 0.05 |
+| **Tique-taque** | ⚽ | Tique-taque — controle o ritmo do jogo com passes curtos | pas+10, dri+5 | 1.04 | 1.00 | 0.15 |
+| **Contra-ataque** | ⚡ | Contra-ataque rápido — velocidade e oportunismo | pac+10, sho+5 | 1.02 | 1.00 | 0.40 |
+| **Bolas longas** | 📏 | Bolas longas — jogo direto e físico | phy+8, sho+3 | 1.00 | 1.00 | 0.20 |
+| **Jogo pelas laterais** | 🏃 | Jogo pelas laterais — cruzamentos e velocidade | pac+8, dri+5 | 1.03 | 1.00 | 0.25 |
+| **Finalizar** | 💥 | Finalizar de qualquer posição — mais chutes, menos precisão | sho+10, pas+3 | 1.02 | 1.00 | 0.35 |
+| **Cera** | ⏰ | Cera — segurar o resultado consumindo tempo | pas+5, dri+3 | 0.92 | 0.95 | 0.00 |
+| **Jogo no pivô** | 🎯 | Jogo no pivô — bola no atacante e tabelas | phy+8, sho+5 | 1.02 | 1.00 | 0.20 |
+| **Liberdade total** | 🌟 | Liberdade total — criatividade e imprevisibilidade | dri+8, pac+5, sho+3 | 1.03 | 1.00 | 0.30 |
+| **Marcação individual** | 👤 | Marcação individual — neutralizar o principal atacante rival | def+8, phy+5 | 0.98 | 0.90 | 0.10 |
+| **Sobreposição** | ↗️ | Sobreposição — laterais avançando no ataque | pac+6, pas+6 | 1.04 | 1.00 | 0.35 |
+
+**Column legend:**
+- **Stat Modifiers**: Temporary additive changes applied to all players' attributes during the segment
+- **Team ×**: Multiplier applied to your team's final power value (1.00 = no change)
+- **Opponent ×**: Multiplier applied to the opponent's final power value (< 1.00 = reduces their effectiveness)
+- **Risk**: Factor that increases both teams' goal probability during the segment (higher = more goals, more exciting)
+
+#### 4.4.2 How Instructions Affect Simulation
+
+When a player selects a tactical instruction, the following steps occur in `simulateMatchSegment()`:
+
+```
+1. Apply stat modifiers to a COPY of the squad (original unchanged)
+   └─ e.g., high_press → every player gets +5 PHY, +3 DEF
+
+2. Recalculate team power using modified squad
+   └─ calculateTeamPower(modifiedSquad, formation, morale, fitness)
+
+3. Apply team power multiplier
+   └─ adjustedHomePower *= teamPowerMultiplier
+
+4. Apply opponent power multiplier
+   └─ adjustedAwayPower *= opponentPowerMultiplier
+
+5. Calculate base goal probability
+   └─ homeGoalProb = (homePower / (homePower + awayPower)) * 0.4 + 0.1
+
+6. Apply mentality modifier (if set)
+   └─ homeGoalProb *= MENTALITY_MODIFIERS[mentality].homeGoalMultiplier
+
+7. Apply risk factor
+   └─ homeGoalProb *= (1 + riskFactor)
+   └─ awayGoalProb *= (1 + riskFactor * 0.5)
+```
+
+#### 4.4.3 Strategic Trade-offs
+
+Each instruction creates a meaningful trade-off:
+
+| Risk Level | Instructions | Trade-off |
+|---|---|---|
+| **Low risk** (0.00-0.10) | Cera, Bloco baixo, Marcação individual | Defensive stability, fewer goals, safer |
+| **Medium risk** (0.15-0.25) | Tique-taque, Bolas longas, Jogo no pivô, Jogo pelas laterais | Balanced approach with tactical advantage |
+| **High risk** (0.30-0.40) | Pressão alta, Contra-ataque, Finalizar, Liberdade total, Sobreposição | More goals for both sides, high reward/high danger |
+
+**Example scenario:**
+- Your team is losing 0-1 at 60'. You select **Pressão alta** (+5 PHY, +3 DEF, team ×1.05, opponent ×0.93, risk 0.30)
+- Your team power increases by 5%, opponent decreases by 7%
+- Both teams' goal probability increases by 30% — you're more likely to score, but also more likely to concede
+- If you'd selected **Contra-ataque** instead (pac+10, sho+5, risk 0.40), even more goals for both sides
+
+#### 4.4.4 Contextual Availability
+
+The tactical instructions shown depend on the match state:
+
+| Match State | Available Instructions |
+|---|---|
+| **Losing** (score ≤ -1) | Pressão alta, Contra-ataque, Finalizar, Bolas longas, Jogo no pivô |
+| **Winning** (score ≥ +1) | Bloco baixo, Cera, Marcação individual, Tique-taque, Contra-ataque |
+| **Tied** (score = 0) | Tique-taque, Jogo pelas laterais, Liberdade total, Pressão alta, Sobreposição, Contra-ataque |
+
 ---
 
 ## 5. Virtual Fanbase Mechanics
