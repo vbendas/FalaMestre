@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FalaMestre! — Navigation Shell</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #000000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'Press Start 2P', monospace;
+      overflow: hidden;
+    }
+
+    .cabinet {
+      width: 844px;
+      height: 390px;
+      position: relative;
+      background: #00381a;
+      overflow: hidden;
+      border-radius: 4px;
+    }
+
+    /* Phosphor border glow */
+    .cabinet::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      box-shadow: inset 0 0 0 2px rgba(255,223,0,0.35), inset 0 0 30px rgba(255,223,0,0.06);
+      z-index: 100;
+      pointer-events: none;
+      border-radius: 4px;
+    }
+
+    /* Scanlines — content area only */
+    .content-area::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent 0px,
+        transparent 2px,
+        rgba(0,0,0,0.18) 2px,
+        rgba(0,0,0,0.18) 4px
+      );
+      z-index: 99;
+      pointer-events: none;
+    }
+
+    /* Vignette */
+    .cabinet-vignette {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.65) 100%);
+      z-index: 98;
+      pointer-events: none;
+    }
+
+    /* Film grain SVG filter */
+    .grain-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 97;
+      pointer-events: none;
+      opacity: 0.04;
+    }
+
+    /* Flicker animation */
+    @keyframes flicker {
+      0%, 96%, 100% { opacity: 1; }
+      97% { opacity: 0.97; }
+      98% { opacity: 0.99; }
+      99% { opacity: 0.96; }
+    }
+
+    .cabinet {
+      animation: flicker 6s infinite;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 200px;
+      height: 100%;
+      background: rgba(0,8,3,0.92);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-right: 1px solid rgba(255,223,0,0.20);
+      display: flex;
+      flex-direction: column;
+      z-index: 50;
+    }
+
+    /* Top section */
+    .sidebar-top {
+      padding: 14px 12px;
+      border-bottom: 1px solid rgba(255,223,0,0.15);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Pixel art shield badge */
+    .team-badge {
+      width: 40px;
+      height: 40px;
+      position: relative;
+      image-rendering: pixelated;
+    }
+
+    .team-badge canvas {
+      width: 40px;
+      height: 40px;
+      image-rendering: pixelated;
+    }
+
+    .team-name {
+      font-size: 6px;
+      color: #FFDF00;
+      text-align: center;
+      letter-spacing: 0.5px;
+      text-shadow: 0 0 10px #FFDF00, 0 0 22px rgba(255,215,0,0.5);
+      line-height: 1.4;
+    }
+
+    .team-division {
+      font-size: 4px;
+      color: #55e0a0;
+      text-align: center;
+      letter-spacing: 0.5px;
+      line-height: 1.4;
+    }
+
+    /* Navigation */
+    .nav-items {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 6px 0;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      height: 46px;
+      padding-left: 14px;
+      gap: 10px;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: all 0.15s ease;
+      position: relative;
+      user-select: none;
+    }
+
+    .nav-item:active {
+      transform: scale(0.96);
+    }
+
+    .nav-item.active {
+      border-left-color: #FFDF00;
+      background: rgba(255,223,0,0.08);
+    }
+
+    .nav-item.active .nav-icon {
+      filter: none;
+      opacity: 1;
+    }
+
+    .nav-item.active .nav-label {
+      color: #FFDF00;
+      text-shadow: 0 0 10px #FFDF00, 0 0 22px rgba(255,215,0,0.5);
+    }
+
+    .nav-icon {
+      font-size: 18px;
+      line-height: 1;
+      width: 18px;
+      text-align: center;
+      opacity: 0.4;
+      transition: opacity 0.15s ease;
+    }
+
+    .nav-item.active .nav-icon {
+      opacity: 1;
+    }
+
+    .nav-label {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 5px;
+      color: rgba(255,223,0,0.40);
+      letter-spacing: 0.5px;
+      transition: color 0.15s ease;
+    }
+
+    .nav-item:hover:not(.active) {
+      background: rgba(255,223,0,0.03);
+    }
+
+    .nav-item:hover:not(.active) .nav-label {
+      color: rgba(255,223,0,0.60);
+    }
+
+    .nav-item:hover:not(.active) .nav-icon {
+      opacity: 0.6;
+    }
+
+    /* Bottom section */
+    .sidebar-bottom {
+      padding: 12px;
+      border-top: 1px solid rgba(255,223,0,0.15);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .coin-display {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .coin-icon {
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    .coin-amount {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 6px;
+      color: #FFDF00;
+      text-shadow: 0 0 10px #FFDF00, 0 0 22px rgba(255,215,0,0.5);
+    }
+
+    .notification-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      position: relative;
+    }
+
+    .bell-icon {
+      font-size: 14px;
+      line-height: 1;
+      filter: grayscale(0.2);
+    }
+
+    .badge {
+      background: #FF3333;
+      color: #ffffff;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 4px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 6px rgba(255,51,51,0.6);
+      position: relative;
+      top: -1px;
+    }
+
+    /* Content area */
+    .content-area {
+      position: absolute;
+      left: 200px;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      background: #00381a;
+      overflow: hidden;
+    }
+
+    /* Pitch stripes in content area */
+    .pitch-stripes {
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        90deg,
+        #006600 0px,
+        #006600 80px,
+        #008800 80px,
+        #008800 160px
+      );
+      opacity: 0.3;
+    }
+
+    /* Content placeholder area */
+    .content-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    .content-ghost {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      opacity: 0.15;
+    }
+
+    .content-ghost-icon {
+      font-size: 48px;
+    }
+
+    .content-ghost-text {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 7px;
+      color: #FFDF00;
+      letter-spacing: 1px;
+    }
+
+    /* Active indicator pulse */
+    @keyframes activePulse {
+      0%, 100% { box-shadow: inset 3px 0 0 #FFDF00; }
+      50% { box-shadow: inset 3px 0 0 #FFDF00, inset 3px 0 12px rgba(255,223,0,0.15); }
+    }
+
+    .nav-item.active {
+      animation: activePulse 3s ease-in-out infinite;
+    }
+
+    /* Badge pulse */
+    @keyframes badgePulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    .badge {
+      animation: badgePulse 2s ease-in-out infinite;
+    }
+
+    /* Top accent line on active */
+    .nav-item.active::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 3px;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(255,223,0,0.3), transparent);
+    }
+
+    .nav-item.active::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 3px;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(255,223,0,0.1), transparent);
+    }
+  </style>
+</head>
+<body>
+  <!-- SVG filter for film grain -->
+  <svg style="position:absolute;width:0;height:0;">
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="4" stitchTiles="stitch"/>
+    </filter>
+  </svg>
+
+  <div class="cabinet">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <!-- Top: Team info -->
+      <div class="sidebar-top">
+        <div class="team-badge">
+          <canvas id="badgeCanvas" width="40" height="40"></canvas>
+        </div>
+        <div class="team-name">FLAMENGO FC</div>
+        <div class="team-division">SÉRIE D · RD.14</div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="nav-items">
+        <div class="nav-item active" data-nav="jogo">
+          <span class="nav-icon">⚽</span>
+          <span class="nav-label">JOGO</span>
+        </div>
+        <div class="nav-item" data-nav="elenco">
+          <span class="nav-icon">👥</span>
+          <span class="nav-label">ELENCO</span>
+        </div>
+        <div class="nav-item" data-nav="mercado">
+          <span class="nav-icon">🏪</span>
+          <span class="nav-label">MERCADO</span>
+        </div>
+        <div class="nav-item" data-nav="liga">
+          <span class="nav-icon">🏆</span>
+          <span class="nav-label">LIGA</span>
+        </div>
+        <div class="nav-item" data-nav="mais">
+          <span class="nav-icon">☰</span>
+          <span class="nav-label">MAIS</span>
+        </div>
+      </div>
+
+      <!-- Bottom: Currency & Notifications -->
+      <div class="sidebar-bottom">
+        <div class="coin-display">
+          <span class="coin-icon">🪙</span>
+          <span class="coin-amount">12.500</span>
+        </div>
+        <div class="notification-row">
+          <span class="bell-icon">🔔</span>
+          <span class="badge">3</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content area -->
+    <div class="content-area">
+      <div class="pitch-stripes"></div>
+      <div class="content-placeholder">
+        <div class="content-ghost">
+          <div class="content-ghost-icon">⚽</div>
+          <div class="content-ghost-text">ÁREA DE CONTEÚDO</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vignette -->
+    <div class="cabinet-vignette"></div>
+
+    <!-- Film grain -->
+    <div class="grain-overlay" style="filter:url(#grain);"></div>
+  </div>
+
+  <script>
+    // Draw pixel-art shield badge
+    function drawBadge() {
+      const canvas = document.getElementById('badgeCanvas');
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = false;
+
+      const s = 2; // pixel scale
+      const gold = '#FFDF00';
+      const green = '#00A859';
+      const darkGreen = '#006600';
+      const black = '#000000';
+
+      // Shield shape (20x20 grid, scaled 2x)
+      const shield = [
+        '..GGGGGGGGGGGGGG..',
+        '.GGGGGGGGGGGGGGGG.',
+        'GGGGGGGGGGGGGGGGGG',
+        'GGGGGGGGGGGGGGGGGG',
+        'YYGGGGGGGGGGGGGGYYG',
+        'YYGGGGGYYGGGGGGYY',
+        'YYGGGGGYYGGGGGGYY',
+        'YYGGGYYYYYYYYGGGYY',
+        'YYGGGGGYYGGGGGGYY',
+        'YYGGGGGYYGGGGGGYY',
+        'YYGGGGGYYGGGGGGYY',
+        '.YGGGGGGGGGGGGGYG.',
+        '.YGGGGGGGGGGGGGGY.',
+        '..YGGGGGGGGGGGGGY.',
+        '..YGGGGGGGGGGGGY..',
+        '...YGGGGGGGGGYG...',
+        '....YGGGGGGGY....',
+        '.....YGGGGGY.....',
+        '......YGGYG......',
+        '.......YY........',
+      ];
+
+      ctx.fillStyle = '#001a0a';
+      ctx.fillRect(0, 0, 40, 40);
+
+      for (let y = 0; y < shield.length; y++) {
+        for (let x = 0; x < shield[y].length; x++) {
+          const c = shield[y][x];
+          if (c === 'G') ctx.fillStyle = green;
+          else if (c === 'Y') ctx.fillStyle = gold;
+          else if (c === 'D') ctx.fillStyle = darkGreen;
+          else continue;
+          ctx.fillRect(x * s, y * s, s, s);
+        }
+      }
+
+      // Add subtle glow
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = 'rgba(255,223,0,0.3)';
+    }
+
+    drawBadge();
+
+    // Navigation interactivity
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('click', () => {
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+      });
+
+      // Pixel press effect
+      item.addEventListener('mousedown', () => {
+        item.style.transform = 'scale(0.94)';
+      });
+      item.addEventListener('mouseup', () => {
+        item.style.transform = 'scale(1)';
+      });
+      item.addEventListener('mouseleave', () => {
+        item.style.transform = 'scale(1)';
+      });
+    });
+  </script>
+</body>
+</html>

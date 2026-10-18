@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=844, height=390, initial-scale=1.0">
+<title>Retro arcade football standings screen</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --bg: #00381a;
+    --gold: #FFDF00;
+    --green: #00A859;
+    --cyan: #55e0a0;
+    --panel: #004d23;
+    --blue: #3EA0D4;
+    --red: #FF3333;
+    --orange: #FFA500;
+    --black: #000000;
+    --muted-gold: rgba(255,223,0,0.55);
+    --frost-bg: rgba(0,18,8,0.72);
+    --frost-border: 1px solid rgba(255,223,0,0.30);
+    --row-a: rgba(0,18,8,0.30);
+    --row-b: rgba(0,18,8,0.50);
+    --user-row: rgba(255,223,0,0.12);
+    --promo-tint: rgba(0,168,89,0.06);
+    --releg-tint: rgba(255,51,51,0.06);
+    --playoff-tint: rgba(62,160,212,0.05);
+  }
+
+  html, body {
+    width: 844px;
+    height: 390px;
+    overflow: hidden;
+    background: var(--black);
+    font-family: 'Press Start 2P', monospace;
+  }
+
+  /* SVG grain filter */
+  .grain-svg { position:absolute; width:0; height:0; }
+
+  .cabinet {
+    position: relative;
+    width: 844px;
+    height: 390px;
+    background: var(--bg);
+    overflow: hidden;
+  }
+
+  /* Pitch stripe bg */
+  .cabinet::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      90deg,
+      #006600 0px, #006600 60px,
+      #008800 60px, #008800 120px
+    );
+    opacity: 0.12;
+    z-index: 0;
+  }
+
+  /* Scanlines */
+  .scanlines {
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent 0px, transparent 2px,
+      rgba(0,0,0,0.18) 2px, rgba(0,0,0,0.18) 4px
+    );
+    z-index: 99;
+    pointer-events: none;
+  }
+
+  /* Vignette */
+  .vignette {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.65) 100%);
+    z-index: 98;
+    pointer-events: none;
+  }
+
+  /* Phosphor border glow */
+  .phosphor {
+    position: fixed;
+    inset: 0;
+    box-shadow: inset 0 0 0 2px rgba(255,223,0,0.35);
+    z-index: 100;
+    pointer-events: none;
+  }
+
+  /* Grain */
+  .grain {
+    position: fixed;
+    inset: 0;
+    filter: url(#noiseFilter);
+    opacity: 0.04;
+    z-index: 97;
+    pointer-events: none;
+    background: transparent;
+  }
+
+  /* Flicker */
+  @keyframes flicker {
+    0%, 95%, 100% { opacity: 1; }
+    96% { opacity: 0.97; }
+    97% { opacity: 0.99; }
+    98% { opacity: 0.96; }
+  }
+  .cabinet { animation: flicker 6s infinite; }
+
+  /* Layout */
+  .content {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    padding: 6px 10px;
+    gap: 8px;
+  }
+
+  .left-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .right-col {
+    width: 240px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    height: 36px;
+    flex-shrink: 0;
+    margin-bottom: 4px;
+  }
+
+  .header-title {
+    font-size: 7px;
+    color: var(--gold);
+    text-shadow: 0 0 10px var(--gold), 0 0 22px rgba(255,215,0,0.5);
+    text-align: center;
+    letter-spacing: 1px;
+  }
+
+  .header-sub {
+    font-size: 5px;
+    color: var(--cyan);
+    text-align: center;
+    margin-top: 2px;
+  }
+
+  .header-center {
+    text-align: center;
+  }
+
+  .round-pill {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--frost-bg);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: var(--frost-border);
+    border-radius: 8px;
+    padding: 4px 8px;
+    font-size: 5px;
+    color: var(--gold);
+    font-family: 'Press Start 2P', monospace;
+    text-shadow: 0 0 6px rgba(255,223,0,0.4);
+  }
+
+  /* Table */
+  .table-wrapper {
+    flex: 1;
+    overflow: hidden;
+    border-radius: 7px;
+    background: var(--frost-bg);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: var(--frost-border);
+  }
+
+  .table-header {
+    display: flex;
+    align-items: center;
+    height: 20px;
+    border-bottom: 2px solid var(--gold);
+    background: rgba(0,18,8,0.80);
+    padding: 0 4px;
+    flex-shrink: 0;
+  }
+
+  .th { font-size: 4px; color: var(--cyan); text-align: center; font-family: 'Press Start 2P', monospace; }
+  .th-rank { width: 22px; }
+  .th-team { flex: 1; text-align: left; padding-left: 4px; }
+  .th-pts { width: 32px; }
+  .th-sm { width: 22px; }
+  .th-sg { width: 28px; }
+
+  .table-body {
+    overflow-y: auto;
+    height: calc(100% - 22px);
+  }
+
+  .table-body::-webkit-scrollbar { width: 3px; }
+  .table-body::-webkit-scrollbar-track { background: rgba(0,18,8,0.4); }
+  .table-body::-webkit-scrollbar-thumb { background: rgba(255,223,0,0.3); border-radius: 2px; }
+
+  .row {
+    display: flex;
+    align-items: center;
+    height: 28px;
+    padding: 0 4px;
+    border-left: 2px solid transparent;
+    transition: background 0.2s;
+  }
+
+  .row:nth-child(odd) { background: var(--row-a); }
+  .row:nth-child(even) { background: var(--row-b); }
+
+  /* Zone styling */
+  .row.promo { border-left: 2px solid var(--green); background-blend-mode: overlay; }
+  .row.promo:nth-child(odd) { background: linear-gradient(90deg, var(--promo-tint), transparent 40%), var(--row-a); }
+  .row.promo:nth-child(even) { background: linear-gradient(90deg, var(--promo-tint), transparent 40%), var(--row-b); }
+
+  .row.playoff { border-left: 2px solid var(--blue); }
+  .row.playoff:nth-child(odd) { background: linear-gradient(90deg, var(--playoff-tint), transparent 40%), var(--row-a); }
+  .row.playoff:nth-child(even) { background: linear-gradient(90deg, var(--playoff-tint), transparent 40%), var(--row-b); }
+
+  .row.releg { border-left: 2px solid var(--red); }
+  .row.releg:nth-child(odd) { background: linear-gradient(90deg, var(--releg-tint), transparent 40%), var(--row-a); }
+  .row.releg:nth-child(even) { background: linear-gradient(90deg, var(--releg-tint), transparent 40%), var(--row-b); }
+
+  .row.user-row {
+    background: var(--user-row) !important;
+    border-left: 3px solid var(--gold) !important;
+  }
+  .row.user-row .cell { color: var(--gold) !important; }
+  .row.user-row .cell-rank { color: var(--gold) !important; text-shadow: 0 0 8px rgba(255,223,0,0.5); }
+  .row.user-row .cell-pts { color: var(--gold) !important; text-shadow: 0 0 8px rgba(255,223,0,0.5); }
+
+  .cell {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 5px;
+    color: rgba(255,255,255,0.85);
+    text-align: center;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .cell-rank { width: 22px; font-size: 6px; color: rgba(255,255,255,0.7); }
+  .cell-team { flex: 1; display: flex; align-items: center; gap: 5px; text-align: left; padding-left: 2px; font-size: 5px; }
+  .cell-pts { width: 32px; font-size: 6px; color: var(--gold); font-weight: bold; text-shadow: 0 0 6px rgba(255,223,0,0.3); }
+  .cell-sm { width: 22px; }
+  .cell-sg { width: 28px; }
+  .sg-pos { color: var(--green); }
+  .sg-neg { color: var(--red); }
+
+  .team-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 4px rgba(0,0,0,0.4);
+  }
+
+  .team-name { overflow: hidden; text-overflow: ellipsis; }
+
+  /* Zone legend */
+  .zone-legend {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    height: 26px;
+    background: var(--frost-bg);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: var(--frost-border);
+    border-radius: 6px;
+    margin-top: 4px;
+    flex-shrink: 0;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 3.5px;
+    color: rgba(255,255,255,0.7);
+    font-family: 'Press Start 2P', monospace;
+  }
+
+  .legend-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  /* Team spotlight card */
+  .team-card {
+    background: var(--frost-bg);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: var(--frost-border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .team-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .team-badge {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, #c62828, #d32f2f);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    box-shadow: 0 0 8px rgba(198,40,40,0.4);
+    flex-shrink: 0;
+  }
+
+  .team-card-title {
+    font-size: 5.5px;
+    color: var(--gold);
+    text-shadow: 0 0 10px var(--gold), 0 0 22px rgba(255,215,0,0.5);
+    font-family: 'Press Start 2P', monospace;
+    line-height: 1.6;
+  }
+
+  .team-card-sub {
+    font-size: 4px;
+    color: var(--cyan);
+    font-family: 'Press Start 2P', monospace;
+  }
+
+  .team-stats {
+    display: flex;
+    gap: 4px;
+  }
+
+  .stat-box {
+    flex: 1;
+    background: rgba(0,18,8,0.50);
+    border: 1px solid rgba(255,223,0,0.15);
+    border-radius: 5px;
+    text-align: center;
+    padding: 5px 2px;
+  }
+
+  .stat-val {
+    font-size: 7px;
+    color: var(--gold);
+    font-family: 'Press Start 2P', monospace;
+    text-shadow: 0 0 8px rgba(255,223,0,0.4);
+  }
+
+  .stat-label {
+    font-size: 3px;
+    color: var(--cyan);
+    font-family: 'Press Start 2P', monospace;
+    margin-top: 3px;
+  }
+
+  /* Right col info cards */
+  .info-card {
+    background: var(--frost-bg);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: var(--frost-border);
+    border-radius: 8px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .info-card-title {
+    font-size: 4px;
+    color: var(--cyan);
+    font-family: 'Press Start 2P', monospace;
+    margin-bottom: 2px;
+  }
+
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 4px;
+    color: rgba(255,255,255,0.75);
+    font-family: 'Press Start 2P', monospace;
+    padding: 2px 0;
+  }
+
+  .info-val { color: var(--gold); }
+
+  .form-strip {
+    display: flex;
+    gap: 3px;
+    margin-top: 2px;
+  }
+
+  .form-w, .form-d, .form-l {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    font-size: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Press Start 2P', monospace;
+    color: #fff;
+  }
+
+  .form-w { background: var(--green); }
+  .form-d { background: var(--orange); }
+  .form-l { background: var(--red); }
+
+  /* Next match card */
+  .next-match {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 4px 0;
+  }
+
+  .nm-team {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    font-size: 3.5px;
+    color: rgba(255,255,255,0.8);
+    font-family: 'Press Start 2P', monospace;
+  }
+
+  .nm-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    box-shadow: 0 0 6px rgba(0,0,0,0.4);
+  }
+
+  .nm-vs {
+    font-size: 6px;
+    color: var(--gold);
+    font-family: 'Press Start 2P', monospace;
+    text-shadow: 0 0 8px rgba(255,223,0,0.5);
+  }
+
+  .nm-info {
+    font-size: 3px;
+    color: var(--muted-gold);
+    text-align: center;
+    margin-top: 3px;
+    font-family: 'Press Start 2P', monospace;
+  }
+
+  /* Position animation */
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .row {
+    animation: slideIn 0.3s ease-out forwards;
+    opacity: 0;
+  }
+
+  @keyframes glowPulse {
+    0%, 100% { text-shadow: 0 0 10px var(--gold), 0 0 22px rgba(255,215,0,0.5); }
+    50% { text-shadow: 0 0 14px var(--gold), 0 0 30px rgba(255,215,0,0.7); }
+  }
+
+  .glow-pulse { animation: glowPulse 3s ease-in-out infinite; }
+
+  /* Rank change indicators */
+  .rank-change {
+    font-size: 3px;
+    margin-left: 1px;
+  }
+  .rank-up { color: var(--green); }
+  .rank-down { color: var(--red); }
+  .rank-same { color: rgba(255,255,255,0.3); }
+
+  /* Scrollbar table body */
+  .table-body { scrollbar-width: thin; scrollbar-color: rgba(255,223,0,0.3) rgba(0,18,8,0.4); }
+</style>
+</head>
+<body>
+
+<!-- SVG Noise Filter -->
+<svg class="grain-svg">
+  <filter id="noiseFilter">
+    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" stitchTiles="stitch"/>
+    <feColorMatrix type="saturate" values="0"/>
+  </filter>
+</svg>
+
+<!-- CRT Layers -->
+<div class="scanlines"></div>
+<div class="vignette"></div>
+<div class="phosphor"></div>
+<div class="grain"></div>
+
+<div class="cabinet">
+  <div class="content">
+    <!-- LEFT COLUMN: Table -->
+    <div class="left-col">
+      <!-- Header -->
+      <div class="header">
+        <div class="header-center">
+          <div class="header-title glow-pulse">🏆 CLASSIFICAÇÃO</div>
+          <div class="header-sub">SÉRIE D · TEMPORADA 2024</div>
+        </div>
+        <div class="round-pill">RODADA 14/38</div>
+      </div>
+
+      <!-- Table -->
+      <div class="table-wrapper">
+        <div class="table-header">
+          <div class="th th-rank">#</div>
+          <div class="th th-team">TIME</div>
+          <div class="th th-pts">PTS</div>
+          <div class="th th-sm">J</div>
+          <div class="th th-sm">V</div>
+          <div class="th th-sm">E</div>
+          <div class="th th-sm">D</div>
+          <div class="th th-sg">SG</div>
+        </div>
+        <div class="table-body" id="tableBody">
+          <!-- rows injected by JS -->
+        </div>
+      </div>
+
+      <!-- Zone Legend -->
+      <div class="zone-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> PROMOÇÃO (1-4)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div> PLAYOFF (5-6)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div> REBAIXAMENTO (7-10)</div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: Team Card + Info -->
+    <div class="right-col">
+      <!-- Team Spotlight -->
+      <div class="team-card">
+        <div class="team-card-header">
+          <div class="team-badge">⚽</div>
+          <div>
+            <div class="team-card-title">FLAMENGO FC</div>
+            <div class="team-card-sub">3° LUGAR · SÉRIE D</div>
+          </div>
+        </div>
+        <div class="team-stats">
+          <div class="stat-box">
+            <div class="stat-val">33</div>
+            <div class="stat-label">PONTOS</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val">8-9-3</div>
+            <div class="stat-label">V-E-D</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val">+12</div>
+            <div class="stat-label">SALDO</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Card -->
+      <div class="info-card">
+        <div class="info-card-title">📊 ÚLTIMOS 5 JOGOS</div>
+        <div class="form-strip">
+          <div class="form-w">V</div>
+          <div class="form-w">V</div>
+          <div class="form-d">E</div>
+          <div class="form-l">D</div>
+          <div class="form-w">V</div>
+        </div>
+        <div class="info-row" style="margin-top:4px;">
+          <span>APROVEITAMENTO</span>
+          <span class="info-val">55%</span>
+        </div>
+      </div>
+
+      <!-- Next Match -->
+      <div class="info-card" style="flex:1;">
+        <div class="info-card-title">⚔️ PRÓXIMO JOGO</div>
+        <div class="next-match">
+          <div class="nm-team">
+            <div class="nm-dot" style="background:linear-gradient(135deg,#c62828,#d32f2f)"></div>
+            FLA
+          </div>
+          <div class="nm-vs">VS</div>
+          <div class="nm-team">
+            <div class="nm-dot" style="background:linear-gradient(135deg,#1565c0,#1e88e5)"></div>
+            CRU
+          </div>
+        </div>
+        <div class="nm-info">ROD. 15 · DOM 18:00</div>
+        <div class="info-row" style="margin-top:2px;">
+          <span>LOCAL</span>
+          <span class="info-val">🏟️ CASA</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const teams = [
+  { rank:1, name:"PALMEIRAS", color:"#006600", pts:38, j:14, v:12, e:2, d:0, sg:"+22", change:"up" },
+  { rank:2, name:"ATLÉTICO MG", color:"#1a1a1a", pts:35, j:14, v:10, e:5, d:1, sg:"+15", change:"up" },
+  { rank:3, name:"FLAMENGO FC", color:"#c62828", pts:33, j:14, v:8, e:9, d:3, sg:"+12", change:"same", isUser:true },
+  { rank:4, name:"GRÊMIO", color:"#0D47A1", pts:30, j:14, v:9, e:3, d:2, sg:"+9", change:"down" },
+  { rank:5, name:"SÃO PAULO", color:"#8B0000", pts:27, j:14, v:7, e:6, d:1, sg:"+6", change:"up" },
+  { rank:6, name:"CRUZEIRO", color:"#1565C0", pts:25, j:14, v:6, e:7, d:1, sg:"+4", change:"same" },
+  { rank:7, name:"BOTAFOGO", color:"#212121", pts:18, j:14, v:5, e:3, d:6, sg:"-3", change:"down" },
+  { rank:8, name:"VASCO DA G", color:"#1a1a1a", pts:15, j:14, v:4, e:3, d:7, sg:"-7", change:"down" },
+  { rank:9, name:"SPORT REC", color:"#c62828", pts:12, j:14, v:3, e:3, d:8, sg:"-14", change:"down" },
+  { rank:10, name:"CORITIBA", color:"#2E7D32", pts:8, j:14, v:2, e:2, d:10, sg:"-20", change:"down" },
+];
+
+const tbody = document.getElementById('tableBody');
+
+teams.forEach((t, i) => {
+  const row = document.createElement('div');
+  let zoneClass = '';
+  if (t.rank <= 4) zoneClass = 'promo';
+  else if (t.rank <= 6) zoneClass = 'playoff';
+  else zoneClass = 'releg';
+
+  let classes = ['row', zoneClass];
+  if (t.isUser) classes.push('user-row');
+  row.className = classes.join(' ');
+  row.style.animationDelay = `${i * 0.05}s`;
+
+  const changeIcon = t.change === 'up' ? '<span class="rank-change rank-up">▲</span>' :
+                     t.change === 'down' ? '<span class="rank-change rank-down">▼</span>' :
+                     '<span class="rank-change rank-same">━</span>';
+
+  const sgClass = t.sg.startsWith('+') ? 'sg-pos' : t.sg.startsWith('-') ? 'sg-neg' : '';
+
+  row.innerHTML = `
+    <div class="cell cell-rank">${t.rank}${changeIcon}</div>
+    <div class="cell cell-team">
+      <div class="team-dot" style="background:${t.color}"></div>
+      <span class="team-name">${t.name}</span>
+    </div>
+    <div class="cell cell-pts">${t.pts}</div>
+    <div class="cell cell-sm">${t.j}</div>
+    <div class="cell cell-sm">${t.v}</div>
+    <div class="cell cell-sm">${t.e}</div>
+    <div class="cell cell-sm">${t.d}</div>
+    <div class="cell cell-sg ${sgClass}">${t.sg}</div>
+  `;
+
+  tbody.appendChild(row);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,2943 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FalaMestre! - Simulação de Partida</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy: #00381a;
+      --gold: #FFDF00;
+      --green: #00A859;
+      --blue: #3EA0D4;
+      --pitch-dark: #006600;
+      --pitch-light: #008800;
+      --card-navy: #004d23;
+      --red: #FF3333;
+      --orange: #FFA500;
+      --cyan: #55e0a0;
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Press Start 2P', monospace;
+      overflow: hidden;
+    }
+
+
+
+    /* ── CRT Cabinet Frame ── */
+    #cabinet {
+      position: relative;
+      width: 100vw;
+      height: 100dvh;
+      background: #0a0a0a;
+      border-radius: 0;
+      box-shadow: none;
+      padding: 4px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── CRT Screen ── */
+    #crt-screen {
+      position: relative;
+      flex: 1;
+      background: var(--navy);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: inset 0 0 60px rgba(0,20,10,0.9), 0 0 30px rgba(0,168,89,0.18);
+    }
+
+    /* Phosphor glow border */
+    #crt-screen::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 10px;
+      box-shadow: inset 0 0 0 2px rgba(255,223,0,0.35), inset 0 0 40px rgba(0,30,15,0.7);
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    /* Scanlines */
+    #crt-screen::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 2px,
+        rgba(0,0,0,0.18) 2px,
+        rgba(0,0,0,0.18) 4px
+      );
+      pointer-events: none;
+      z-index: 99;
+      border-radius: 10px;
+    }
+
+    /* Vignette */
+    #vignette {
+      position: absolute;
+      inset: 0;
+      border-radius: 10px;
+      background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.65) 100%);
+      pointer-events: none;
+      z-index: 98;
+    }
+
+    /* Film grain overlay */
+    #grain {
+      position: absolute;
+      inset: 0;
+      opacity: 0.04;
+      pointer-events: none;
+      z-index: 97;
+      border-radius: 10px;
+    }
+
+    /* Flicker animation */
+    @keyframes flicker {
+      0%,97%,100% { opacity: 1; }
+      98% { opacity: 0.94; }
+      99% { opacity: 0.97; }
+    }
+    #crt-screen { animation: flicker 6s infinite; }
+
+    /* ── Screen layout ── */
+    #screen-content {
+      position: relative;
+      z-index: 10;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+      gap: 0;
+    }
+
+    /* ── Scoreboard — hidden, replaced by overlay ── */
+    #scoreboard { display: none; }
+
+    /* ── Overlay scoreboard (floats over pitch) ── */
+    #score-overlay {
+      position: absolute;
+      top: calc(var(--ad-board-h, 62px) + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 35;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: 0;
+      background: rgba(0,8,3,0.62);
+      backdrop-filter: blur(12px) saturate(1.5);
+      -webkit-backdrop-filter: blur(12px) saturate(1.5);
+      border: 1px solid rgba(255,223,0,0.30);
+      border-radius: 8px;
+      padding: 9px 20px 9px 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.06);
+      white-space: nowrap;
+    }
+
+    .so-team {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 7px;
+      color: var(--gold);
+    }
+    .so-team.away { flex-direction: row-reverse; }
+    .so-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      box-shadow: 0 0 5px currentColor;
+    }
+    .so-events { font-size: 8px; letter-spacing: 1px; }
+
+    #so-score-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 12px;
+      gap: 2px;
+    }
+    #so-score {
+      font-size: 17px;
+      color: var(--gold);
+      text-shadow: 0 0 10px var(--gold), 0 0 22px rgba(255,215,0,0.5);
+      letter-spacing: 5px;
+      line-height: 1;
+    }
+    #so-time-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 6px;
+    }
+    #so-clock {
+      color: var(--gold);
+      text-shadow: 0 0 6px var(--gold);
+    }
+    #so-status {
+      color: var(--gold);
+      text-shadow: 0 0 6px var(--gold);
+    }
+
+    /* Live dot between clock and status */
+    #so-live-dot {
+      display: none;
+    }
+    @keyframes liveDotPulse {
+      0%, 100% { opacity: 1;   transform: scale(1);    }
+      50%       { opacity: 0.25; transform: scale(0.6); }
+    }
+
+    .score-digit {
+      display: inline-block;
+      transition: transform 0.2s;
+      min-width: 22px;
+      text-align: center;
+    }
+
+    /* legacy refs — keep silent */
+    #match-clock, #match-status { display: none; }
+    .event-icons { display: none; }
+
+    /* ── Main pitch area ── */
+    #pitch-container {
+      flex: 1;
+      display: flex;
+      gap: 0;
+      min-height: 0;
+      position: relative;
+    }
+
+    #pitch-wrapper {
+      flex: 1;
+      position: relative;
+      min-height: 0;
+    }
+
+    #pitch-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      border: 2px solid var(--gold);
+      border-radius: 4px;
+      image-rendering: pixelated;
+    }
+
+    /* Goal overlay */
+    #goal-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 50;
+      opacity: 0;
+      transition: opacity 0.1s;
+    }
+
+    #goal-text {
+      font-size: clamp(16px, 4vw, 28px);
+      color: var(--gold);
+      text-shadow: 0 0 20px var(--gold), 0 0 40px rgba(255,215,0,0.8);
+      animation: goalPulse 0.4s infinite alternate;
+    }
+
+    @keyframes goalPulse {
+      from { transform: scale(1); }
+      to { transform: scale(1.08); }
+    }
+
+    #goal-scorer {
+      font-size: 6px;
+      color: #fff;
+      margin-top: 8px;
+      text-align: center;
+    }
+
+    /* Event flash */
+    #event-flash {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 49;
+      opacity: 0;
+      border-radius: 4px;
+    }
+
+    /* Stats panel — slides over pitch from right */
+    #stats-panel {
+      position: absolute;
+      top: 0; right: 0;
+      height: 100%;
+      width: 0;
+      overflow: hidden;
+      transition: width 0.3s ease;
+      flex-shrink: 0;
+      z-index: 40;
+      pointer-events: none;
+    }
+    #stats-panel.open { width: 150px; pointer-events: all; }
+
+    #stats-inner {
+      width: 150px;
+      height: 100%;
+      background: rgba(0,30,14,0.96);
+      backdrop-filter: blur(10px);
+      border-left: 2px solid var(--gold);
+      border-radius: 0;
+      padding: 8px 6px;
+      overflow: hidden;
+    }
+
+    #stats-title {
+      font-size: 5px;
+      color: var(--gold);
+      text-align: center;
+      margin-bottom: 6px;
+      border-bottom: 1px solid var(--gold);
+      padding-bottom: 4px;
+    }
+
+    .stat-row { margin-bottom: 7px; }
+
+    .stat-name {
+      font-size: 4px;
+      color: var(--cyan);
+      margin-bottom: 3px;
+    }
+
+    .stat-bars {
+      display: flex;
+      gap: 2px;
+      align-items: center;
+      height: 6px;
+    }
+
+    .stat-bar-home, .stat-bar-away {
+      height: 100%;
+      border-radius: 1px;
+      transition: width 1s ease;
+    }
+    .stat-bar-home { background: var(--green); }
+    .stat-bar-away { background: var(--blue); }
+
+    .stat-values {
+      display: flex;
+      justify-content: space-between;
+      font-size: 4px;
+      color: #fff;
+      margin-top: 2px;
+    }
+
+    /* ── Commentary caption (top-center overlay, below score) ── */
+    #commentary {
+      position: absolute;
+      top: calc(var(--ad-board-h, 62px) + 58px); left: 50%;
+      transform: translateX(-50%);
+      z-index: 30;
+      pointer-events: none;
+      width: auto;
+      max-width: min(94%, 620px);
+      background: transparent;
+      border: none;
+      height: auto;
+      display: flex;
+      justify-content: center;
+    }
+
+    #commentary-title { display: none; }
+
+    :root {
+      --caption-pulse-dur: 1.6s;
+    }
+
+    @keyframes livePulse {
+      0%,100% { opacity: 1; box-shadow: 0 0 4px var(--red); }
+      50%      { opacity: 0.3; box-shadow: none; }
+    }
+
+    @keyframes pillBreath {
+      0%,100% { border-color: rgba(255,223,0,0.30); box-shadow: 0 4px 28px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.09); }
+      50%      { border-color: rgba(255,223,0,0.08); box-shadow: 0 4px 28px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.04); }
+    }
+
+    @keyframes captionSlideIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    #commentary-scroll {
+      overflow: visible;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* hide all lines except the latest */
+    .commentary-line { display: none; }
+
+    /* Marquee keyframe — scrolls text left when it overflows */
+    @keyframes marqueeScroll {
+      0%   { transform: translateX(0); }
+      18%  { transform: translateX(0); }          /* pause at start */
+      82%  { transform: translateX(var(--marquee-dist, 0px)); }
+      100% { transform: translateX(var(--marquee-dist, 0px)); } /* pause at end */
+    }
+
+    .commentary-line.latest {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      /* frosted-glass background */
+      background: rgba(0, 18, 8, 0.72);
+      backdrop-filter: blur(14px) saturate(1.6);
+      -webkit-backdrop-filter: blur(14px) saturate(1.6);
+      border: 1px solid rgba(255, 223, 0, 0.30);
+      border-radius: 7px;
+      padding: 10px 16px;
+      font-size: 9px;
+      line-height: 1.65;
+      color: var(--gold);
+      text-shadow: 0 0 8px rgba(255, 215, 0, 0.55);
+      box-shadow: 0 4px 28px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.09);
+      animation: captionSlideIn 0.3s ease forwards,
+                 pillBreath var(--caption-pulse-dur) ease-in-out infinite;
+      /* pill clips overflow so marquee stays inside */
+      overflow: hidden;
+      max-width: min(94vw, 620px);
+    }
+
+    /* The live-dot sits outside the overflow clip so it's always visible */
+    .commentary-line.latest::before {
+      content: '';
+      width: 6px; height: 6px;
+      background: var(--red);
+      border-radius: 50%;
+      flex-shrink: 0;
+      animation: livePulse var(--caption-pulse-dur) infinite;
+    }
+
+    /* Inner text span that actually scrolls */
+    .caption-text {
+      white-space: nowrap;
+      display: inline-block;
+      /* animation is applied via JS once overflow is measured */
+    }
+    .caption-text.scrolling {
+      animation: marqueeScroll var(--marquee-dur, 7s) 0.4s linear infinite alternate;
+    }
+
+    /* ── Pitch wrapper needs relative positioning for caption overlay ── */
+    #pitch-wrapper { position: relative; }
+
+    /* ── HUD toggle hint ── */
+    #hud-hint {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      z-index: 50;
+      font-size: 7px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255,215,0,0.45);
+      pointer-events: none;
+      user-select: none;
+      transition: opacity 0.4s ease;
+    }
+    #hud-hint::before {
+      content: '';
+      display: inline-block;
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: rgba(255,215,0,0.45);
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+
+    /* ── HUD hidden state ── */
+    #pitch-wrapper.hud-hidden #score-overlay,
+    #pitch-wrapper.hud-hidden #commentary {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(-50%) translateY(-6px);
+    }
+    #pitch-wrapper.hud-hidden #hud-hint {
+      color: rgba(255,215,0,0.70);
+    }
+    #pitch-wrapper.hud-hidden #hud-hint::before {
+      background: rgba(255,215,0,0.70);
+    }
+
+    /* Animate the overlays smoothly */
+    #score-overlay, #commentary {
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+
+    /* ── Controls bar ── */
+    #controls-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 5px 8px;
+      background: rgba(0,15,7,0.95);
+      border-top: 1px solid rgba(255,223,0,0.30);
+      border-radius: 0;
+      flex-shrink: 0;
+      gap: 6px;
+    }
+
+    .ctrl-group {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .ctrl-label {
+      font-size: 4px;
+      color: rgba(255,215,0,0.5);
+    }
+
+    .btn {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 6px;
+      padding: 6px 9px;
+      border: 2px solid var(--gold);
+      background: rgba(0,25,12,0.85);
+      color: var(--gold);
+      cursor: pointer;
+      border-radius: 3px;
+      transition: all 0.1s;
+      white-space: nowrap;
+      touch-action: manipulation;
+    }
+    .btn:hover { background: rgba(255,215,0,0.15); }
+    .btn.active {
+      background: var(--gold);
+      color: #000;
+      box-shadow: 0 0 10px var(--gold);
+    }
+    .btn.red {
+      border-color: var(--red);
+      color: var(--red);
+    }
+    .btn.red:hover { background: rgba(255,50,50,0.15); }
+    .btn.vr {
+      border-color: var(--cyan);
+      color: var(--cyan);
+      box-shadow: 0 0 6px rgba(0,255,255,0.3);
+    }
+
+    /* ── Insert coin ── */
+    #insert-coin { display: none; }
+    @keyframes coinBlink {
+      0%,49% { opacity: 1; }
+      50%,100% { opacity: 0; }
+    }
+
+    /* Shake animation */
+    @keyframes shake {
+      0%,100% { transform: translate(0,0); }
+      10% { transform: translate(-4px, 2px); }
+      20% { transform: translate(4px, -2px); }
+      30% { transform: translate(-3px, 3px); }
+      40% { transform: translate(3px, -3px); }
+      50% { transform: translate(-2px, 2px); }
+      60% { transform: translate(2px, -2px); }
+    }
+
+    #crt-screen.shake { animation: shake 0.5s ease, flicker 6s infinite; }
+
+    /* Card overlay */
+    #card-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 60;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .card-icon {
+      width: 30px; height: 42px;
+      border-radius: 3px;
+      box-shadow: 0 0 20px currentColor;
+    }
+
+    /* ── Substitution Panel ── */
+    #sub-panel {
+      position: absolute;
+      top: 0; right: 0;
+      width: 0;
+      height: 100%;
+      overflow: hidden;
+      transition: width 0.35s cubic-bezier(0.4,0,0.2,1);
+      z-index: 70;
+      pointer-events: none;
+    }
+    #sub-panel.open {
+      width: 200px;
+      pointer-events: all;
+    }
+    #sub-inner {
+      width: 200px;
+      height: 100%;
+      background: rgba(0,30,14,0.97);
+      border-left: 2px solid var(--gold);
+      display: flex;
+      flex-direction: column;
+      padding: 8px 6px;
+      gap: 6px;
+    }
+    #sub-title {
+      font-size: 5px;
+      color: var(--gold);
+      text-align: center;
+      border-bottom: 1px solid var(--gold);
+      padding-bottom: 5px;
+      letter-spacing: 1px;
+    }
+    #sub-hint {
+      font-size: 4px;
+      color: var(--cyan);
+      text-align: center;
+      opacity: 0.8;
+      line-height: 1.6;
+    }
+    .sub-section-title {
+      font-size: 4px;
+      color: rgba(255,215,0,0.6);
+      margin: 2px 0 2px 0;
+      text-transform: uppercase;
+    }
+    .sub-scroll {
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .sub-scroll::-webkit-scrollbar { width: 3px; }
+    .sub-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
+    .sub-scroll::-webkit-scrollbar-thumb { background: var(--gold); }
+
+    .player-card {
+      background: rgba(0,40,20,0.8);
+      border: 1.5px solid rgba(255,223,0,0.35);
+      border-radius: 3px;
+      padding: 5px 6px;
+      cursor: grab;
+      transition: border-color 0.15s, background 0.15s, opacity 0.15s;
+      position: relative;
+    }
+    .player-card:active { cursor: grabbing; }
+    .player-card.dragging {
+      opacity: 0.4;
+      border-color: var(--cyan);
+    }
+    .player-card.subbed-out {
+      opacity: 0.35;
+      cursor: default;
+      border-color: rgba(255,50,50,0.3);
+    }
+    .player-card:not(.subbed-out):hover {
+      border-color: var(--gold);
+      background: rgba(0,70,35,0.8);
+    }
+    .player-card-top {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 4px;
+    }
+    .player-num-badge {
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 5px;
+      font-family: 'Press Start 2P', monospace;
+      flex-shrink: 0;
+      font-weight: bold;
+    }
+    .player-num-badge.home { background: #00A859; color: #000; border: 1.5px solid #FFDF00; }
+    .player-num-badge.bench { background: #004d23; color: #88ffcc; border: 1.5px solid #00A859; }
+    .player-name-pos {
+      flex: 1;
+      min-width: 0;
+    }
+    .player-card-name {
+      font-size: 4px;
+      color: var(--gold);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .player-card-pos {
+      font-size: 3.5px;
+      color: var(--cyan);
+      margin-top: 2px;
+    }
+    .stamina-bar-wrap {
+      height: 5px;
+      background: rgba(0,0,0,0.5);
+      border-radius: 2px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .stamina-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 1s linear, background-color 0.5s;
+    }
+    .stamina-label {
+      font-size: 3.5px;
+      color: rgba(255,255,255,0.5);
+      text-align: right;
+      margin-top: 2px;
+    }
+
+    /* AI Sub suggestion badge */
+    .sub-suggest-badge {
+      display: none;
+      flex-direction: column;
+      margin-top: 4px;
+      padding: 4px 5px;
+      background: rgba(255,60,60,0.15);
+      border: 1px solid rgba(255,60,60,0.6);
+      border-radius: 2px;
+      gap: 4px;
+    }
+    .sub-suggest-badge.visible { display: flex; }
+    .sub-badge-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 4px;
+    }
+    .sub-warn-text {
+      font-size: 3.5px;
+      color: #FF3333;
+      animation: subWarnFlash 0.7s step-end infinite;
+      white-space: nowrap;
+    }
+    @keyframes subWarnFlash {
+      0%,49% { opacity: 1; }
+      50%,100% { opacity: 0.15; }
+    }
+    .sub-suggest-name {
+      font-size: 3px;
+      color: var(--cyan);
+      text-align: right;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 80px;
+    }
+    .btn-accept-sub {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 3.5px;
+      padding: 3px 5px;
+      border: 1px solid var(--cyan);
+      background: rgba(0,168,89,0.15);
+      color: var(--cyan);
+      cursor: pointer;
+      border-radius: 2px;
+      width: 100%;
+      text-align: center;
+      transition: background 0.1s;
+      white-space: nowrap;
+    }
+    .btn-accept-sub:hover { background: rgba(0,168,89,0.32); }
+    .btn-accept-sub:disabled { opacity: 0.3; cursor: default; }
+
+    /* ── Player stat popup ── */
+    .player-stat-popup {
+      position: absolute;
+      z-index: 200;
+      pointer-events: none;
+      background: rgba(0,12,6,0.96);
+      border: 1px solid rgba(255,223,0,0.55);
+      border-radius: 5px;
+      padding: 7px 9px 8px;
+      min-width: 110px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.8), inset 0 0 8px rgba(0,60,20,0.4);
+      opacity: 0;
+      transform: translateY(4px) scale(0.97);
+      transition: opacity 0.14s ease, transform 0.14s ease;
+      font-family: 'Press Start 2P', monospace;
+    }
+    .player-stat-popup.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    .psp-header {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 6px;
+      border-bottom: 1px solid rgba(255,223,0,0.2);
+      padding-bottom: 5px;
+    }
+    .psp-badge {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 5px; font-weight: bold; flex-shrink: 0;
+    }
+    .psp-badge.home { background: #00A859; color: #000; border: 1.5px solid #FFDF00; }
+    .psp-badge.away { background: #2255CC; color: #fff; border: 1.5px solid #aaccff; }
+    .psp-nameblock { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .psp-name {
+      font-size: 4.5px;
+      color: var(--gold);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 82px;
+    }
+    .psp-pos {
+      font-size: 3.5px;
+      color: var(--cyan);
+    }
+    .psp-stats { display: flex; flex-direction: column; gap: 4px; }
+    .psp-stat-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .psp-stat-label {
+      font-size: 3px;
+      color: rgba(255,255,255,0.45);
+      width: 22px;
+      flex-shrink: 0;
+    }
+    .psp-stat-bar-wrap {
+      flex: 1;
+      height: 5px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .psp-stat-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+    .psp-stat-val {
+      font-size: 3.5px;
+      color: #fff;
+      width: 16px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    /* Canvas player-hover popup lives in pitch-wrapper */
+    #canvas-player-popup {
+      position: absolute;
+      z-index: 200;
+      pointer-events: none;
+    }
+
+    /* Drop zone on pitch players */
+    .drop-active-hint {
+      position: absolute;
+      inset: 0;
+      border-radius: 4px;
+      border: 2px dashed var(--cyan);
+      pointer-events: none;
+      animation: dropPulse 0.6s infinite alternate;
+      z-index: 75;
+    }
+    @keyframes dropPulse {
+      from { opacity: 0.3; }
+      to { opacity: 0.9; }
+    }
+
+    /* Sub confirmation toast */
+    #sub-toast {
+      position: absolute;
+      bottom: 50px; left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,35,18,0.97);
+      border: 2px solid var(--cyan);
+      border-radius: 4px;
+      padding: 8px 12px;
+      font-size: 5px;
+      color: var(--cyan);
+      text-align: center;
+      pointer-events: none;
+      z-index: 80;
+      opacity: 0;
+      transition: opacity 0.3s;
+      white-space: nowrap;
+      box-shadow: 0 0 15px rgba(0,255,255,0.3);
+      line-height: 1.8;
+    }
+    #sub-toast.show { opacity: 1; }
+
+    /* Sub counter badge */
+    #sub-counter {
+      font-size: 4px;
+      color: rgba(255,215,0,0.7);
+      text-align: center;
+    }
+
+    /* Substitution history log */
+    #sub-history-wrap {
+      margin-top: 4px;
+      border-top: 1px solid rgba(255,223,0,0.25);
+      padding-top: 4px;
+      flex-shrink: 0;
+    }
+    #sub-history-title {
+      font-size: 3.5px;
+      color: rgba(255,215,0,0.5);
+      text-transform: uppercase;
+      margin-bottom: 3px;
+      letter-spacing: 0.5px;
+    }
+    #sub-history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      max-height: 72px;
+      overflow-y: auto;
+    }
+    #sub-history-list::-webkit-scrollbar { width: 3px; }
+    #sub-history-list::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
+    #sub-history-list::-webkit-scrollbar-thumb { background: var(--gold); }
+
+    .sub-history-entry {
+      background: rgba(0,20,10,0.7);
+      border: 1px solid rgba(255,223,0,0.18);
+      border-radius: 2px;
+      padding: 4px 5px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .sub-history-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 3px;
+    }
+    .sub-history-min {
+      font-size: 3.5px;
+      color: var(--gold);
+      flex-shrink: 0;
+    }
+    .sub-history-names {
+      flex: 1;
+      font-size: 3px;
+      color: rgba(255,255,255,0.75);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: right;
+    }
+    .sub-history-stamina-row {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .sub-history-stamina-label {
+      font-size: 3px;
+      color: rgba(255,255,255,0.4);
+      flex-shrink: 0;
+    }
+    .sub-history-stamina-bar-wrap {
+      flex: 1;
+      height: 4px;
+      background: rgba(0,0,0,0.5);
+      border-radius: 1px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .sub-history-stamina-fill {
+      height: 100%;
+      border-radius: 1px;
+    }
+    .sub-history-stamina-pct {
+      font-size: 3px;
+      flex-shrink: 0;
+    }
+
+    /* ── Mobile adjustments ── */
+    @media (max-width: 600px) {
+      .commentary-line.latest { max-width: 92vw; }
+      #cabinet { padding: 2px; }
+      #crt-screen { border-radius: 4px; }
+      #stats-panel.open { width: 130px; }
+      #stats-inner { width: 130px; }
+      #so-score { font-size: 14px; }
+      .so-team { font-size: 6px; }
+      #sub-panel.open { width: 170px; }
+      #sub-inner { width: 170px; }
+      .commentary-line.latest { font-size: 8px; padding: 8px 12px; }
+      .btn { font-size: 6px; padding: 6px 8px; }
+    }
+
+    /* Ad board animations */
+    @keyframes adScroll {
+      0%   { opacity: 1; }
+      45%  { opacity: 1; }
+      50%  { opacity: 0; }
+      95%  { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    .ad-slot-a { animation: adScroll 11s infinite; }
+    .ad-slot-b { animation: adScroll 11s infinite reverse; }
+  </style>
+</head>
+<body>
+
+<div id="cabinet">
+  <div id="crt-screen">
+    <div id="vignette"></div>
+    <canvas id="grain" width="200" height="200"></canvas>
+
+    <div id="screen-content">
+
+      <!-- SCOREBOARD (hidden shell kept for JS refs) -->
+      <div id="scoreboard" style="display:none">
+        <div id="score-bottom-row">
+          <div class="event-icons" id="home-events">⚽⚽🟨</div>
+          <div id="match-clock">67'</div>
+          <div id="match-status">2o TEMPO</div>
+          <div class="event-icons" id="away-events">⚽🟨🟨</div>
+        </div>
+      </div>
+
+      <!-- PITCH + STATS -->
+      <div id="pitch-container">
+        <div id="pitch-wrapper">
+          <canvas id="pitch-canvas"></canvas>
+
+          <!-- HUD TOGGLE HINT -->
+          <div id="hud-hint">tap to show hud</div>
+
+          <!-- OVERLAY SCOREBOARD -->
+          <div id="score-overlay">
+            <div class="so-team home">
+              <div class="so-dot" style="background:var(--green);color:var(--green)"></div>
+              <span>LEOPOLDO FC</span>
+              <span class="so-events" id="so-home-events">⚽⚽🟨</span>
+            </div>
+            <div id="so-score-block">
+              <div id="so-score">
+                <span class="score-digit" id="score-home">2</span>
+                <span style="font-size:13px;color:rgba(255,215,0,0.55)"> — </span>
+                <span class="score-digit" id="score-away">1</span>
+              </div>
+              <div id="so-time-row">
+                <span id="so-clock">67'</span>
+                <div id="so-live-dot"></div>
+                <span id="so-status">2o TEMPO</span>
+              </div>
+            </div>
+            <div class="so-team away">
+              <div class="so-dot" style="background:var(--blue);color:var(--blue)"></div>
+              <span>FALCOES DE ACAO</span>
+              <span class="so-events" id="so-away-events">⚽🟨🟨</span>
+            </div>
+          </div>
+          <div id="goal-overlay">
+            <div id="goal-text">GOOOOL!</div>
+            <div id="goal-scorer"></div>
+          </div>
+          <div id="event-flash"></div>
+          <div id="card-overlay">
+            <canvas id="card-icon" class="card-icon" width="30" height="42"></canvas>
+          </div>
+
+          <!-- COMMENTARY CAPTION (overlaid on pitch bottom) -->
+          <div id="commentary">
+            <div id="commentary-title"></div>
+            <div id="commentary-scroll">
+              <div class="commentary-line">23' ⚽ GOOOOL! Carlos Ventura de cabeca! Ass. Rodrigo Silva</div>
+              <div class="commentary-line">34' 🟨 Cartao amarelo: Joao Santos (falta dura)</div>
+              <div class="commentary-line">45' ⏸ INTERVALO. Leopoldo FC 1x0 Falcoes de Acao</div>
+              <div class="commentary-line">52' ↔ Marcos Leite entra, Pedro Costa sai.</div>
+              <div class="commentary-line latest">67' ⚽ GOOOOL! Rodrigo Silva amplia! Chute de fora da area!</div>
+            </div>
+          </div>
+
+        <!-- SUBSTITUTION PANEL (slides over pitch) -->
+        <div id="sub-panel">
+          <div id="sub-inner">
+            <div id="sub-title">⇄ SUBSTITUICOES</div>
+            <div id="sub-counter">USADAS: 0 / 3</div>
+            <div id="sub-hint">Arraste um reserva<br>sobre um titular</div>
+
+            <div class="sub-section-title">— TITULARES —</div>
+            <div class="sub-scroll" id="starters-list"></div>
+
+            <div class="sub-section-title" style="margin-top:4px">— BANCO —</div>
+            <div class="sub-scroll" id="bench-list"></div>
+
+            <div id="sub-history-wrap" style="display:none">
+              <div id="sub-history-title">— HISTORICO —</div>
+              <div id="sub-history-list"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+          <div id="stats-panel">
+          <div id="stats-inner">
+            <div id="stats-title">ESTATISTICAS</div>
+            <div class="stat-row">
+              <div class="stat-name">POSSE DE BOLA</div>
+              <div class="stat-bars">
+                <div class="stat-bar-home" style="width:58%"></div>
+                <div class="stat-bar-away" style="width:42%"></div>
+              </div>
+              <div class="stat-values"><span>58%</span><span>42%</span></div>
+            </div>
+            <div class="stat-row">
+              <div class="stat-name">FINALIZACOES</div>
+              <div class="stat-bars">
+                <div class="stat-bar-home" style="width:67%"></div>
+                <div class="stat-bar-away" style="width:33%"></div>
+              </div>
+              <div class="stat-values"><span>8</span><span>4</span></div>
+            </div>
+            <div class="stat-row">
+              <div class="stat-name">NO ALVO</div>
+              <div class="stat-bars">
+                <div class="stat-bar-home" style="width:71%"></div>
+                <div class="stat-bar-away" style="width:29%"></div>
+              </div>
+              <div class="stat-values"><span>5</span><span>2</span></div>
+            </div>
+            <div class="stat-row">
+              <div class="stat-name">ESCANTEIOS</div>
+              <div class="stat-bars">
+                <div class="stat-bar-home" style="width:80%"></div>
+                <div class="stat-bar-away" style="width:20%"></div>
+              </div>
+              <div class="stat-values"><span>4</span><span>1</span></div>
+            </div>
+            <div class="stat-row">
+              <div class="stat-name">FALTAS</div>
+              <div class="stat-bars">
+                <div class="stat-bar-home" style="width:40%"></div>
+                <div class="stat-bar-away" style="width:60%"></div>
+              </div>
+              <div class="stat-values"><span>6</span><span>9</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    <!-- Sub toast -->
+    <div id="sub-toast"></div>
+
+      <!-- CONTROLS -->
+      <div id="controls-bar">
+        <div class="ctrl-group">
+          <span class="ctrl-label">VEL:</span>
+          <button class="btn active" id="btn-1x" onclick="setSpeed(1,this)">1x</button>
+          <button class="btn" id="btn-2x" onclick="setSpeed(2,this)">2x</button>
+          <button class="btn" id="btn-3x" onclick="setSpeed(3,this)">3x</button>
+        </div>
+        <div class="ctrl-group">
+          <button class="btn" id="btn-pause" onclick="togglePause()">PAUSAR</button>
+          <button class="btn" id="btn-stats" onclick="toggleStats()">ESTAT.</button>
+          <button class="btn" id="btn-sub" onclick="toggleSubPanel()">SUB ⇄</button>
+          <button class="btn vr" onclick="void(0)">MODO VR</button>
+          <button class="btn red" onclick="void(0)">SAIR</button>
+        </div>
+      </div>
+
+    </div><!-- end screen-content -->
+  </div><!-- end crt-screen -->
+  <div id="insert-coin">— INSERT COIN TO CONTINUE —</div>
+</div><!-- end cabinet -->
+
+<script>
+// ─── Substitution System ───
+const MAX_SUBS = 3;
+let subsUsed = 0;
+
+const awayStarterData = [
+  {idx:0,  n:1,  name:'J. FARIA',    pos:'GOL', stats:{PAC:52,FIN:22,PAR:55,DEF:82,FIS:74}},
+  {idx:1,  n:2,  name:'B. FALCAO',   pos:'ZAG', stats:{PAC:60,FIN:28,PAR:50,DEF:84,FIS:80}},
+  {idx:2,  n:5,  name:'N. SOUZA',    pos:'ZAG', stats:{PAC:58,FIN:30,PAR:52,DEF:81,FIS:77}},
+  {idx:3,  n:4,  name:'R. SANTOS',   pos:'ZAG', stats:{PAC:55,FIN:25,PAR:48,DEF:86,FIS:79}},
+  {idx:4,  n:3,  name:'E. MOTA',     pos:'LAT', stats:{PAC:75,FIN:42,PAR:60,DEF:72,FIS:70}},
+  {idx:5,  n:7,  name:'D. CUNHA',    pos:'MED', stats:{PAC:68,FIN:55,PAR:72,DEF:58,FIS:65}},
+  {idx:6,  n:8,  name:'H. BRAGA',    pos:'MED', stats:{PAC:65,FIN:58,PAR:70,DEF:55,FIS:68}},
+  {idx:7,  n:6,  name:'I. VALE',     pos:'MED', stats:{PAC:63,FIN:52,PAR:74,DEF:60,FIS:64}},
+  {idx:8,  n:11, name:'L. TEIXEIRA', pos:'ATA', stats:{PAC:82,FIN:78,PAR:66,DEF:30,FIS:70}},
+  {idx:9,  n:9,  name:'M. GUERRA',   pos:'ATA', stats:{PAC:79,FIN:85,PAR:62,DEF:27,FIS:75}},
+  {idx:10, n:10, name:'F. RAMOS',    pos:'ATA', stats:{PAC:85,FIN:82,PAR:68,DEF:25,FIS:68}}
+];
+
+const starterData = [
+  {idx:0,  n:1,  name:'R. MENDES',   pos:'GOL', stamina:100, stats:{PAC:55,FIN:24,PAR:58,DEF:85,FIS:76}},
+  {idx:1,  n:2,  name:'A. SILVA',    pos:'ZAG', stamina:100, stats:{PAC:62,FIN:32,PAR:54,DEF:83,FIS:81}},
+  {idx:2,  n:5,  name:'C. LIMA',     pos:'ZAG', stamina:100, stats:{PAC:59,FIN:28,PAR:51,DEF:80,FIS:78}},
+  {idx:3,  n:4,  name:'D. ROCHA',    pos:'ZAG', stamina:100, stats:{PAC:57,FIN:26,PAR:49,DEF:88,FIS:80}},
+  {idx:4,  n:6,  name:'F. NUNES',    pos:'LAT', stamina:100, stats:{PAC:78,FIN:44,PAR:62,DEF:70,FIS:72}},
+  {idx:5,  n:8,  name:'G. COSTA',    pos:'MED', stamina:100, stats:{PAC:67,FIN:57,PAR:75,DEF:60,FIS:66}},
+  {idx:6,  n:10, name:'R. SILVA',    pos:'MEI', stamina:100, stats:{PAC:72,FIN:68,PAR:82,DEF:48,FIS:63}},
+  {idx:7,  n:7,  name:'B. MARTINS',  pos:'MED', stamina:100, stats:{PAC:66,FIN:54,PAR:71,DEF:57,FIS:67}},
+  {idx:8,  n:11, name:'C. VENTURA',  pos:'ATA', stamina:100, stats:{PAC:84,FIN:80,PAR:64,DEF:28,FIS:72}},
+  {idx:9,  n:9,  name:'M. LEITE',    pos:'ATA', stamina:100, stats:{PAC:80,FIN:88,PAR:60,DEF:25,FIS:74}},
+  {idx:10, n:99, name:'J. SANTOS',   pos:'ATA', stamina:100, stats:{PAC:77,FIN:84,PAR:66,DEF:30,FIS:70}}
+];
+
+const benchData = [
+  {idx:11, n:12, name:'P. COSTA',    pos:'GOL', stamina:100, stats:{PAC:50,FIN:20,PAR:52,DEF:78,FIS:71}},
+  {idx:12, n:14, name:'L. FERREIRA', pos:'ZAG', stamina:100, stats:{PAC:61,FIN:30,PAR:50,DEF:79,FIS:76}},
+  {idx:13, n:16, name:'K. OLIVEIRA', pos:'LAT', stamina:100, stats:{PAC:76,FIN:40,PAR:60,DEF:68,FIS:70}},
+  {idx:14, n:18, name:'T. ARAUJO',   pos:'MED', stamina:100, stats:{PAC:64,FIN:53,PAR:68,DEF:55,FIS:65}},
+  {idx:15, n:20, name:'V. BORGES',   pos:'MEI', stamina:100, stats:{PAC:70,FIN:65,PAR:78,DEF:44,FIS:62}},
+  {idx:16, n:22, name:'W. DIAS',     pos:'ATA', stamina:100, stats:{PAC:81,FIN:76,PAR:58,DEF:26,FIS:69}},
+  {idx:17, n:17, name:'E. PINTO',    pos:'ATA', stamina:100, stats:{PAC:75,FIN:72,PAR:56,DEF:28,FIS:67}}
+];
+
+// Stamina drain rates (per real second, adjusted by speed)
+const DRAIN_RATE = 0.12;
+let staminaAccum = 0;
+
+// Substitution history log
+const subHistory = []; // {min, outName, inName, staminaAtSub}
+
+function addSubHistoryEntry(min, outName, inName, staminaAtSub) {
+  subHistory.push({ min, outName, inName, staminaAtSub });
+  renderSubHistory();
+}
+
+function renderSubHistory() {
+  const wrap = document.getElementById('sub-history-wrap');
+  const list = document.getElementById('sub-history-list');
+  if (!subHistory.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  list.innerHTML = '';
+  // newest first
+  [...subHistory].reverse().forEach(entry => {
+    const color = entry.staminaAtSub > 60 ? '#00FF00'
+                : entry.staminaAtSub > 30 ? '#FFA500'
+                : '#FF3333';
+    const el = document.createElement('div');
+    el.className = 'sub-history-entry';
+    el.innerHTML = `
+      <div class="sub-history-top">
+        <span class="sub-history-min">${entry.min}'</span>
+        <span class="sub-history-names">▼${entry.outName} / ▲${entry.inName}</span>
+      </div>
+      <div class="sub-history-stamina-row">
+        <span class="sub-history-stamina-label">STAMINA SAIU:</span>
+        <div class="sub-history-stamina-bar-wrap">
+          <div class="sub-history-stamina-fill"
+               style="width:${entry.staminaAtSub}%;background:${color}"></div>
+        </div>
+        <span class="sub-history-stamina-pct" style="color:${color}">${entry.staminaAtSub}%</span>
+      </div>
+    `;
+    list.appendChild(el);
+  });
+}
+
+// Drag state
+let dragData = null; // {benchIdx, element}
+let dropHintEl = null;
+
+function getStaminaColor(pct) {
+  if (pct > 60) return '#00FF00';
+  if (pct > 30) return '#FFA500';
+  return '#FF3333';
+}
+
+// Find best bench replacement for a starter by matching position
+function getBestBenchSuggestion(starterListIdx) {
+  const starter = starterData[starterListIdx];
+  if (!starter) return null;
+  // Prefer exact position match, then any available bench player
+  let best = null;
+  benchData.forEach(b => {
+    if (b.subbedOut) return;
+    if (!best) { best = b; return; }
+    const posMatch = b.pos === starter.pos;
+    const bestPosMatch = best.pos === starter.pos;
+    if (posMatch && !bestPosMatch) best = b;
+    else if (posMatch === bestPosMatch && b.stamina > best.stamina) best = b;
+  });
+  return best;
+}
+
+function buildSubPanel() {
+  const startersList = document.getElementById('starters-list');
+  const benchList    = document.getElementById('bench-list');
+  startersList.innerHTML = '';
+  benchList.innerHTML    = '';
+
+  starterData.forEach((p, i) => {
+    const card = createPlayerCard(p, 'starter', i);
+    startersList.appendChild(card);
+  });
+
+  benchData.forEach((p, i) => {
+    const card = createPlayerCard(p, 'bench', i);
+    benchList.appendChild(card);
+  });
+}
+
+function createPlayerCard(p, type, listIdx) {
+  const card = document.createElement('div');
+  card.className = 'player-card' + (p.subbedOut ? ' subbed-out' : '');
+  card.dataset.type = type;
+  card.dataset.listIdx = listIdx;
+
+  const staminaPct = Math.round(p.stamina);
+  const stColor = getStaminaColor(staminaPct);
+
+  const showBadge = type === 'starter' && staminaPct <= 25 && subsUsed < MAX_SUBS && !p.subbedOut;
+  const rec = showBadge ? getBestBenchSuggestion(listIdx) : null;
+
+  card.innerHTML = `
+    <div class="player-card-top">
+      <div class="player-num-badge ${type==='starter'?'home':'bench'}">${p.n}</div>
+      <div class="player-name-pos">
+        <div class="player-card-name">${p.name}</div>
+        <div class="player-card-pos">${p.pos}</div>
+      </div>
+    </div>
+    <div class="stamina-bar-wrap">
+      <div class="stamina-bar-fill" id="stamina-fill-${type}-${listIdx}"
+           style="width:${staminaPct}%;background:${stColor}"></div>
+    </div>
+    <div class="stamina-label" id="stamina-lbl-${type}-${listIdx}">${staminaPct}%</div>
+    ${type === 'starter' ? `
+    <div class="sub-suggest-badge${showBadge ? ' visible' : ''}" id="sub-badge-starter-${listIdx}">
+      <div class="sub-badge-top">
+        <span class="sub-warn-text">⚠ SUB?</span>
+        <span class="sub-suggest-name" id="sub-suggest-${listIdx}">${rec ? `→ ${rec.name} (${rec.pos})` : ''}</span>
+      </div>
+      <button class="btn-accept-sub" id="sub-accept-btn-${listIdx}"
+        onclick="acceptSuggestion(${listIdx})"
+        ${(!rec) ? 'disabled' : ''}>
+        ✔ CONFIRMAR SUB
+      </button>
+    </div>` : ''}
+  `;
+
+  if (type === 'bench' && !p.subbedOut) {
+    card.setAttribute('draggable', 'true');
+    card.addEventListener('dragstart', e => onBenchDragStart(e, listIdx));
+    card.addEventListener('dragend',   e => onBenchDragEnd(e));
+  }
+
+  if (type === 'starter' && !p.subbedOut) {
+    card.addEventListener('dragover',  e => { e.preventDefault(); card.style.borderColor = 'var(--cyan)'; });
+    card.addEventListener('dragleave', e => { card.style.borderColor = ''; });
+    card.addEventListener('drop',      e => onStarterDrop(e, listIdx, card));
+  }
+
+  return card;
+}
+
+function onBenchDragStart(e, benchIdx) {
+  if (subsUsed >= MAX_SUBS) { e.preventDefault(); return; }
+  dragData = { benchIdx };
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(() => {
+    const el = document.querySelector(`#bench-list .player-card:nth-child(${benchIdx+1})`);
+    if (el) el.classList.add('dragging');
+  }, 0);
+
+  // Show drop hint on pitch wrapper
+  dropHintEl = document.createElement('div');
+  dropHintEl.className = 'drop-active-hint';
+  document.getElementById('pitch-wrapper').appendChild(dropHintEl);
+}
+
+function onBenchDragEnd(e) {
+  dragData = null;
+  if (dropHintEl) { dropHintEl.remove(); dropHintEl = null; }
+  document.querySelectorAll('#starters-list .player-card').forEach(c => c.style.borderColor = '');
+  document.querySelectorAll('#bench-list .player-card').forEach(c => c.classList.remove('dragging'));
+}
+
+function onStarterDrop(e, starterListIdx, card) {
+  e.preventDefault();
+  card.style.borderColor = '';
+  if (!dragData || subsUsed >= MAX_SUBS) return;
+
+  const benchIdx   = dragData.benchIdx;
+  const benchPlayer  = benchData[benchIdx];
+  const starterPlayer = starterData[starterListIdx];
+
+  if (benchPlayer.subbedOut || starterPlayer.subbedOut) return;
+
+  // Apply substitution
+  subsUsed++;
+  document.getElementById('sub-counter').textContent = `USADAS: ${subsUsed} / ${MAX_SUBS}`;
+
+  // Snapshot stamina before marking subbed
+  const staminaSnap = Math.round(starterPlayer.stamina);
+
+  // Update homePlayers position data
+  const pitchPlayer = homePlayers[starterListIdx];
+  const newPlayer = {
+    x: pitchPlayer.x, y: pitchPlayer.y,
+    tx: pitchPlayer.tx ?? pitchPlayer.x, ty: pitchPlayer.ty ?? pitchPlayer.y,
+    wxPhase: Math.random() * Math.PI * 2, wyPhase: Math.random() * Math.PI * 2,
+    wxFreq: 0.18 + Math.random() * 0.14, wyFreq: 0.14 + Math.random() * 0.14,
+    wxAmp:  0.018 + Math.random() * 0.012, wyAmp: 0.013 + Math.random() * 0.010,
+    n: benchPlayer.n,
+    baseX: pitchPlayer.baseX, baseY: pitchPlayer.baseY,
+    lerpSpeed: pitchPlayer.lerpSpeed
+  };
+  homePlayers[starterListIdx] = newPlayer;
+
+  // Mark both as subbed
+  starterPlayer.subbedOut = true;
+  benchPlayer.subbedOut   = true;
+
+  // Add commentary
+  const min = state.minute;
+  addCommentary(`${min}' ↔ SUB: ${benchPlayer.name} entra, ${starterPlayer.name} sai.`);
+  const icons   = document.getElementById('home-events');
+  const soIcons = document.getElementById('so-home-events');
+  icons.textContent   += '↔';
+  soIcons.textContent += '↔';
+
+  // History log
+  addSubHistoryEntry(min, starterPlayer.name, benchPlayer.name, staminaSnap);
+
+  // Show toast
+  showSubToast(`↔ ${benchPlayer.name}\nentra por ${starterPlayer.name}`);
+
+  // Rebuild panel
+  buildSubPanel();
+  dragData = null;
+  if (dropHintEl) { dropHintEl.remove(); dropHintEl = null; }
+}
+
+function showSubToast(msg) {
+  const toast = document.getElementById('sub-toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2800);
+}
+
+function acceptSuggestion(starterListIdx) {
+  if (subsUsed >= MAX_SUBS) return;
+  const rec = getBestBenchSuggestion(starterListIdx);
+  if (!rec) return;
+
+  const benchIdx = benchData.indexOf(rec);
+  if (benchIdx === -1) return;
+
+  const starterPlayer = starterData[starterListIdx];
+  if (starterPlayer.subbedOut || rec.subbedOut) return;
+
+  subsUsed++;
+  document.getElementById('sub-counter').textContent = `USADAS: ${subsUsed} / ${MAX_SUBS}`;
+
+  const pitchPlayer = homePlayers[starterListIdx];
+  homePlayers[starterListIdx] = {
+    x: pitchPlayer.x, y: pitchPlayer.y,
+    tx: pitchPlayer.tx ?? pitchPlayer.x, ty: pitchPlayer.ty ?? pitchPlayer.y,
+    wxPhase: Math.random() * Math.PI * 2, wyPhase: Math.random() * Math.PI * 2,
+    wxFreq: 0.18 + Math.random() * 0.14, wyFreq: 0.14 + Math.random() * 0.14,
+    wxAmp:  0.018 + Math.random() * 0.012, wyAmp: 0.013 + Math.random() * 0.010,
+    n: rec.n,
+    baseX: pitchPlayer.baseX, baseY: pitchPlayer.baseY,
+    lerpSpeed: pitchPlayer.lerpSpeed
+  };
+
+  const staminaSnap = Math.round(starterPlayer.stamina);
+
+  starterPlayer.subbedOut = true;
+  rec.subbedOut = true;
+
+  const min = state.minute;
+  addCommentary(`${min}' ↔ SUB: ${rec.name} entra, ${starterPlayer.name} sai.`);
+  document.getElementById('home-events').textContent   += '↔';
+  document.getElementById('so-home-events').textContent += '↔';
+  addSubHistoryEntry(min, starterPlayer.name, rec.name, staminaSnap);
+  showSubToast(`↔ ${rec.name}\nentra por ${starterPlayer.name}`);
+  buildSubPanel();
+}
+
+function toggleSubPanel() {
+  const panel = document.getElementById('sub-panel');
+  const btn   = document.getElementById('btn-sub');
+  panel.classList.toggle('open');
+  btn.classList.toggle('active', panel.classList.contains('open'));
+}
+
+function updateStaminaBars() {
+  starterData.forEach((p, i) => {
+    if (p.subbedOut) return;
+    const fill  = document.getElementById(`stamina-fill-starter-${i}`);
+    const lbl   = document.getElementById(`stamina-lbl-starter-${i}`);
+    const badge = document.getElementById(`sub-badge-starter-${i}`);
+    if (!fill || !lbl) return;
+    const pct = Math.round(p.stamina);
+    fill.style.width = pct + '%';
+    fill.style.backgroundColor = getStaminaColor(pct);
+    lbl.textContent = pct + '%';
+    // Warn card border when low
+    const card = fill.closest('.player-card');
+    if (card) card.style.borderColor = pct < 30 ? 'rgba(255,51,51,0.7)' : '';
+
+    // AI suggestion badge
+      if (badge) {
+          if (pct <= 25 && subsUsed < MAX_SUBS) {
+            badge.classList.add('visible');
+            const rec = getBestBenchSuggestion(i);
+            const suggestEl = document.getElementById(`sub-suggest-${i}`);
+            const acceptBtn = document.getElementById(`sub-accept-btn-${i}`);
+            if (suggestEl) suggestEl.textContent = rec ? `→ ${rec.name} (${rec.pos})` : '→ SEM OPÇÃO';
+            if (acceptBtn) acceptBtn.disabled = !rec;
+          } else {
+            badge.classList.remove('visible');
+          }
+        }
+  });
+  benchData.forEach((p, i) => {
+    if (p.subbedOut) return;
+    const fill = document.getElementById(`stamina-fill-bench-${i}`);
+    const lbl  = document.getElementById(`stamina-lbl-bench-${i}`);
+    if (!fill || !lbl) return;
+    const pct = Math.round(p.stamina);
+    fill.style.width = pct + '%';
+    fill.style.backgroundColor = getStaminaColor(pct);
+    lbl.textContent = pct + '%';
+  });
+}
+
+// ─── Film grain ───
+(function() {
+  const c = document.getElementById('grain');
+  const ctx = c.getContext('2d');
+  function makeGrain() {
+    const d = ctx.createImageData(200,200);
+    for (let i=0;i<d.data.length;i+=4) {
+      const v = Math.random()*255|0;
+      d.data[i]=d.data[i+1]=d.data[i+2]=v;
+      d.data[i+3]=255;
+    }
+    ctx.putImageData(d,0,0);
+  }
+  makeGrain();
+  setInterval(makeGrain, 80);
+})();
+
+// ─── Game State ───
+const state = {
+  scoreHome: 2, scoreAway: 1,
+  minute: 67, paused: false, speed: 1,
+  ballOwner: -1,
+  celebrating: false,
+  celebrationTeam: -1,
+  celebrationTimer: 0
+};
+
+// ─── Player position tables — LANDSCAPE ───
+// x = left→right (0–1), y = top→bottom (0–1)
+// Home attacks right; Away attacks left
+const homePosLandscape = [
+  {x:0.06, y:0.5 }, // GK
+  {x:0.2,  y:0.15}, {x:0.2,  y:0.38}, {x:0.2,  y:0.62}, {x:0.2,  y:0.85}, // DEF
+  {x:0.38, y:0.22}, {x:0.4,  y:0.5 }, {x:0.38, y:0.78}, // MID
+  {x:0.58, y:0.18}, {x:0.6,  y:0.5 }, {x:0.58, y:0.82}  // FWD
+];
+const awayPosLandscape = [
+  {x:0.94, y:0.5 }, // GK
+  {x:0.8,  y:0.15}, {x:0.8,  y:0.38}, {x:0.8,  y:0.62}, {x:0.8,  y:0.85}, // DEF
+  {x:0.62, y:0.22}, {x:0.6,  y:0.5 }, {x:0.62, y:0.78}, {x:0.55, y:0.5 }, // MID
+  {x:0.42, y:0.35}, {x:0.42, y:0.65}  // FWD
+];
+
+// ─── Player position tables — PORTRAIT ───
+// x = left→right (0–1), y = top→bottom (0–1)
+// Home attacks DOWN (GK at top); Away attacks UP (GK at bottom)
+const homePosPortrait = [
+  {x:0.5,  y:0.06}, // GK
+  {x:0.15, y:0.2 }, {x:0.38, y:0.2 }, {x:0.62, y:0.2 }, {x:0.85, y:0.2 }, // DEF
+  {x:0.22, y:0.38}, {x:0.5,  y:0.4 }, {x:0.78, y:0.38}, // MID
+  {x:0.18, y:0.58}, {x:0.5,  y:0.6 }, {x:0.82, y:0.58}  // FWD
+];
+const awayPosPortrait = [
+  {x:0.5,  y:0.94}, // GK
+  {x:0.15, y:0.8 }, {x:0.38, y:0.8 }, {x:0.62, y:0.8 }, {x:0.85, y:0.8 }, // DEF
+  {x:0.22, y:0.62}, {x:0.5,  y:0.6 }, {x:0.78, y:0.62}, {x:0.5,  y:0.55}, // MID
+  {x:0.35, y:0.42}, {x:0.65, y:0.42}  // FWD
+];
+
+// ─── Active player arrays — initialised to correct orientation ───
+// Lerp speed per role: GK=slow, DEF=measured, MID=brisk, FWD=quick
+// Index 0=GK, 1-4=DEF, 5-7=MID(home)/5-8=MID(away), 8-10=FWD(home)/9-10=FWD(away)
+function roleSpeed(i, total) {
+  if (i === 0) return 2.8;                    // GK — very measured
+  if (i <= 4)  return 3.8 + Math.random()*0.4; // DEF — steady
+  // mid range: indices 5 up to (total-3) exclusive
+  if (i <= total - 3) return 5.0 + Math.random()*0.6; // MID — brisk
+  return 6.5 + Math.random()*1.0;            // FWD — sharp / reactive
+}
+
+function makePlayers(nums, posTable) {
+  return posTable.map((p, i) => ({
+    x: p.x, y: p.y,
+    tx: p.x, ty: p.y,
+    // Perlin-style wandering state: independent phase offsets per axis per player
+    wxPhase: Math.random() * Math.PI * 2,
+    wyPhase: Math.random() * Math.PI * 2,
+    wxFreq:  0.18 + Math.random() * 0.14,  // wander frequency X (Hz)
+    wyFreq:  0.14 + Math.random() * 0.14,  // wander frequency Y (Hz)
+    wxAmp:   0.018 + Math.random() * 0.012, // wander amplitude X
+    wyAmp:   0.013 + Math.random() * 0.010, // wander amplitude Y
+    n: nums[i], baseX: p.x, baseY: p.y,
+    lerpSpeed: roleSpeed(i, posTable.length)
+  }));
+}
+
+const homeNums  = [1, 2, 5, 4, 6, 8, 10, 7, 11, 9, 99];
+const awayNums  = [1, 2, 5, 4, 3, 7, 8,  6, 11, 9, 10];
+
+const _hPos0 = window.innerWidth < 600 ? homePosPortrait : homePosLandscape;
+const _aPos0 = window.innerWidth < 600 ? awayPosPortrait : awayPosLandscape;
+const homePlayers = makePlayers(homeNums, _hPos0);
+const awayPlayers = makePlayers(awayNums, _aPos0);
+
+// Ball
+const ball = { x:0.5, y:0.52, tx:0.5, ty:0.52, trail:[] };
+let ballOwnerIdx = 6; // home player index with ball
+let ballTeam = 0; // 0=home, 1=away
+
+// Trail colour interpolation
+// home = hue 45 (gold-green), away = hue 215 (blue)
+let trailHue = 45;       // current interpolated hue
+let trailSat = 90;       // current saturation
+const TRAIL_HOME_HUE = 45;
+const TRAIL_AWAY_HUE = 215;
+
+// Badge fade transition
+let badgeAlpha = 1;
+let badgeFading = false;
+let badgeFadeDir = -1; // -1 = fading out, 1 = fading in
+let pendingBallTeam = null;
+let pendingBallOwnerIdx = null;
+
+// ─── Pass queue ───
+let passQueue = [];
+let passProgress = 0;
+let passActive = false;
+let passSrc = null, passDst = null;
+
+// Commentary events queue
+const events = [
+  {min:1, text:"1' ⚽ INICIO DE JOGO! Leopoldo FC com a bola."},
+  {min:5, text:"5' ↕ Rodrigo Silva arrisca de longe. Fora!"},
+  {min:10, text:"10' 🟨 Cartao amarelo: Joao Santos (falta dura)"},
+  {min:15, text:"15' ↕ Escanteio para Leopoldo FC..."},
+  {min:23, text:"23' ⚽ GOOOOL! Carlos Ventura de cabeca! Ass. Rodrigo Silva", isGoal:true, team:0},
+  {min:34, text:"34' 🟨 Cartao amarelo: Rodrigo Santos (reclamacao)"},
+  {min:40, text:"40' ↕ DEFESA! Goleiro Falcoes salva chute de Marcos!"},
+  {min:45, text:"45' ⏸ INTERVALO. Leopoldo FC 1x0 Falcoes de Acao"},
+  {min:50, text:"50' ↔ Marcos Leite entra, Pedro Costa sai."},
+  {min:55, text:"55' ⚽ GOOOOL! Falcoes empata! Chute cruzado!", isGoal:true, team:1},
+  {min:60, text:"60' ↕ Leopoldo pressiona buscando o segundo!"},
+  {min:67, text:"67' ⚽ GOOOOL! Rodrigo Silva amplia! Chute de fora da area!", isGoal:true, team:0},
+  {min:72, text:"72' 🟨 Cartao amarelo: Bruno Falcao (entrada violenta)"},
+  {min:78, text:"78' ↕ PRA FORA! Chute potente de Nuno vai la fora!"},
+  {min:85, text:"85' ↔ Substituicao: Lucas entra por Ventura."},
+  {min:90, text:"90' ⏱ 3 MINUTOS DE ACRESCIMOS!"},
+  {min:93, text:"93' 🏆 FIM DE JOGO! Leopoldo FC 2x1 Falcoes de Acao!"}
+];
+let eventIdx = events.findIndex(e => e.min >= 67);
+let commentaryLines = [
+  "23' ⚽ GOOOOL! Carlos Ventura de cabeca! Ass. Rodrigo Silva",
+  "34' 🟨 Cartao amarelo: Joao Santos (falta dura)",
+  "45' ⏸ INTERVALO. Leopoldo FC 1x0 Falcoes de Acao",
+  "52' ↔ Marcos Leite entra, Pedro Costa sai.",
+  "67' ⚽ GOOOOL! Rodrigo Silva amplia! Chute de fora!"
+];
+
+// ─── Canvas setup ───
+const canvas = document.getElementById('pitch-canvas');
+const ctx = canvas.getContext('2d');
+
+// ─── Orientation: portrait when viewport width < 600px ───
+let isPortrait = window.innerWidth < 600;
+
+function updateOrientation() {
+  const next = window.innerWidth < 600;
+  if (next === isPortrait) return;
+  isPortrait = next;
+  const hTable = isPortrait ? homePosPortrait : homePosLandscape;
+  const aTable = isPortrait ? awayPosPortrait : awayPosLandscape;
+  homePlayers.forEach((p, i) => {
+    p.baseX = hTable[i].x; p.baseY = hTable[i].y;
+    p.x = p.baseX; p.y = p.baseY;
+    p.tx = p.baseX; p.ty = p.baseY;
+  });
+  awayPlayers.forEach((p, i) => {
+    p.baseX = aTable[i].x; p.baseY = aTable[i].y;
+    p.x = p.baseX; p.y = p.baseY;
+    p.tx = p.baseX; p.ty = p.baseY;
+  });
+}
+
+function resizeCanvas() {
+  const wrapper = document.getElementById('pitch-wrapper');
+  canvas.width = wrapper.offsetWidth;
+  canvas.height = wrapper.offsetHeight;
+  updateOrientation();
+  updateAdBoardOffset();
+}
+
+function updateAdBoardOffset() {
+  const wrapper = document.getElementById('pitch-wrapper');
+  const scaleY = wrapper.getBoundingClientRect().height / (canvas.height || 1);
+  const pad = 28;
+  const boardH = pad - 3;
+  const cssH = Math.round(boardH * scaleY);
+  wrapper.style.setProperty('--ad-board-h', cssH + 'px');
+}
+
+// ─── Ad board data ───
+const adBoards = [
+  { text: 'FALA MESTRE', bg: '#FFD700', fg: '#000000', url: 'https://falamestre.com.br' },
+  { text: 'CERVEJA REI',  bg: '#CC0000', fg: '#FFFFFF', url: 'https://example.com/cerveja-rei' },
+  { text: 'BANCO FORTE',  bg: '#003399', fg: '#FFFFFF', url: 'https://example.com/banco-forte' },
+  { text: 'TURBO SPORTS', bg: '#FF6600', fg: '#000000', url: 'https://example.com/turbo-sports' },
+  { text: 'MEGA STORE',   bg: '#006600', fg: '#FFFF00', url: 'https://example.com/mega-store' },
+  { text: 'RADIO GOLS',   bg: '#220044', fg: '#FF00FF', url: 'https://example.com/radio-gols' },
+  { text: 'AUTO RAPIDO',  bg: '#111111', fg: '#00FFFF', url: 'https://example.com/auto-rapido' },
+  { text: 'CAFE CAMPEAO', bg: '#4B2C00', fg: '#FFD700', url: 'https://example.com/cafe-campeao' },
+  { text: 'NET PLAY',     bg: '#002244', fg: '#4488FF', url: 'https://example.com/net-play' },
+  { text: 'SPORT KING',   bg: '#880000', fg: '#FFFFFF', url: 'https://example.com/sport-king' },
+  { text: 'VIZA CARD',    bg: '#1A1A8C', fg: '#FFFFFF', url: 'https://example.com/viza-card' },
+  { text: 'MEGA TV',      bg: '#009900', fg: '#FFFFFF', url: 'https://example.com/mega-tv' },
+];
+
+// Live hit-map: rebuilt every frame by drawAdBoards
+// Each entry: { board, x, y, w, h, angle }  (angle 0 = normal, ±PI/2 = rotated)
+const adHitMap = [];
+
+// Per-slot phase offset so they don't all flip together
+const adPhaseOffset = [0, 0.4, 0.8, 1.2, 1.6, 2.0, 2.4, 2.8, 3.2, 3.6, 4.0, 4.4];
+
+// Ad tooltip overlay
+const adTooltip = (() => {
+  const el = document.createElement('div');
+  el.style.cssText = `
+    position:absolute; pointer-events:none; z-index:90;
+    background:rgba(0,12,6,0.92); border:1px solid rgba(255,223,0,0.55);
+    border-radius:4px; padding:4px 8px; font-family:'Press Start 2P',monospace;
+    font-size:5px; color:var(--gold); white-space:nowrap; opacity:0;
+    transition:opacity 0.15s; box-shadow:0 2px 10px rgba(0,0,0,0.7);
+    text-decoration:underline; text-underline-offset:2px;
+  `;
+  document.getElementById('pitch-wrapper').appendChild(el);
+  return el;
+})();
+
+function showAdTooltip(board, canvasX, canvasY) {
+  const wrapper = document.getElementById('pitch-wrapper');
+  const rect = wrapper.getBoundingClientRect();
+  const scaleX = rect.width  / canvas.width;
+  const scaleY = rect.height / canvas.height;
+  const px = canvasX * scaleX + 6;
+  const py = canvasY * scaleY - 22;
+  adTooltip.textContent = '🔗 ' + board.text;
+  adTooltip.style.left  = Math.min(px, rect.width - 140) + 'px';
+  adTooltip.style.top   = Math.max(4, py) + 'px';
+  adTooltip.style.opacity = '1';
+}
+function hideAdTooltip() { adTooltip.style.opacity = '0'; }
+
+// Fit text into maxWidth: shrinks font size until text <= maxWidth, then draws.
+function fitAndDrawText(ctx, text, x, y, maxWidth, baseSize) {
+  let size = baseSize;
+  ctx.font = `bold ${size}px "Press Start 2P", monospace`;
+  while (size > 3 && ctx.measureText(text).width > maxWidth * 0.88) {
+    size -= 0.5;
+    ctx.font = `bold ${size}px "Press Start 2P", monospace`;
+  }
+  ctx.fillText(text, x, y);
+}
+
+function drawAdBoards(W, H, t) {
+  const pad = 28;
+  const pw = W - pad*2, ph = H - pad*2;
+  const px = pad, py = pad;
+  const boardH = pad - 3;
+
+  // Rebuild hit-map each frame
+  adHitMap.length = 0;
+
+  ctx.save();
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'center';
+
+  if (!isPortrait) {
+    // ── LANDSCAPE: long strips top/bottom, short rotated strips left/right ──
+    const boardW = pw / 6;
+    const lsLongBase = Math.max(5, boardH * 0.45); // top/bottom: full-width boards
+    // side boards: sideH_ls is the long dimension when rotated (ph/3)
+    const sideH_ls = ph / 3;
+    const sideW_ls = boardH;
+    const lsSideBaseSize = Math.max(4, Math.min(boardH * 0.45, sideH_ls * 0.28));
+
+    // Top strip
+    for (let i = 0; i < 6; i++) {
+      const adIdx  = (i * 2)     % adBoards.length;
+      const adIdx2 = (i * 2 + 1) % adBoards.length;
+      const phase  = (t * 0.035 + adPhaseOffset[i]) % 1;
+      const board  = phase < 0.5 ? adBoards[adIdx] : adBoards[adIdx2];
+      const bx = px + i * boardW;
+      const by = py - boardH;
+      ctx.fillStyle = board.bg;
+      ctx.fillRect(bx + 1, by + 1, boardW - 2, boardH - 2);
+      ctx.strokeStyle = '#000'; ctx.lineWidth = 1;
+      ctx.strokeRect(bx + 1, by + 1, boardW - 2, boardH - 2);
+      ctx.fillStyle = board.fg;
+      fitAndDrawText(ctx, board.text, bx + boardW/2, by + boardH/2, boardW - 4, lsLongBase);
+      adHitMap.push({ board, x: bx + 1, y: by + 1, w: boardW - 2, h: boardH - 2, angle: 0 });
+    }
+
+    // Bottom strip
+    for (let i = 0; i < 6; i++) {
+      const adIdx  = (i * 2 + 6) % adBoards.length;
+      const adIdx2 = (i * 2 + 7) % adBoards.length;
+      const phase  = (t * 0.035 + adPhaseOffset[i + 6]) % 1;
+      const board  = phase < 0.5 ? adBoards[adIdx] : adBoards[adIdx2];
+      const bx = px + (5 - i) * boardW;
+      const by = py + ph + 1;
+      ctx.fillStyle = board.bg;
+      ctx.fillRect(bx + 1, by + 1, boardW - 2, boardH - 2);
+      ctx.strokeStyle = '#000'; ctx.lineWidth = 1;
+      ctx.strokeRect(bx + 1, by + 1, boardW - 2, boardH - 2);
+      ctx.fillStyle = board.fg;
+      fitAndDrawText(ctx, board.text, bx + boardW/2, by + boardH/2, boardW - 4, lsLongBase);
+      adHitMap.push({ board, x: bx + 1, y: by + 1, w: boardW - 2, h: boardH - 2, angle: 0 });
+    }
+
+    // Left / right side strips (rotated) — sideH is the long dimension
+    for (let i = 0; i < 3; i++) {
+      const adIdx  = (i + 2) % adBoards.length;
+      const adIdx2 = (i + 5) % adBoards.length;
+      const phase  = (t * 0.035 + adPhaseOffset[i]) % 1;
+      const board  = phase < 0.5 ? adBoards[adIdx] : adBoards[adIdx2];
+      const bx = px - sideW_ls;
+      const by = py + i * sideH_ls;
+      ctx.save();
+      ctx.translate(bx + sideW_ls/2, by + sideH_ls/2);
+      ctx.rotate(-Math.PI/2);
+      ctx.fillStyle = board.bg;
+      ctx.fillRect(-sideH_ls/2 + 1, -sideW_ls/2 + 1, sideH_ls - 2, sideW_ls - 2);
+      ctx.strokeStyle = '#000'; ctx.lineWidth = 1;
+      ctx.strokeRect(-sideH_ls/2 + 1, -sideW_ls/2 + 1, sideH_ls - 2, sideW_ls - 2);
+      ctx.fillStyle = board.fg;
+      fitAndDrawText(ctx, board.text, 0, 0, sideH_ls - 4, lsSideBaseSize);
+      ctx.restore();
+      adHitMap.push({ board, x: bx, y: by, w: sideW_ls, h: sideH_ls, angle: -Math.PI/2 });
+    }
+
+    for (let i = 0; i < 3; i++) {
+      const adIdx  = (i + 8) % adBoards.length;
+      const adIdx2 = (i + 9) % adBoards.length;
+      const phase  = (t * 0.035 + adPhaseOffset[i + 3]) % 1;
+      const board  = phase < 0.5 ? adBoards[adIdx] : adBoards[adIdx2];
+      const bx = px + pw + 1;
+      const by = py + (2 - i) * sideH_ls;
+      ctx.save();
+      ctx.translate(bx + sideW_ls/2, by + sideH_ls/2);
+      ctx.rotate(Math.PI/2);
+      ctx.fillStyle = board.bg;
+      ctx.fillRect(-sideH_ls/2 + 1, -sideW_ls/2 + 1, sideH_ls - 2, sideW_ls - 2);
+      ctx.strokeStyle = '#000'; ctx.lineWidth = 1;
+      ctx.strokeRect(-sideH_ls/2 + 1, -sideW_ls/2 + 1, sideH_ls - 2, sideW_ls - 2);
+      ctx.fillStyle = board.fg;
+      fitAndDrawText(ctx, board.text, 0, 0, sideH_ls - 4, lsSideBaseSize);
+      ctx.restore();
+      adHitMap.push({ board, x: bx, y: by, w: sideW_ls, h: sideH_ls, angle: Math.PI/2 });
+    }
+
+  } else {
+    // ── PORTRAIT: long strips left/right (rotated), short flat strips top/bottom ──
+    const boardW = ph / 6;   // boards span the height
+    const sideH  = pw / 3;   // top/bottom short boards span the width in thirds
+    const sideW  = boardH;
+
+    // Base sizes: fitAndDrawText will shrink further if text still overflows
+    const longFontBase  = Math.max(4, Math.min(boardH * 0.45, boardW * 0.28));
+    const shortFontBase = Math.max(5, boardH * 0.45);
+
+    // Left strip (rotated -90°, 6 boards stacked vertically)
+    for (let i = 0; i < 6; i++) {
+      const adIdx  = (i * 2)     % adBoards.length;
+      const adIdx2 = (i * 2 + 1) % adBoards.length;
+      const phase  = (t * 0.035 + adPhaseOffset[i]) % 1;
+      const board  = phase < 0.5 ? adBoards[adIdx] : adBoards[adIdx2];
+      const bx = px - boardH;
+      const by = py + i * boardW;
+      ctx.save();
+      ctx.translate(bx + boardH/2, by + boardW/2);
+      ctx.rotate(-Math.PI/2);
+      ctx.fillStyle = board.bg;
+      ctx.fillRect(-boardW/2 + 1, -boardH/2 + 1, boardW - 2, boardH - 2);
+      ctx.strokeStyle = '#000'; ctx.lineWidth = 1;
+      ctx.strokeRect(-boardW/2 + 1, -boardH/2 + 1, boardW - 2, boardH - 2);
+      ctx.fillStyle = board.fg;
+      fitAndDrawText(ctx, board.text, 0, 0, boardW - 4, longFontBase);
+      ctx.restore();
+      adHitMap.push({ board, x: bx, y: by, w: boardH, h: boardW, angle: -Math.PI/2 });
+    }
+
+    // Right strip (rotated +90°, 6 boards stacked vertically)
+    for (let i = 0; i < 6; i++) {
+      const adIdx  = (i * 2 + 6) % adBoards.length;
+      const adIdx2 = (i * 2 + 7) % adBoards.length;
+      const phase  = (t * 0.035 + adPhaseOffset[i + 6]) % 1;
+      const board  = phase < 0.5 ? adBoards[adIdx] : adBoards[adIdx2];
+      const bx = px + pw + 1;
+      const by = py + (5 - i) * boardW;
+      ctx.save();
+      ctx.translate(bx + boardH/2, by + boardW/2);
+      ctx.rotate(Math.PI/2);
+      ctx.fillStyle = board.bg;
+      ctx.fillRect(-boardW/2 + 1, -boardH/2 + 1, boardW - 2, boardH - 2);
+      ctx.strokeStyle = '#000'; ctx.lineWidth = 1;
+      ctx.strokeRect(-boardW/2 + 1, -boardH/2 + 1, boardW - 2, boardH - 2);
+      ctx.fillStyle = board.fg;
+      fitAndDrawText(ctx, board.text, 0, 0, boardW - 4, longFontBase);
+      ctx.restore();
+      adHitMap.push({ board, x: bx, y: by, w: boardH, h: boardW, angle: Math.PI/2 });
+    }
+
+    // Top strip (3 flat horizontal boards)
+    for (let i = 0; i < 3; i++) {
+      const adIdx  = (i + 2) % adBoards.length;
+      const adIdx2 = (i + 5) % adBoards.length;
+      const phase  = (t * 0.035 + adPhaseOffset[i]) % 1;
+      const board  = phase < 0.5 ? adBoards[adIdx] : adBoards[adIdx2];
+      const bx = px + i * sideH;
+      const by = py - sideW;
+      ctx.fillStyle = board.bg;
+      ctx.fillRect(bx + 1, by + 1, sideH - 2, sideW - 2);
+      ctx.strokeStyle = '#000'; ctx.lineWidth = 1;
+      ctx.strokeRect(bx + 1, by + 1, sideH - 2, sideW - 2);
+      ctx.fillStyle = board.fg;
+      fitAndDrawText(ctx, board.text, bx + sideH/2, by + sideW/2, sideH - 4, shortFontBase);
+      adHitMap.push({ board, x: bx + 1, y: by + 1, w: sideH - 2, h: sideW - 2, angle: 0 });
+    }
+
+    // Bottom strip (3 flat horizontal boards)
+    for (let i = 0; i < 3; i++) {
+      const adIdx  = (i + 8) % adBoards.length;
+      const adIdx2 = (i + 9) % adBoards.length;
+      const phase  = (t * 0.035 + adPhaseOffset[i + 3]) % 1;
+      const board  = phase < 0.5 ? adBoards[adIdx] : adBoards[adIdx2];
+      const bx = px + (2 - i) * sideH;
+      const by = py + ph + 1;
+      ctx.fillStyle = board.bg;
+      ctx.fillRect(bx + 1, by + 1, sideH - 2, sideW - 2);
+      ctx.strokeStyle = '#000'; ctx.lineWidth = 1;
+      ctx.strokeRect(bx + 1, by + 1, sideH - 2, sideW - 2);
+      ctx.fillStyle = board.fg;
+      fitAndDrawText(ctx, board.text, bx + sideH/2, by + sideW/2, sideH - 4, shortFontBase);
+      adHitMap.push({ board, x: bx + 1, y: by + 1, w: sideH - 2, h: sideW - 2, angle: 0 });
+    }
+  }
+
+  ctx.restore();
+}
+
+// ── Canvas → logical pixel coords (accounts for CSS scaling) ──
+function canvasPoint(clientX, clientY) {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: (clientX - rect.left) * (canvas.width  / rect.width),
+    y: (clientY - rect.top)  * (canvas.height / rect.height)
+  };
+}
+
+function hitTestAds(cx, cy) {
+  for (const hit of adHitMap) {
+    if (cx >= hit.x && cx <= hit.x + hit.w && cy >= hit.y && cy <= hit.y + hit.h) {
+      return hit;
+    }
+  }
+  return null;
+}
+
+// ── Mouse / touch handlers on the canvas ──
+canvas.addEventListener('mousemove', e => {
+  const { x, y } = canvasPoint(e.clientX, e.clientY);
+  const hit = hitTestAds(x, y);
+  if (hit) {
+    canvas.style.cursor = 'pointer';
+    showAdTooltip(hit.board, x, y);
+  } else {
+    canvas.style.cursor = '';
+    hideAdTooltip();
+  }
+});
+
+canvas.addEventListener('mouseleave', () => {
+  canvas.style.cursor = '';
+  hideAdTooltip();
+});
+
+canvas.addEventListener('click', e => {
+  const { x, y } = canvasPoint(e.clientX, e.clientY);
+  const hit = hitTestAds(x, y);
+  if (hit && hit.board.url) {
+    window.open(hit.board.url, '_blank', 'noopener,noreferrer');
+    return;
+  }
+  toggleHUD();
+});
+
+canvas.addEventListener('touchend', e => {
+  const touch = e.changedTouches[0];
+  const { x, y } = canvasPoint(touch.clientX, touch.clientY);
+  const hit = hitTestAds(x, y);
+  if (hit && hit.board.url) {
+    window.open(hit.board.url, '_blank', 'noopener,noreferrer');
+    return;
+  }
+  toggleHUD();
+}, { passive: true });
+
+// ── HUD visibility toggle ──
+const pitchWrapper = document.getElementById('pitch-wrapper');
+const hudHint      = document.getElementById('hud-hint');
+let hudVisible = true;
+let hudHintTimer = null;
+
+function showHudHint(msg) {
+  hudHint.textContent = msg;
+  hudHint.style.opacity = '1';
+  clearTimeout(hudHintTimer);
+  hudHintTimer = setTimeout(() => { hudHint.style.opacity = '0'; }, 2200);
+}
+
+function toggleHUD() {
+  hudVisible = !hudVisible;
+  if (hudVisible) {
+    pitchWrapper.classList.remove('hud-hidden');
+    showHudHint('tap to hide hud');
+  } else {
+    pitchWrapper.classList.add('hud-hidden');
+    showHudHint('tap to show hud');
+  }
+}
+
+// Show the initial hint briefly on load
+setTimeout(() => showHudHint('tap to hide hud'), 1800);
+
+// ─── Draw pitch ───
+function drawPitch(W, H) {
+  const pad = 28;
+  const pw = W - pad*2, ph = H - pad*2;
+  const px = pad, py = pad;
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+  ctx.lineWidth = 2;
+
+  if (!isPortrait) {
+    // ── LANDSCAPE ──
+    const stripeCount = 14;
+    for (let i = 0; i < stripeCount; i++) {
+      ctx.fillStyle = i % 2 === 0 ? '#006600' : '#007700';
+      ctx.fillRect(px + i*(pw/stripeCount), py, pw/stripeCount + 1, ph);
+    }
+    ctx.strokeRect(px, py, pw, ph);
+
+    // Center line (vertical)
+    ctx.beginPath(); ctx.moveTo(px+pw/2, py); ctx.lineTo(px+pw/2, py+ph); ctx.stroke();
+
+    // Center circle & dot
+    ctx.beginPath(); ctx.arc(px+pw/2, py+ph/2, pw*0.09, 0, Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(px+pw/2, py+ph/2, 2.5, 0, Math.PI*2);
+    ctx.fillStyle='#fff'; ctx.fill();
+
+    // Penalty areas (left / right)
+    const paw=pw*0.16, pah=ph*0.55;
+    ctx.strokeRect(px, py+(ph-pah)/2, paw, pah);
+    ctx.strokeRect(px+pw-paw, py+(ph-pah)/2, paw, pah);
+
+    // Goal areas
+    const gaw=pw*0.06, gah=ph*0.32;
+    ctx.strokeRect(px, py+(ph-gah)/2, gaw, gah);
+    ctx.strokeRect(px+pw-gaw, py+(ph-gah)/2, gaw, gah);
+
+    // Goals
+    const goalW=pw*0.012, goalH=ph*0.22;
+    ctx.fillStyle='rgba(255,255,255,0.7)';
+    ctx.fillRect(px-goalW, py+(ph-goalH)/2, goalW, goalH);
+    ctx.fillRect(px+pw, py+(ph-goalH)/2, goalW, goalH);
+
+    // Corners
+    [[px,py,0,Math.PI/2],[px+pw,py,Math.PI/2,Math.PI],[px,py+ph,Math.PI*1.5,Math.PI*2],[px+pw,py+ph,Math.PI,Math.PI*1.5]].forEach(([cx,cy,a1,a2])=>{
+      ctx.beginPath(); ctx.arc(cx,cy,pw*0.025,a1,a2); ctx.stroke();
+    });
+
+    // Penalty spots & arcs
+    ctx.fillStyle='#fff';
+    const sxL = px+paw*0.7, sxR = px+pw-paw*0.7, sy = py+ph/2;
+    ctx.beginPath(); ctx.arc(sxL, sy, 2, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(sxR, sy, 2, 0, Math.PI*2); ctx.fill();
+    // Arc radius & angle clamped so arc ends exactly on penalty box edge
+    const arcR_ls = pw*0.08;
+    const distToBoxL = paw - paw*0.7; // spot-to-box-right-edge distance
+    const halfAngle_ls = Math.acos(Math.min(distToBoxL / arcR_ls, 1));
+    ctx.beginPath(); ctx.arc(sxL, sy, arcR_ls, -halfAngle_ls, halfAngle_ls); ctx.stroke();
+    ctx.beginPath(); ctx.arc(sxR, sy, arcR_ls, Math.PI-halfAngle_ls, Math.PI+halfAngle_ls); ctx.stroke();
+
+  } else {
+    // ── PORTRAIT ──
+    const stripeCount = 14;
+    for (let i = 0; i < stripeCount; i++) {
+      ctx.fillStyle = i % 2 === 0 ? '#006600' : '#007700';
+      ctx.fillRect(px, py + i*(ph/stripeCount), pw, ph/stripeCount + 1);
+    }
+    ctx.strokeRect(px, py, pw, ph);
+
+    // Center line (horizontal)
+    ctx.beginPath(); ctx.moveTo(px, py+ph/2); ctx.lineTo(px+pw, py+ph/2); ctx.stroke();
+
+    // Center circle & dot
+    ctx.beginPath(); ctx.arc(px+pw/2, py+ph/2, ph*0.09, 0, Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(px+pw/2, py+ph/2, 2.5, 0, Math.PI*2);
+    ctx.fillStyle='#fff'; ctx.fill();
+
+    // Penalty areas (top / bottom)
+    const pah2=ph*0.16, paw2=pw*0.55;
+    ctx.strokeRect(px+(pw-paw2)/2, py, paw2, pah2);
+    ctx.strokeRect(px+(pw-paw2)/2, py+ph-pah2, paw2, pah2);
+
+    // Goal areas
+    const gah2=ph*0.06, gaw2=pw*0.32;
+    ctx.strokeRect(px+(pw-gaw2)/2, py, gaw2, gah2);
+    ctx.strokeRect(px+(pw-gaw2)/2, py+ph-gah2, gaw2, gah2);
+
+    // Goals (top / bottom)
+    const goalH2=ph*0.012, goalW2=pw*0.22;
+    ctx.fillStyle='rgba(255,255,255,0.7)';
+    ctx.fillRect(px+(pw-goalW2)/2, py-goalH2, goalW2, goalH2);
+    ctx.fillRect(px+(pw-goalW2)/2, py+ph, goalW2, goalH2);
+
+    // Corners
+    [[px,py,0,Math.PI/2],[px+pw,py,Math.PI/2,Math.PI],[px,py+ph,Math.PI*1.5,Math.PI*2],[px+pw,py+ph,Math.PI,Math.PI*1.5]].forEach(([cx,cy,a1,a2])=>{
+      ctx.beginPath(); ctx.arc(cx,cy,ph*0.025,a1,a2); ctx.stroke();
+    });
+
+    // Penalty spots & arcs
+    ctx.fillStyle='#fff';
+    const sx2 = px+pw/2, syT = py+pah2*0.7, syB = py+ph-pah2*0.7;
+    ctx.beginPath(); ctx.arc(sx2, syT, 2, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(sx2, syB, 2, 0, Math.PI*2); ctx.fill();
+    // Arc radius & angle clamped so arc ends exactly on penalty box edge
+    const arcR_pt = ph*0.08;
+    const distToBoxT = pah2 - pah2*0.7; // spot-to-box-bottom-edge distance
+    const halfAngle_pt = Math.acos(Math.min(distToBoxT / arcR_pt, 1));
+    ctx.beginPath(); ctx.arc(sx2, syT, arcR_pt, Math.PI+halfAngle_pt, Math.PI*2-halfAngle_pt); ctx.stroke();
+    ctx.beginPath(); ctx.arc(sx2, syB, arcR_pt, halfAngle_pt, Math.PI-halfAngle_pt); ctx.stroke();
+  }
+}
+
+// Convert logical 0-1 to canvas coords
+// Landscape: lx = left→right, ly = top→bottom
+function logicalToCanvas(lx, ly, W, H) {
+  const pad = 28;
+  return {
+    x: pad + lx*(W - pad*2),
+    y: pad + ly*(H - pad*2)
+  };
+}
+
+// ─── Draw crowd ───
+function drawCrowd(W, H, t) {
+  const waveOffset = Math.sin(t * 0.5) * 3;
+  const crowdH = 12;
+
+  if (!isPortrait) {
+    // Top crowd (home - green)
+    for (let i=0; i<W; i+=7) {
+      const bob = Math.sin(t*3 + i*0.3 + waveOffset) > 0.7 ? -3 : 0;
+      ctx.fillStyle = `hsl(${120 + Math.random()*20}, 80%, ${30+Math.random()*20}%)`;
+      ctx.fillRect(i, 2+bob, 5, crowdH);
+      ctx.fillStyle = '#003300';
+      ctx.fillRect(i+1, 5+bob, 3, 5);
+    }
+    // Bottom crowd (away - blue)
+    for (let i=0; i<W; i+=7) {
+      const bob = Math.sin(t*3 + i*0.3 - waveOffset) > 0.7 ? -3 : 0;
+      ctx.fillStyle = `hsl(${210 + Math.random()*20}, 80%, ${30+Math.random()*20}%)`;
+      ctx.fillRect(i, H-crowdH-2+bob, 5, crowdH);
+      ctx.fillStyle = '#001133';
+      ctx.fillRect(i+1, H-crowdH+1+bob, 3, 5);
+    }
+  } else {
+    // Left crowd (home - green)
+    for (let i=0; i<H; i+=7) {
+      const bob = Math.sin(t*3 + i*0.3 + waveOffset) > 0.7 ? -3 : 0;
+      ctx.fillStyle = `hsl(${120 + Math.random()*20}, 80%, ${30+Math.random()*20}%)`;
+      ctx.fillRect(2+bob, i, crowdH, 5);
+      ctx.fillStyle = '#003300';
+      ctx.fillRect(5+bob, i+1, 5, 3);
+    }
+    // Right crowd (away - blue)
+    for (let i=0; i<H; i+=7) {
+      const bob = Math.sin(t*3 + i*0.3 - waveOffset) > 0.7 ? -3 : 0;
+      ctx.fillStyle = `hsl(${210 + Math.random()*20}, 80%, ${30+Math.random()*20}%)`;
+      ctx.fillRect(W-crowdH-2+bob, i, crowdH, 5);
+      ctx.fillStyle = '#001133';
+      ctx.fillRect(W-crowdH+1+bob, i+1, 5, 3);
+    }
+  }
+}
+
+// ─── Draw a pixel-art style player avatar ───
+function drawPlayerAvatar(cx, cy, r, shirtColor, shirtStroke, skinColor, numStr, hasBall, celebrating, celebColor, t) {
+  const s = r; // scale unit
+
+  // Pulsing golden ring when has ball
+  if (hasBall) {
+    const pulse = 0.6 + 0.4*Math.sin(t*8);
+    ctx.beginPath();
+    ctx.arc(cx, cy + s*0.15, s*2.0*pulse, 0, Math.PI*2);
+    ctx.strokeStyle = `rgba(255,215,0,${0.45*pulse})`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  // Ground shadow
+  ctx.beginPath();
+  ctx.ellipse(cx+1, cy + s*1.05, s*0.9, s*0.28, 0, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(0,0,0,0.32)';
+  ctx.fill();
+
+  const shirt = celebrating ? celebColor : shirtColor;
+
+  // ── Legs ──
+  // Left leg
+  ctx.fillStyle = '#1a1a2e'; // dark shorts colour
+  ctx.fillRect(cx - s*0.38, cy + s*0.42, s*0.28, s*0.44);
+  // Right leg
+  ctx.fillRect(cx + s*0.10, cy + s*0.42, s*0.28, s*0.44);
+  // Socks
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(cx - s*0.38, cy + s*0.68, s*0.28, s*0.18);
+  ctx.fillRect(cx + s*0.10, cy + s*0.68, s*0.28, s*0.18);
+  // Boots
+  ctx.fillStyle = '#111';
+  ctx.fillRect(cx - s*0.40, cy + s*0.82, s*0.32, s*0.12);
+  ctx.fillRect(cx + s*0.08, cy + s*0.82, s*0.32, s*0.12);
+
+  // ── Torso / shirt ──
+  ctx.fillStyle = shirt;
+  ctx.beginPath();
+  ctx.roundRect(cx - s*0.44, cy - s*0.05, s*0.88, s*0.52, s*0.08);
+  ctx.fill();
+  ctx.strokeStyle = shirtStroke;
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+
+  // Collar
+  ctx.fillStyle = skinColor;
+  ctx.beginPath();
+  ctx.arc(cx, cy - s*0.04, s*0.14, 0, Math.PI*2);
+  ctx.fill();
+
+
+
+  // ── Arms ──
+  // Left arm
+  ctx.fillStyle = shirt;
+  ctx.fillRect(cx - s*0.64, cy - s*0.04, s*0.22, s*0.38);
+  ctx.strokeStyle = shirtStroke;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(cx - s*0.64, cy - s*0.04, s*0.22, s*0.38);
+  // Left hand
+  ctx.fillStyle = skinColor;
+  ctx.beginPath();
+  ctx.arc(cx - s*0.53, cy + s*0.38, s*0.12, 0, Math.PI*2);
+  ctx.fill();
+
+  // Right arm
+  ctx.fillStyle = shirt;
+  ctx.fillRect(cx + s*0.42, cy - s*0.04, s*0.22, s*0.38);
+  ctx.strokeStyle = shirtStroke;
+  ctx.strokeRect(cx + s*0.42, cy - s*0.04, s*0.22, s*0.38);
+  // Right hand
+  ctx.fillStyle = skinColor;
+  ctx.beginPath();
+  ctx.arc(cx + s*0.53, cy + s*0.38, s*0.12, 0, Math.PI*2);
+  ctx.fill();
+
+  // ── Head ──
+  ctx.fillStyle = skinColor;
+  ctx.beginPath();
+  ctx.arc(cx, cy - s*0.32, s*0.28, 0, Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Hair
+  ctx.fillStyle = ['#3d1c00','#111','#6b3a00','#222'][Math.abs(parseInt(numStr)||0) % 4];
+  ctx.beginPath();
+  ctx.arc(cx, cy - s*0.42, s*0.22, Math.PI, Math.PI*2);
+  ctx.fill();
+
+  // Eyes
+  ctx.fillStyle = '#111';
+  ctx.fillRect(cx - s*0.12, cy - s*0.30, s*0.07, s*0.07);
+  ctx.fillRect(cx + s*0.05, cy - s*0.30, s*0.07, s*0.07);
+}
+
+// ─── Draw ball-owner number badge ───
+function drawOwnerBadge(W, H, t) {
+  const team = ballTeam === 0 ? homePlayers : awayPlayers;
+  const p = team[ballOwnerIdx];
+  if (!p) return;
+
+  const {x: cx, y: cy} = logicalToCanvas(p.x, p.y, W, H);
+  const r = Math.min(W, H) * 0.030;
+  const offsetY = r * 2.8;
+
+  // Pulsing scale
+  const pulse = 0.92 + 0.08 * Math.sin(t * 7);
+  const bw = r * 5.2 * pulse;
+  const bh = r * 1.65 * pulse;
+  const bx = cx - bw / 2;
+  const by = cy - r * 0.3 - offsetY - bh / 2;
+
+  // Outer glow
+  ctx.save();
+  ctx.globalAlpha = badgeAlpha;
+  ctx.shadowColor = ballTeam === 0 ? '#00FF88' : '#4488FF';
+  ctx.shadowBlur = 6;
+
+  // Background pill
+  ctx.fillStyle = ballTeam === 0 ? 'rgba(0,30,0,0.72)' : 'rgba(0,10,40,0.72)';
+  ctx.beginPath();
+  ctx.roundRect(bx, by, bw, bh, bh / 2);
+  ctx.fill();
+
+  // Border
+  ctx.strokeStyle = ballTeam === 0 ? 'rgba(0,255,136,0.55)' : 'rgba(68,136,255,0.55)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.roundRect(bx, by, bw, bh, bh / 2);
+  ctx.stroke();
+
+  ctx.restore();
+
+  // Badge content: number + first name
+  const numStr = String(p.n);
+  // Find player name from starterData/benchData/awayStarterData by jersey number
+  const allData = ballTeam === 0 ? [...starterData, ...benchData] : awayStarterData;
+  const playerRecord = allData.find(d => d.n === p.n);
+  const firstName = playerRecord ? playerRecord.name.split('.')[0].trim() : '';
+  const labelColor = ballTeam === 0 ? 'rgba(0,255,136,0.85)' : 'rgba(136,170,255,0.85)';
+
+  // Number on left
+  ctx.fillStyle = labelColor;
+  ctx.font = `bold ${Math.max(5, r * 0.72)}px "Press Start 2P", monospace`;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('#' + numStr, bx + bh * 0.5, by + bh / 2);
+
+  // Separator
+  ctx.fillStyle = ballTeam === 0 ? 'rgba(0,255,136,0.25)' : 'rgba(68,136,255,0.25)';
+  ctx.fillRect(bx + bh * 0.5 + Math.max(5, r * 0.72) * (('#' + numStr).length * 0.72), by + bh * 0.22, 1, bh * 0.56);
+
+  // First name on right
+  ctx.fillStyle = 'rgba(255,255,255,0.75)';
+  ctx.font = `bold ${Math.max(4, r * 0.62)}px "Press Start 2P", monospace`;
+  ctx.textAlign = 'right';
+  ctx.fillText(firstName, bx + bw - bh * 0.45, by + bh / 2);
+
+  // Connector line
+  ctx.beginPath();
+  ctx.moveTo(cx, by + bh);
+  ctx.lineTo(cx, cy - r * 0.3 - r * 0.5);
+  ctx.strokeStyle = ballTeam === 0 ? 'rgba(0,255,136,0.28)' : 'rgba(68,136,255,0.28)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([2, 4]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.restore(); // restore globalAlpha
+}
+
+// ─── Draw players ───
+function drawPlayers(W, H, t) {
+  const r = Math.min(W,H) * 0.030;
+
+  // Skin tone variety per index
+  const skins = ['#f5c08a','#d4956a','#e8b07a','#c47a50','#f0d0a0','#b8722a','#f5c08a','#e0a070','#d4956a','#c47a50','#f5c08a'];
+
+  homePlayers.forEach((p, i) => {
+    const {x: cx, y: cy} = logicalToCanvas(p.x, p.y, W, H);
+    const hasBall = ballTeam===0 && i===ballOwnerIdx;
+    const skin = skins[i % skins.length];
+    drawPlayerAvatar(
+      cx, cy - r*0.3, r,
+      state.celebrationTeam===0 && state.celebrating ? '#00FF88' : '#00CC00',
+      '#007700',
+      skin,
+      String(p.n),
+      hasBall,
+      state.celebrating && state.celebrationTeam===0,
+      '#00FF88',
+      t
+    );
+  });
+
+  awayPlayers.forEach((p, i) => {
+    const {x: cx, y: cy} = logicalToCanvas(p.x, p.y, W, H);
+    const hasBall = ballTeam===1 && i===ballOwnerIdx;
+    const skin = skins[(i + 3) % skins.length];
+    drawPlayerAvatar(
+      cx, cy - r*0.3, r,
+      state.celebrationTeam===1 && state.celebrating ? '#88AAFF' : '#2255CC',
+      '#aaccff',
+      skin,
+      String(p.n),
+      hasBall,
+      state.celebrating && state.celebrationTeam===1,
+      '#88AAFF',
+      t
+    );
+  });
+}
+
+// ─── Draw ball ───
+function drawBall(W, H, t) {
+  const {x: bx, y: by} = logicalToCanvas(ball.x, ball.y, W, H);
+  const br = Math.min(W,H) * 0.018;
+
+  // Trail — hue shifts with trailHue
+  ball.trail.forEach((pt, i) => {
+    const {x: tx, y: ty} = logicalToCanvas(pt.x, pt.y, W, H);
+    const frac  = i / ball.trail.length;
+    const alpha = frac * 0.55;
+    const lum   = 55 + frac * 15; // brighter toward the ball
+    ctx.beginPath();
+    ctx.arc(tx, ty, br * 0.45 * frac, 0, Math.PI * 2);
+    ctx.fillStyle = `hsla(${trailHue},${trailSat}%,${lum}%,${alpha})`;
+    ctx.fill();
+  });
+
+  // Possession hue glow ring (outermost, colour-shifted)
+  const hueGrd = ctx.createRadialGradient(bx, by, br*0.8, bx, by, br*3.8);
+  hueGrd.addColorStop(0, `hsla(${trailHue},${trailSat}%,65%,0.28)`);
+  hueGrd.addColorStop(0.5, `hsla(${trailHue},${trailSat}%,50%,0.12)`);
+  hueGrd.addColorStop(1, 'transparent');
+  ctx.beginPath();
+  ctx.arc(bx, by, br*3.8, 0, Math.PI*2);
+  ctx.fillStyle = hueGrd;
+  ctx.fill();
+
+  // Ball glow (inner white-gold core, unchanged)
+  const grd = ctx.createRadialGradient(bx, by, 0, bx, by, br*2.5);
+  grd.addColorStop(0, 'rgba(255,215,0,0.4)');
+  grd.addColorStop(1, 'transparent');
+  ctx.beginPath();
+  ctx.arc(bx, by, br*2.5, 0, Math.PI*2);
+  ctx.fillStyle = grd;
+  ctx.fill();
+
+  // Ball body
+  const pulse = 1 + 0.05*Math.sin(t*12);
+  const br2 = br * pulse;
+
+  // White base
+  ctx.beginPath();
+  ctx.arc(bx, by, br2, 0, Math.PI*2);
+  ctx.fillStyle = '#f0f0f0';
+  ctx.fill();
+  ctx.strokeStyle = '#888';
+  ctx.lineWidth = 0.8;
+  ctx.stroke();
+
+  // Classic soccer ball pattern (Telstar-style truncated icosahedron projected to 2D)
+  // Rotation angle driven by time
+  const rot = t * 1.2;
+
+  // Light source direction (top-left, fixed in screen space)
+  const lightX = -0.6, lightY = -0.6; // normalised light vector
+  const lightLen = Math.sqrt(lightX*lightX + lightY*lightY);
+  const lnx = lightX / lightLen, lny = lightY / lightLen;
+
+  // Compute a shading factor [0..1] for a patch centre relative to ball centre.
+  // We project the patch's 2D offset onto the light direction, then map to a
+  // cosine-like brightness so the light side stays bright and shadow side darkens.
+  function shadeFactor(pcx, pcy) {
+    const dx = (pcx - bx) / br2; // normalised offset [-1..1]
+    const dy = (pcy - by) / br2;
+    // dot product with light direction (inverted so facing-light = positive)
+    const dot = -(dx * lnx + dy * lny);
+    // remap [-1..1] → [0.28..1.0] so even the darkest patch stays visible
+    return 0.28 + 0.72 * (dot * 0.5 + 0.5);
+  }
+
+  // Helper: draw a filled regular polygon clipped inside the ball circle
+  // shade: brightness factor 0..1 (1 = fully lit, 0 = fully dark)
+  function drawPatch(pcx, pcy, pr, sides, angleOffset, baseColor, shade) {
+    ctx.save();
+    // Clip to ball boundary
+    ctx.beginPath();
+    ctx.arc(bx, by, br2 * 0.995, 0, Math.PI * 2);
+    ctx.clip();
+    // Build polygon path
+    ctx.beginPath();
+    for (let i = 0; i < sides; i++) {
+      const a = angleOffset + (i / sides) * Math.PI * 2;
+      const vx = pcx + Math.cos(a) * pr;
+      const vy = pcy + Math.sin(a) * pr;
+      i === 0 ? ctx.moveTo(vx, vy) : ctx.lineTo(vx, vy);
+    }
+    ctx.closePath();
+    // Base fill
+    ctx.fillStyle = baseColor;
+    ctx.fill();
+    // Shadow overlay: semi-transparent black scaled by (1 - shade)
+    const shadowAlpha = (1 - shade) * 0.72;
+    if (shadowAlpha > 0.01) {
+      ctx.fillStyle = `rgba(0,0,0,${shadowAlpha.toFixed(3)})`;
+      ctx.fill();
+    }
+    ctx.strokeStyle = `rgba(40,40,40,${(0.4 + shade * 0.35).toFixed(3)})`;
+    ctx.lineWidth = 0.7;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Central black hexagon
+  drawPatch(bx, by, br2 * 0.38, 6, rot, '#111', shadeFactor(bx, by));
+
+  // 6 black hexagons arranged in a ring around the centre
+  const ringR = br2 * 0.72;
+  const hexR  = br2 * 0.30;
+  for (let i = 0; i < 6; i++) {
+    const a  = rot + (i / 6) * Math.PI * 2;
+    const hx = bx + Math.cos(a) * ringR;
+    const hy = by + Math.sin(a) * ringR;
+    drawPatch(hx, hy, hexR, 6, rot + Math.PI / 6, '#111', shadeFactor(hx, hy));
+  }
+
+  // 6 white pentagons between the ring hexagons
+  const wRingR = br2 * 0.68;
+  const pentR  = br2 * 0.22;
+  for (let i = 0; i < 6; i++) {
+    const a   = rot + ((i + 0.5) / 6) * Math.PI * 2;
+    const px2 = bx + Math.cos(a) * wRingR;
+    const py2 = by + Math.sin(a) * wRingR;
+    drawPatch(px2, py2, pentR, 5, rot + Math.PI / 10, '#f0f0f0', shadeFactor(px2, py2));
+  }
+
+  // Specular highlight — stays fixed top-left to match light direction
+  ctx.beginPath();
+  ctx.arc(bx - br2*0.28, by - br2*0.28, br2*0.22, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(255,255,255,0.65)';
+  ctx.fill();
+}
+
+// ─── Main render loop ───
+let lastTime = 0, clockAccum = 0, eventAccum = 0;
+let celebrationConfetti = [];
+
+function animate(ts) {
+  requestAnimationFrame(animate);
+  if (state.paused) return;
+
+  const dt = Math.min((ts - lastTime)/1000, 0.05) * state.speed;
+  lastTime = ts;
+  const t = ts/1000;
+
+  const W = canvas.width, H = canvas.height;
+  if (!W || !H) { resizeCanvas(); return; }
+
+  // ── Clock ──
+  clockAccum += dt;
+  if (clockAccum >= 2.5 && state.minute < 93) {
+    state.minute++;
+    clockAccum = 0;
+    document.getElementById('match-clock').textContent = state.minute + "'";
+    document.getElementById('so-clock').textContent = state.minute + "'";
+    checkEvents();
+  }
+
+  // ── Stamina drain ──
+  staminaAccum += dt;
+  if (staminaAccum >= 1) {
+    staminaAccum = 0;
+    starterData.forEach(p => {
+      if (!p.subbedOut) p.stamina = Math.max(0, p.stamina - DRAIN_RATE * state.speed);
+    });
+    if (document.getElementById('sub-panel').classList.contains('open')) {
+      updateStaminaBars();
+    }
+  }
+
+  // ── Player drift — continuous sinusoidal wander, no snap-back ──
+  if (!state.celebrating) {
+    [...homePlayers, ...awayPlayers].forEach(p => {
+      // Each axis uses its own independent sine wave driven by real time
+      // This produces smooth, organic figure-of-eight style wandering
+      const wx = Math.sin(t * p.wxFreq * Math.PI * 2 + p.wxPhase) * p.wxAmp;
+      const wy = Math.sin(t * p.wyFreq * Math.PI * 2 + p.wyPhase) * p.wyAmp;
+      // Target is always relative to base — never accumulates drift
+      p.tx = Math.max(0.04, Math.min(0.96, p.baseX + wx));
+      p.ty = Math.max(0.04, Math.min(0.96, p.baseY + wy));
+      // Lerp toward target each frame — role-based speed, capped to avoid overshoot
+      const s = Math.min(1, dt * (p.lerpSpeed ?? 5));
+      p.x += (p.tx - p.x) * s;
+      p.y += (p.ty - p.y) * s;
+    });
+  }
+
+  // ── Trail hue interpolation ──
+  const targetHue = ballTeam === 0 ? TRAIL_HOME_HUE : TRAIL_AWAY_HUE;
+  // If a pending team switch is queued, lerp toward the pending team's hue
+  const lerpTargetHue = (pendingBallTeam !== null)
+    ? (pendingBallTeam === 0 ? TRAIL_HOME_HUE : TRAIL_AWAY_HUE)
+    : targetHue;
+  trailHue += (lerpTargetHue - trailHue) * Math.min(1, dt * 4);
+  trailSat = 85 + 15 * Math.abs(Math.sin(t * 1.5)); // gentle saturation shimmer
+
+  // ── Badge fade ──
+  if (badgeFading) {
+    badgeAlpha += badgeFadeDir * dt * 6;
+    if (badgeFadeDir === -1 && badgeAlpha <= 0) {
+      badgeAlpha = 0;
+      // Apply the pending team/owner switch
+      if (pendingBallTeam !== null) {
+        ballTeam = pendingBallTeam;
+        pendingBallTeam = null;
+      }
+      if (pendingBallOwnerIdx !== null) {
+        ballOwnerIdx = pendingBallOwnerIdx;
+        pendingBallOwnerIdx = null;
+      }
+      badgeFadeDir = 1;
+    } else if (badgeFadeDir === 1 && badgeAlpha >= 1) {
+      badgeAlpha = 1;
+      badgeFading = false;
+    }
+  }
+
+  // ── Ball movement ──
+  if (passActive && passSrc && passDst) {
+    passProgress += dt * 0.9;
+    if (passProgress >= 1) {
+      passProgress = 1;
+      passActive = false;
+      ball.x = passDst.x;
+      ball.y = passDst.y;
+      ball.trail = [];
+      scheduleNextPass();
+    } else {
+      ball.trail.push({x:ball.x, y:ball.y});
+      if (ball.trail.length > 8) ball.trail.shift();
+      ball.x = passSrc.x + (passDst.x - passSrc.x)*passProgress;
+      ball.y = passSrc.y + (passDst.y - passSrc.y)*passProgress;
+    }
+  } else if (!passActive) {
+    // Ball idles near current owner
+    const owner = ballTeam===0 ? homePlayers[ballOwnerIdx] : awayPlayers[ballOwnerIdx];
+    if (owner) {
+      ball.x += (owner.x - ball.x) * 0.15;
+      ball.y += (owner.y - ball.y) * 0.15;
+    }
+    ball.trail = [];
+  }
+
+  // ── Celebration ──
+  if (state.celebrating) {
+    state.celebrationTimer -= dt;
+    if (state.celebrationTimer <= 0) {
+      state.celebrating = false;
+      state.celebrationTeam = -1;
+      document.getElementById('goal-overlay').style.opacity = '0';
+      document.getElementById('crt-screen').classList.remove('shake');
+      celebrationConfetti = [];
+    } else {
+      // Cluster players toward scoring end
+      const team = state.celebrationTeam === 0 ? homePlayers : awayPlayers;
+      // In portrait: home attacks down → celebrate near bottom (0.65), away near top (0.35)
+      // In landscape: both cluster toward center-right / center-left
+      const clusterX = isPortrait ? 0.5 : (state.celebrationTeam === 0 ? 0.65 : 0.35);
+      const clusterY = isPortrait ? (state.celebrationTeam === 0 ? 0.65 : 0.35) : 0.5;
+      team.forEach(p => {
+        p.x += (clusterX - p.x)*0.05;
+        p.y += (clusterY - p.y)*0.05;
+      });
+    }
+  }
+
+  // ── Overlay scoreboard border tint ──
+  const hueT = (trailHue - TRAIL_HOME_HUE) / (TRAIL_AWAY_HUE - TRAIL_HOME_HUE);
+  const sbR = Math.round(255 * (1 - hueT * 0.55));
+  const sbG = Math.round(215 * (1 - hueT * 0.45));
+  const sbB = Math.round(0   + hueT * 210);
+  const sbGlowA = (0.20 + hueT * 0.18).toFixed(2);
+  const soEl = document.getElementById('score-overlay');
+  soEl.style.borderColor = `rgba(${sbR},${sbG},${sbB},0.42)`;
+  soEl.style.boxShadow   = `0 4px 24px rgba(0,0,0,0.65), 0 0 12px rgba(${sbR},${sbG},${sbB},${sbGlowA}), inset 0 1px 0 rgba(255,255,255,0.06)`;
+
+  // ── Live dot possession tint + urgency pulse speed ──
+  const dotEl = document.getElementById('so-live-dot');
+  dotEl.style.setProperty('--dot-r', sbR);
+  dotEl.style.setProperty('--dot-g', sbG);
+  dotEl.style.setProperty('--dot-b', sbB);
+  dotEl.style.background = `rgb(${sbR},${sbG},${sbB})`;
+  dotEl.style.boxShadow  = `0 0 5px rgba(${sbR},${sbG},${sbB},0.9), 0 0 10px rgba(${sbR},${sbG},${sbB},0.45)`;
+  // Snap pulse speed: 0.6s during goal celebration, 1.6s during normal play
+  const targetDur = state.celebrating ? '0.6s' : '1.6s';
+  if (dotEl.style.getPropertyValue('--dot-pulse-dur') !== targetDur) {
+    dotEl.style.setProperty('--dot-pulse-dur', targetDur);
+    // Force animation restart so the new duration kicks in immediately
+    dotEl.style.animation = 'none';
+    dotEl.offsetHeight; // reflow
+    dotEl.style.animation = '';
+  }
+
+  // ── Caption live-dot + pill-border urgency pulse speed ──
+  const captionTargetDur = state.celebrating ? '0.6s' : '1.6s';
+  const currentCaptionDur = document.documentElement.style.getPropertyValue('--caption-pulse-dur');
+  if (currentCaptionDur !== captionTargetDur) {
+    document.documentElement.style.setProperty('--caption-pulse-dur', captionTargetDur);
+    // Force both the ::before dot and the pill border animations to restart in sync
+    const latestLine = document.querySelector('.commentary-line.latest');
+    if (latestLine) {
+      latestLine.style.animation = 'none';
+      latestLine.offsetHeight; // reflow — flushes both animations at once
+      latestLine.style.animation =
+        `captionSlideIn 0.3s ease forwards, pillBreath ${captionTargetDur} ease-in-out infinite`;
+    }
+  }
+
+  // ── Clock tint ──
+  const ckSpread = (8 + hueT * 6).toFixed(1);
+  const soClockEl = document.getElementById('so-clock');
+  soClockEl.style.color = `rgb(${sbR},${sbG},${sbB})`;
+  soClockEl.style.textShadow =
+    `0 0 ${ckSpread}px rgba(${sbR},${sbG},${sbB},${(0.85 + hueT * 0.15).toFixed(2)}), ` +
+    `0 0 ${(+ckSpread * 2.2).toFixed(1)}px rgba(${sbR},${sbG},${sbB},${(0.30 + hueT * 0.25).toFixed(2)})`;
+
+  // ── Status tint ──
+  const stSpread = (6 + hueT * 5).toFixed(1);
+  const soStatusEl = document.getElementById('so-status');
+  soStatusEl.style.color = `rgb(${sbR},${sbG},${sbB})`;
+  soStatusEl.style.textShadow =
+    `0 0 ${stSpread}px rgba(${sbR},${sbG},${sbB},${(0.65 + hueT * 0.15).toFixed(2)}), ` +
+    `0 0 ${(+stSpread * 2.0).toFixed(1)}px rgba(${sbR},${sbG},${sbB},${(0.20 + hueT * 0.20).toFixed(2)})`;
+
+  // ── Score digits tint ──
+  ['score-home','score-away'].forEach(id => {
+    const el = document.getElementById(id);
+    el.style.color = `rgb(${sbR},${sbG},${sbB})`;
+    el.style.textShadow = `0 0 10px rgba(${sbR},${sbG},${sbB},0.7), 0 0 22px rgba(${sbR},${sbG},${sbB},0.35)`;
+  });
+
+  // ── Draw ──
+  ctx.clearRect(0, 0, W, H);
+  drawCrowd(W, H, t);
+  drawPitch(W, H);
+  drawAdBoards(W, H, t);
+  drawBall(W, H, t);
+  drawPlayers(W, H, t);
+  drawOwnerBadge(W, H, t);
+
+  // Confetti
+  celebrationConfetti.forEach(p => {
+    p.y += p.vy * dt * 80;
+    p.x += p.vx * dt * 80;
+    p.life -= dt;
+    ctx.fillStyle = p.color;
+    ctx.globalAlpha = Math.max(0, p.life/2);
+    ctx.fillRect(p.x*W, p.y*H, 4, 4);
+    ctx.globalAlpha = 1;
+  });
+  celebrationConfetti = celebrationConfetti.filter(p => p.life > 0);
+}
+
+// ─── Pass scheduling ───
+let passTimer = 0;
+function scheduleNextPass() {
+  const delay = 1.8 + Math.random()*2.4;
+  setTimeout(() => {
+    if (state.paused || state.celebrating) { scheduleNextPass(); return; }
+
+    // Occasionally switch possession
+    if (Math.random() < 0.2) {
+      const newTeam = 1 - ballTeam;
+      const newOwner = Math.floor(Math.random()*11);
+      pendingBallTeam = newTeam;
+      pendingBallOwnerIdx = newOwner;
+      badgeFading = true;
+      badgeFadeDir = -1;
+    }
+
+    const team = ballTeam===0 ? homePlayers : awayPlayers;
+    const srcIdx = ballOwnerIdx;
+    let dstIdx;
+    do { dstIdx = Math.floor(Math.random()*11); } while(dstIdx===srcIdx);
+
+    passSrc = {x:team[srcIdx].x, y:team[srcIdx].y};
+    ballOwnerIdx = dstIdx;
+    passDst = {x:team[dstIdx].x, y:team[dstIdx].y};
+    passProgress = 0;
+    passActive = true;
+  }, delay*1000);
+}
+
+// ─── Event checking ───
+function checkEvents() {
+  if (eventIdx >= events.length) return;
+  const ev = events[eventIdx];
+  if (state.minute >= ev.min) {
+    addCommentary(ev.text);
+    if (ev.isGoal) triggerGoal(ev.team, ev.text);
+    if (ev.text.includes('Cartao amarelo')) triggerCard('yellow');
+    if (ev.text.includes('Cartao vermelho')) triggerCard('red');
+    eventIdx++;
+  }
+}
+
+function addCommentary(text) {
+  commentaryLines.push(text);
+  if (commentaryLines.length > 6) commentaryLines.shift();
+  const scroll = document.getElementById('commentary-scroll');
+  scroll.innerHTML = '';
+  commentaryLines.forEach((line, i) => {
+    const div = document.createElement('div');
+    div.className = 'commentary-line' + (i===commentaryLines.length-1?' latest':'');
+    div.textContent = line;
+    scroll.appendChild(div);
+  });
+}
+
+function triggerGoal(team, text) {
+  // Update score
+  if (team===0) { state.scoreHome++; document.getElementById('score-home').textContent = state.scoreHome; }
+  else          { state.scoreAway++; document.getElementById('score-away').textContent = state.scoreAway; }
+
+  // Screen flash
+  const flash = document.getElementById('event-flash');
+  flash.style.background = 'rgba(255,215,0,0.7)';
+  flash.style.opacity = '1';
+  setTimeout(()=>{ flash.style.opacity='0'; flash.style.transition='opacity 0.5s'; }, 200);
+  setTimeout(()=>{ flash.style.transition=''; }, 800);
+
+  // Goal overlay
+  const overlay = document.getElementById('goal-overlay');
+  overlay.style.opacity = '1';
+  document.getElementById('goal-scorer').textContent = text;
+
+  // Screen shake
+  const screen = document.getElementById('crt-screen');
+  screen.classList.add('shake');
+
+  // Celebration
+  state.celebrating = true;
+  state.celebrationTeam = team;
+  state.celebrationTimer = 3.5;
+
+  // Confetti
+  for (let i=0;i<60;i++) {
+    celebrationConfetti.push({
+      x: 0.3+Math.random()*0.4,
+      y: 0.3+Math.random()*0.3,
+      vx: (Math.random()-0.5)*0.3,
+      vy: 0.05+Math.random()*0.2,
+      color: ['#FFD700','#00FF00','#4488FF','#FF3333','#FF00FF'][Math.floor(Math.random()*5)],
+      life: 1.5+Math.random()
+    });
+  }
+
+  // Update event icons (overlay + hidden)
+  const icons    = document.getElementById(team===0?'home-events':'away-events');
+  const soIcons  = document.getElementById(team===0?'so-home-events':'so-away-events');
+  icons.textContent  += '⚽';
+  soIcons.textContent += '⚽';
+}
+
+function triggerCard(type) {
+  const overlay = document.getElementById('card-overlay');
+  const cardCanvas = document.getElementById('card-icon');
+  const cc = cardCanvas.getContext('2d');
+  cc.clearRect(0,0,30,42);
+  cc.fillStyle = type==='yellow' ? '#FFD700' : '#FF3333';
+  cc.fillRect(2,2,26,38);
+  cc.strokeStyle = '#000';
+  cc.lineWidth = 1;
+  cc.strokeRect(2,2,26,38);
+
+  overlay.style.opacity='1';
+  const flash = document.getElementById('event-flash');
+  flash.style.background = type==='yellow' ? 'rgba(255,215,0,0.3)' : 'rgba(255,50,50,0.3)';
+  flash.style.opacity='1';
+  setTimeout(()=>{ overlay.style.opacity='0'; flash.style.opacity='0'; }, 1500);
+}
+
+// ─── Controls ───
+function toggleStats() {
+  const panel = document.getElementById('stats-panel');
+  const btn   = document.getElementById('btn-stats');
+  panel.classList.toggle('open');
+  btn.classList.toggle('active', panel.classList.contains('open'));
+}
+
+function setSpeed(s, btn) {
+  state.speed = s;
+  ['1x','2x','3x'].forEach(id => document.getElementById('btn-'+id).classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function togglePause() {
+  state.paused = !state.paused;
+  document.getElementById('btn-pause').textContent = state.paused ? 'RESUMIR' : 'PAUSAR';
+  document.getElementById('btn-pause').classList.toggle('active', state.paused);
+  if (!state.paused) lastTime = performance.now();
+}
+
+// ─── Resize handler ───
+window.addEventListener('resize', () => {
+  resizeCanvas();
+  // Re-measure ad board offset after layout settles
+  requestAnimationFrame(updateAdBoardOffset);
+});
+
+// ─── Init ───
+resizeCanvas();
+// Measure ad board offset after first layout paint
+requestAnimationFrame(updateAdBoardOffset);
+buildSubPanel();
+scheduleNextPass();
+requestAnimationFrame(t => { lastTime = t; animate(t); });
+</script>
+</body>
+</html>

@@ -43,3 +43,6 @@ next-env.d.ts
 graphify-out/
 opencode.json
 Documentation/.obsidian/workspace.json
+.mimocode/
+.opencode/
+SWARM_PLAN.*

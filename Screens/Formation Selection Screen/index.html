@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FalaMestre! — Escolha sua Formação</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-navy: #00381a;
+      --gold: #FFDF00;
+      --green-accent: #00A859;
+      --cyan: #55e0a0;
+      --card-bg: #004d23;
+      --pitch-dark: #004400;
+      --pitch-light: #006600;
+      --pitch-lighter: #008800;
+      --blue-away: #3EA0D4;
+      --red-danger: #FF3333;
+      --orange-warn: #FFA500;
+      --black: #000000;
+      --muted-gold: rgba(255,223,0,0.55);
+      --frost-bg: rgba(0,18,8,0.72);
+      --frost-border: 1px solid rgba(255,223,0,0.30);
+      --font: 'Press Start 2P', monospace;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--black);
+      font-family: var(--font);
+    }
+
+    /* SVG noise filter */
+    .svg-filters {
+      position: absolute;
+      width: 0;
+      height: 0;
+    }
+
+    .screen {
+      position: relative;
+      width: 844px;
+      height: 390px;
+      margin: auto;
+      background: var(--bg-navy);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Center screen on page */
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    /* Film grain */
+    .grain {
+      position: absolute;
+      inset: 0;
+      z-index: 97;
+      pointer-events: none;
+      opacity: 0.04;
+      filter: url(#noise);
+      background: transparent;
+    }
+    .grain::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: white;
+      filter: url(#noise);
+    }
+
+    /* Vignette */
+    .vignette {
+      position: absolute;
+      inset: 0;
+      z-index: 98;
+      pointer-events: none;
+      background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.65) 100%);
+    }
+
+    /* Scanlines */
+    .scanlines {
+      position: absolute;
+      inset: 0;
+      z-index: 99;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent 0px,
+        transparent 2px,
+        rgba(0,0,0,0.18) 2px,
+        rgba(0,0,0,0.18) 4px
+      );
+    }
+
+    /* Phosphor border glow */
+    .phosphor {
+      position: absolute;
+      inset: 0;
+      z-index: 100;
+      pointer-events: none;
+      box-shadow: inset 0 0 0 2px rgba(255,223,0,0.35),
+                  inset 0 0 30px rgba(255,223,0,0.06);
+    }
+
+    /* Flicker animation */
+    @keyframes flicker {
+      0%, 95%, 100% { opacity: 1; }
+      96% { opacity: 0.97; }
+      97% { opacity: 0.99; }
+      98% { opacity: 0.96; }
+    }
+    .screen {
+      animation: flicker 6s infinite;
+    }
+
+    /* Content layer */
+    .content {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      padding: 10px 20px 12px;
+    }
+
+    /* Step dots */
+    .step-dots {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 6px;
+      padding-top: 2px;
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255,223,0,0.3);
+      transition: all 0.3s;
+    }
+    .dot.active {
+      width: 12px;
+      height: 12px;
+      background: var(--gold);
+      box-shadow: 0 0 8px var(--gold), 0 0 20px rgba(255,215,0,0.5);
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      margin-bottom: 8px;
+    }
+    .back-arrow {
+      position: absolute;
+      left: 0;
+      color: var(--gold);
+      font-size: 10px;
+      cursor: pointer;
+      text-shadow: 0 0 6px rgba(255,223,0,0.4);
+      background: none;
+      border: none;
+      font-family: var(--font);
+      transition: text-shadow 0.2s;
+    }
+    .back-arrow:hover {
+      text-shadow: 0 0 10px var(--gold), 0 0 22px rgba(255,215,0,0.5);
+    }
+    .header-center {
+      text-align: center;
+    }
+    .header-title {
+      font-size: 8px;
+      color: var(--gold);
+      text-shadow: 0 0 10px var(--gold), 0 0 22px rgba(255,215,0,0.5);
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+    .header-step {
+      font-size: 5px;
+      color: var(--cyan);
+      letter-spacing: 0.5px;
+    }
+
+    /* Main area */
+    .main-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 8px;
+      min-height: 0;
+    }
+
+    /* Formation grid */
+    .formation-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 14px;
+      justify-items: center;
+    }
+
+    .formation-card {
+      width: 175px;
+      height: 155px;
+      background: var(--frost-bg);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,223,0,0.30);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 6px 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .formation-card:hover {
+      border-color: rgba(255,223,0,0.6);
+      background: rgba(0,18,8,0.82);
+    }
+    .formation-card.selected {
+      border: 2px solid var(--gold);
+      box-shadow: 0 0 16px rgba(255,223,0,0.25),
+                  inset 0 0 20px rgba(255,223,0,0.06);
+    }
+    .formation-card.selected .formation-label {
+      text-shadow: 0 0 10px var(--gold), 0 0 22px rgba(255,215,0,0.5);
+    }
+
+    .formation-label {
+      font-family: var(--font);
+      font-size: 7px;
+      color: var(--gold);
+      margin-bottom: 6px;
+      letter-spacing: 0.5px;
+    }
+
+    /* Mini pitch */
+    .mini-pitch {
+      width: 100%;
+      flex: 1;
+      background: var(--pitch-dark);
+      border-radius: 4px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    .mini-pitch .stripe {
+      position: absolute;
+      left: 0;
+      right: 0;
+      background: rgba(0,100,0,0.25);
+    }
+    .mini-pitch .stripe:nth-child(1) { top: 0; height: 25%; }
+    .mini-pitch .stripe:nth-child(2) { top: 50%; height: 25%; }
+
+    /* Pitch lines */
+    .mini-pitch .center-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 50%;
+      height: 1px;
+      background: rgba(255,255,255,0.18);
+    }
+    .mini-pitch .center-circle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 20px;
+      height: 20px;
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 50%;
+      transform: translate(-50%,-50%);
+    }
+    .mini-pitch .penalty-area-top {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 40%;
+      height: 16%;
+      border-bottom: 1px solid rgba(255,255,255,0.18);
+      border-left: 1px solid rgba(255,255,255,0.18);
+      border-right: 1px solid rgba(255,255,255,0.18);
+    }
+    .mini-pitch .penalty-area-bottom {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 40%;
+      height: 16%;
+      border-top: 1px solid rgba(255,255,255,0.18);
+      border-left: 1px solid rgba(255,255,255,0.18);
+      border-right: 1px solid rgba(255,255,255,0.18);
+    }
+
+    /* Player dots */
+    .player-dot {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: #ffffff;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 4px rgba(255,255,255,0.6);
+    }
+    .selected .player-dot {
+      background: var(--gold);
+      box-shadow: 0 0 4px rgba(255,223,0,0.8);
+    }
+
+    /* Description area */
+    .description-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      width: 100%;
+    }
+    .desc-pill {
+      background: var(--frost-bg);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: var(--frost-border);
+      border-radius: 20px;
+      padding: 5px 16px;
+    }
+    .desc-text {
+      font-size: 5px;
+      color: var(--cyan);
+      text-align: center;
+      letter-spacing: 0.3px;
+    }
+    .stats-row {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      justify-content: center;
+    }
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 5px;
+      color: var(--cyan);
+    }
+    .stat-icon {
+      font-size: 7px;
+    }
+    .stat-stars {
+      display: flex;
+      gap: 1px;
+    }
+    .star {
+      width: 5px;
+      height: 5px;
+      display: inline-block;
+    }
+    .star.filled {
+      color: var(--gold);
+      text-shadow: 0 0 3px rgba(255,223,0,0.5);
+    }
+    .star.empty {
+      color: rgba(255,223,0,0.25);
+    }
+
+    /* Bottom */
+    .bottom-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      margin-top: auto;
+      padding-top: 6px;
+    }
+    .btn-next {
+      width: 100%;
+      max-width: 780px;
+      height: 36px;
+      background: var(--gold);
+      border: 2px solid var(--gold);
+      border-radius: 6px;
+      font-family: var(--font);
+      font-size: 7px;
+      color: var(--bg-navy);
+      cursor: pointer;
+      text-shadow: none;
+      letter-spacing: 1px;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-next:hover {
+      box-shadow: 0 0 16px rgba(255,223,0,0.5), 0 0 30px rgba(255,223,0,0.2);
+      transform: scale(1.01);
+    }
+    .btn-next:active {
+      transform: scale(0.99);
+    }
+    .back-link {
+      font-family: var(--font);
+      font-size: 5px;
+      color: var(--muted-gold);
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .back-link:hover {
+      color: var(--gold);
+    }
+
+    /* Selection tick */
+    .selected-tick {
+      position: absolute;
+      top: 4px;
+      right: 6px;
+      font-size: 6px;
+      display: none;
+    }
+    .selected .selected-tick {
+      display: block;
+    }
+
+    /* Responsive scaling */
+    @media (max-width: 860px) {
+      .screen {
+        width: 100vw;
+        height: calc(100vw * 390 / 844);
+        max-height: 100vh;
+      }
+    }
+    @media (max-height: 400px) {
+      .screen {
+        width: calc(100vh * 844 / 390);
+        height: 100vh;
+      }
+    }
+
+    /* Ambient glow behind pitch */
+    @keyframes ambientPulse {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 0.5; }
+    }
+    .formation-card.selected::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 12px;
+      background: radial-gradient(ellipse at center, rgba(255,223,0,0.12) 0%, transparent 70%);
+      z-index: -1;
+      animation: ambientPulse 3s ease-in-out infinite;
+    }
+
+    /* Subtle CRT color fringing on title */
+    @keyframes textGlow {
+      0%, 100% { text-shadow: 0 0 10px var(--gold), 0 0 22px rgba(255,215,0,0.5); }
+      50% { text-shadow: 0 0 12px var(--gold), 0 0 28px rgba(255,215,0,0.6), -1px 0 0 rgba(255,0,0,0.1), 1px 0 0 rgba(0,100,255,0.1); }
+    }
+    .header-title {
+      animation: textGlow 4s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SVG Noise Filter -->
+  <svg class="svg-filters">
+    <filter id="noise">
+      <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="4" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+    </filter>
+  </svg>
+
+  <div class="screen" id="screen">
+    <!-- CRT Effects -->
+    <div class="grain"></div>
+    <div class="vignette"></div>
+    <div class="scanlines"></div>
+    <div class="phosphor"></div>
+
+    <div class="content">
+      <!-- Step Dots -->
+      <div class="step-dots">
+        <div class="dot"></div>
+        <div class="dot active"></div>
+        <div class="dot"></div>
+      </div>
+
+      <!-- Header -->
+      <div class="header">
+        <button class="back-arrow" title="Voltar">◄</button>
+        <div class="header-center">
+          <div class="header-title">ESCOLHA SUA FORMAÇÃO</div>
+          <div class="header-step">PASSO 2 DE 3</div>
+        </div>
+      </div>
+
+      <div class="main-area">
+        <!-- Formation Grid -->
+        <div class="formation-grid" id="formationGrid">
+
+          <!-- 4-3-3 (selected) -->
+          <div class="formation-card selected" data-formation="433" data-desc="EQUILIBRADO — Bom ataque e defesa" data-atk="4" data-def="3" data-ctrl="4">
+            <span class="selected-tick">✦</span>
+            <div class="formation-label">4-3-3</div>
+            <div class="mini-pitch">
+              <div class="stripe"></div>
+              <div class="stripe"></div>
+              <div class="center-line"></div>
+              <div class="center-circle"></div>
+              <div class="penalty-area-top"></div>
+              <div class="penalty-area-bottom"></div>
+              <!-- GK -->
+              <div class="player-dot" style="left:50%;top:92%"></div>
+              <!-- Defenders -->
+              <div class="player-dot" style="left:15%;top:75%"></div>
+              <div class="player-dot" style="left:38%;top:78%"></div>
+              <div class="player-dot" style="left:62%;top:78%"></div>
+              <div class="player-dot" style="left:85%;top:75%"></div>
+              <!-- Midfielders -->
+              <div class="player-dot" style="left:25%;top:52%"></div>
+              <div class="player-dot" style="left:50%;top:55%"></div>
+              <div class="player-dot" style="left:75%;top:52%"></div>
+              <!-- Forwards -->
+              <div class="player-dot" style="left:20%;top:22%"></div>
+              <div class="player-dot" style="left:50%;top:18%"></div>
+              <div class="player-dot" style="left:80%;top:22%"></div>
+            </div>
+          </div>
+
+          <!-- 4-4-2 -->
+          <div class="formation-card" data-formation="442" data-desc="CLÁSSICO — Sólido e confiável" data-atk="3" data-def="4" data-ctrl="3">
+            <span class="selected-tick">✦</span>
+            <div class="formation-label">4-4-2</div>
+            <div class="mini-pitch">
+              <div class="stripe"></div>
+              <div class="stripe"></div>
+              <div class="center-line"></div>
+              <div class="center-circle"></div>
+              <div class="penalty-area-top"></div>
+              <div class="penalty-area-bottom"></div>
+              <!-- GK -->
+              <div class="player-dot" style="left:50%;top:92%"></div>
+              <!-- Defenders -->
+              <div class="player-dot" style="left:15%;top:75%"></div>
+              <div class="player-dot" style="left:38%;top:78%"></div>
+              <div class="player-dot" style="left:62%;top:78%"></div>
+              <div class="player-dot" style="left:85%;top:75%"></div>
+              <!-- Midfielders -->
+              <div class="player-dot" style="left:15%;top:50%"></div>
+              <div class="player-dot" style="left:38%;top:53%"></div>
+              <div class="player-dot" style="left:62%;top:53%"></div>
+              <div class="player-dot" style="left:85%;top:50%"></div>
+              <!-- Forwards -->
+              <div class="player-dot" style="left:35%;top:22%"></div>
+              <div class="player-dot" style="left:65%;top:22%"></div>
+            </div>
+          </div>
+
+          <!-- 4-2-4 -->
+          <div class="formation-card" data-formation="424" data-desc="OFENSIVO — Ataque total, risco alto" data-atk="5" data-def="2" data-ctrl="3">
+            <span class="selected-tick">✦</span>
+            <div class="formation-label">4-2-4</div>
+            <div class="mini-pitch">
+              <div class="stripe"></div>
+              <div class="stripe"></div>
+              <div class="center-line"></div>
+              <div class="center-circle"></div>
+              <div class="penalty-area-top"></div>
+              <div class="penalty-area-bottom"></div>
+              <!-- GK -->
+              <div class="player-dot" style="left:50%;top:92%"></div>
+              <!-- Defenders -->
+              <div class="player-dot" style="left:15%;top:75%"></div>
+              <div class="player-dot" style="left:38%;top:78%"></div>
+              <div class="player-dot" style="left:62%;top:78%"></div>
+              <div class="player-dot" style="left:85%;top:75%"></div>
+              <!-- Midfielders -->
+              <div class="player-dot" style="left:35%;top:52%"></div>
+              <div class="player-dot" style="left:65%;top:52%"></div>
+              <!-- Forwards -->
+              <div class="player-dot" style="left:15%;top:22%"></div>
+              <div class="player-dot" style="left:38%;top:18%"></div>
+              <div class="player-dot" style="left:62%;top:18%"></div>
+              <div class="player-dot" style="left:85%;top:22%"></div>
+            </div>
+          </div>
+
+          <!-- 3-5-2 -->
+          <div class="formation-card" data-formation="352" data-desc="CONTROLE — Domínio do meio-campo" data-atk="3" data-def="3" data-ctrl="5">
+            <span class="selected-tick">✦</span>
+            <div class="formation-label">3-5-2</div>
+            <div class="mini-pitch">
+              <div class="stripe"></div>
+              <div class="stripe"></div>
+              <div class="center-line"></div>
+              <div class="center-circle"></div>
+              <div class="penalty-area-top"></div>
+              <div class="penalty-area-bottom"></div>
+              <!-- GK -->
+              <div class="player-dot" style="left:50%;top:92%"></div>
+              <!-- Defenders -->
+              <div class="player-dot" style="left:25%;top:76%"></div>
+              <div class="player-dot" style="left:50%;top:80%"></div>
+              <div class="player-dot" style="left:75%;top:76%"></div>
+              <!-- Midfielders -->
+              <div class="player-dot" style="left:10%;top:50%"></div>
+              <div class="player-dot" style="left:30%;top:53%"></div>
+              <div class="player-dot" style="left:50%;top:48%"></div>
+              <div class="player-dot" style="left:70%;top:53%"></div>
+              <div class="player-dot" style="left:90%;top:50%"></div>
+              <!-- Forwards -->
+              <div class="player-dot" style="left:35%;top:22%"></div>
+              <div class="player-dot" style="left:65%;top:22%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Description Area -->
+        <div class="description-area">
+          <div class="desc-pill">
+            <div class="desc-text" id="descText">EQUILIBRADO — Bom ataque e defesa</div>
+          </div>
+          <div class="stats-row" id="statsRow">
+            <div class="stat-item">
+              <span class="stat-icon">⚔️</span>
+              <span>Ataque</span>
+              <span class="stat-stars" id="atkStars"></span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-icon">🛡️</span>
+              <span>Defesa</span>
+              <span class="stat-stars" id="defStars"></span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-icon">🎯</span>
+              <span>Controle</span>
+              <span class="stat-stars" id="ctrlStars"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Section -->
+      <div class="bottom-section">
+        <button class="btn-next">PRÓXIMO →</button>
+        <button class="back-link">← Voltar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function renderStars(container, filled, total = 5) {
+      container.innerHTML = '';
+      for (let i = 0; i < total; i++) {
+        const star = document.createElement('span');
+        star.className = 'star ' + (i < filled ? 'filled' : 'empty');
+        star.textContent = '★';
+        star.style.fontSize = '6px';
+        container.appendChild(star);
+      }
+    }
+
+    function updateDescription(card) {
+      const desc = card.getAttribute('data-desc');
+      const atk = parseInt(card.getAttribute('data-atk'));
+      const def = parseInt(card.getAttribute('data-def'));
+      const ctrl = parseInt(card.getAttribute('data-ctrl'));
+
+      document.getElementById('descText').textContent = desc;
+      renderStars(document.getElementById('atkStars'), atk);
+      renderStars(document.getElementById('defStars'), def);
+      renderStars(document.getElementById('ctrlStars'), ctrl);
+    }
+
+    const cards = document.querySelectorAll('.formation-card');
+
+    cards.forEach(card => {
+      card.addEventListener('click', () => {
+        cards.forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        updateDescription(card);
+      });
+    });
+
+    // Initialize with selected card
+    const selectedCard = document.querySelector('.formation-card.selected');
+    if (selectedCard) {
+      updateDescription(selectedCard);
+    }
+
+    // Subtle hover sound simulation via visual feedback
+    cards.forEach(card => {
+      card.addEventListener('mouseenter', () => {
+        if (!card.classList.contains('selected')) {
+          card.style.transform = 'scale(1.02)';
+        }
+      });
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = 'scale(1)';
+      });
+    });
+
+    // Next button click effect
+    document.querySelector('.btn-next').addEventListener('click', () => {
+      const btn = document.querySelector('.btn-next');
+      btn.style.transform = 'scale(0.97)';
+      btn.style.boxShadow = '0 0 24px rgba(255,223,0,0.7)';
+      setTimeout(() => {
+        btn.style.transform = 'scale(1)';
+        btn.style.boxShadow = '';
+      }, 200);
+    });
+  </script>
+</body>
+</html>

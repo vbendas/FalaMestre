@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FalaMestre! — Instalações</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-navy: #00381a;
+      --gold: #FFDF00;
+      --green: #00A859;
+      --cyan: #55e0a0;
+      --card-bg: #004d23;
+      --blue: #3EA0D4;
+      --red: #FF3333;
+      --orange: #FFA500;
+      --black: #000000;
+      --muted-gold: rgba(255,223,0,0.55);
+      --glass-fill: rgba(0,18,8,0.72);
+      --glass-border: rgba(255,223,0,0.30);
+    }
+
+    html, body {
+      width: 844px;
+      height: 390px;
+      overflow: hidden;
+      font-family: 'Press Start 2P', monospace;
+      background: var(--black);
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .screen {
+      width: 844px;
+      height: 390px;
+      background: var(--bg-navy);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* SVG Grain Filter */
+    .grain-svg {
+      position: absolute;
+      width: 0;
+      height: 0;
+    }
+
+    /* CRT Scanlines */
+    .screen::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent 0px,
+        transparent 2px,
+        rgba(0,0,0,0.18) 2px,
+        rgba(0,0,0,0.18) 4px
+      );
+      z-index: 99;
+      pointer-events: none;
+    }
+
+    /* CRT Vignette */
+    .screen::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.65) 100%);
+      z-index: 98;
+      pointer-events: none;
+    }
+
+    /* Phosphor border glow */
+    .phosphor-border {
+      position: absolute;
+      inset: 0;
+      box-shadow: inset 0 0 0 2px rgba(255,223,0,0.35);
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    /* Film grain overlay */
+    .grain-overlay {
+      position: absolute;
+      inset: 0;
+      filter: url(#grain);
+      opacity: 0.04;
+      z-index: 97;
+      pointer-events: none;
+      background: rgba(128,128,128,0.1);
+    }
+
+    /* Flicker animation */
+    @keyframes flicker {
+      0%, 95%, 100% { opacity: 1; }
+      96% { opacity: 0.97; }
+      97% { opacity: 0.99; }
+      98% { opacity: 0.96; }
+      99% { opacity: 1; }
+    }
+
+    .screen {
+      animation: flicker 6s infinite;
+    }
+
+    /* HEADER */
+    .header {
+      height: 58px;
+      min-height: 58px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 8px 16px 4px;
+      border-bottom: 1px solid rgba(255,223,0,0.15);
+    }
+
+    .header-title {
+      font-size: 7px;
+      color: var(--gold);
+      text-shadow: 0 0 10px var(--gold), 0 0 22px rgba(255,215,0,0.5);
+      letter-spacing: 2px;
+    }
+
+    .header-sub {
+      font-size: 5px;
+      color: var(--cyan);
+      margin-top: 5px;
+      opacity: 0.9;
+    }
+
+    .budget-pill {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--glass-fill);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--glass-border);
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 5px;
+      color: var(--gold);
+      text-shadow: 0 0 8px rgba(255,223,0,0.4);
+    }
+
+    /* BACK BUTTON */
+    .back-btn {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 6px;
+      color: var(--muted-gold);
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: 'Press Start 2P', monospace;
+      transition: color 0.2s;
+    }
+
+    .back-btn:hover {
+      color: var(--gold);
+      text-shadow: 0 0 10px var(--gold);
+    }
+
+    /* MAIN CONTENT */
+    .main-content {
+      flex: 1;
+      padding: 10px 16px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 0;
+    }
+
+    /* FACILITIES GRID */
+    .facilities-grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 10px;
+      min-height: 0;
+    }
+
+    /* FACILITY CARD */
+    .facility-card {
+      background: var(--glass-fill);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      padding: 10px 12px 8px;
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .facility-card:hover {
+      box-shadow: 0 0 15px rgba(255,223,0,0.15);
+    }
+
+    .facility-card.green { border-left: 3px solid var(--green); }
+    .facility-card.blue { border-left: 3px solid var(--blue); }
+    .facility-card.cyan-accent { border-left: 3px solid var(--cyan); }
+    .facility-card.orange { border-left: 3px solid var(--orange); }
+
+    .card-icon {
+      width: 32px;
+      height: 32px;
+      min-width: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      image-rendering: pixelated;
+    }
+
+    .card-icon canvas {
+      image-rendering: pixelated;
+    }
+
+    .card-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .card-title {
+      font-size: 5.5px;
+      color: var(--gold);
+      text-shadow: 0 0 8px rgba(255,223,0,0.4);
+      white-space: nowrap;
+    }
+
+    .level-bar-container {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .level-dots {
+      display: flex;
+      gap: 3px;
+    }
+
+    .level-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      border: 1px solid rgba(255,223,0,0.4);
+    }
+
+    .level-dot.filled { background: var(--gold); box-shadow: 0 0 4px rgba(255,223,0,0.5); }
+    .level-dot.empty { background: rgba(255,255,255,0.12); }
+
+    .level-label {
+      font-size: 4px;
+      color: var(--cyan);
+    }
+
+    .card-effect {
+      font-size: 4px;
+      color: rgba(255,255,255,0.85);
+      letter-spacing: 0.5px;
+    }
+
+    .card-btn {
+      margin-top: 2px;
+      width: 100%;
+      height: 22px;
+      background: rgba(0,18,8,0.6);
+      border-radius: 4px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all 0.25s;
+      letter-spacing: 0.5px;
+    }
+
+    .card-btn.green-btn {
+      border: 1px solid var(--green);
+      color: var(--cyan);
+    }
+    .card-btn.green-btn:hover {
+      background: var(--green);
+      color: var(--bg-navy);
+      box-shadow: 0 0 12px rgba(0,168,89,0.5);
+    }
+
+    .card-btn.blue-btn {
+      border: 1px solid var(--blue);
+      color: #8dd8f8;
+    }
+    .card-btn.blue-btn:hover {
+      background: var(--blue);
+      color: var(--bg-navy);
+      box-shadow: 0 0 12px rgba(62,160,212,0.5);
+    }
+
+    .card-btn.cyan-btn {
+      border: 1px solid var(--cyan);
+      color: var(--cyan);
+    }
+    .card-btn.cyan-btn:hover {
+      background: var(--cyan);
+      color: var(--bg-navy);
+      box-shadow: 0 0 12px rgba(85,224,160,0.5);
+    }
+
+    .card-btn.orange-btn {
+      border: 1px solid var(--orange);
+      color: #ffd080;
+    }
+    .card-btn.orange-btn:hover {
+      background: var(--orange);
+      color: var(--bg-navy);
+      box-shadow: 0 0 12px rgba(255,165,0,0.5);
+    }
+
+    /* EFFICIENCY SUMMARY */
+    .efficiency-strip {
+      min-height: 46px;
+      background: var(--glass-fill);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
+      padding: 8px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .efficiency-text {
+      font-size: 5.5px;
+      color: var(--gold);
+      text-shadow: 0 0 10px var(--gold), 0 0 22px rgba(255,215,0,0.5);
+      letter-spacing: 1px;
+    }
+
+    .efficiency-bar-track {
+      width: 100%;
+      height: 6px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 3px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .efficiency-bar-fill {
+      height: 100%;
+      background: var(--green);
+      border-radius: 3px;
+      box-shadow: 0 0 8px rgba(0,168,89,0.5);
+      transition: width 1.2s ease;
+    }
+
+    /* Pixel icon animation */
+    @keyframes pulse-glow {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.85; }
+    }
+
+    .card-icon {
+      animation: pulse-glow 3s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body>
+
+<!-- SVG Grain Filter -->
+<svg class="grain-svg">
+  <filter id="grain">
+    <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="4" stitchTiles="stitch"/>
+    <feColorMatrix type="saturate" values="0"/>
+  </filter>
+</svg>
+
+<div class="screen">
+  <div class="phosphor-border"></div>
+  <div class="grain-overlay"></div>
+
+  <!-- HEADER -->
+  <div class="header">
+    <button class="back-btn" title="Voltar">◀</button>
+    <div class="header-title">⚙️ INSTALAÇÕES</div>
+    <div class="header-sub">Potencialize o desenvolvimento do elenco</div>
+    <div class="budget-pill">💰 12.500</div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main-content">
+    <div class="facilities-grid">
+
+      <!-- CARD 1: TÉCNICO -->
+      <div class="facility-card green">
+        <div class="card-icon">
+          <canvas id="icon-tech" width="32" height="32"></canvas>
+        </div>
+        <div class="card-info">
+          <div class="card-title">CT TÉCNICO</div>
+          <div class="level-bar-container">
+            <div class="level-dots">
+              <div class="level-dot filled"></div>
+              <div class="level-dot filled"></div>
+              <div class="level-dot filled"></div>
+              <div class="level-dot empty"></div>
+              <div class="level-dot empty"></div>
+            </div>
+            <span class="level-label">NÍVEL 3/5</span>
+          </div>
+          <div class="card-effect">+15% GANHO TÉCNICO</div>
+          <button class="card-btn green-btn" onclick="upgrade('tech')">💰 3.000 &nbsp; MELHORAR</button>
+        </div>
+      </div>
+
+      <!-- CARD 2: FÍSICO -->
+      <div class="facility-card blue">
+        <div class="card-icon">
+          <canvas id="icon-phys" width="32" height="32"></canvas>
+        </div>
+        <div class="card-info">
+          <div class="card-title">CT FÍSICO</div>
+          <div class="level-bar-container">
+            <div class="level-dots">
+              <div class="level-dot filled"></div>
+              <div class="level-dot filled"></div>
+              <div class="level-dot empty"></div>
+              <div class="level-dot empty"></div>
+              <div class="level-dot empty"></div>
+            </div>
+            <span class="level-label">NÍVEL 2/5</span>
+          </div>
+          <div class="card-effect">+10% GANHO FÍSICO</div>
+          <button class="card-btn blue-btn" onclick="upgrade('phys')">💰 2.000 &nbsp; MELHORAR</button>
+        </div>
+      </div>
+
+      <!-- CARD 3: TÁTICO -->
+      <div class="facility-card cyan-accent">
+        <div class="card-icon">
+          <canvas id="icon-tact" width="32" height="32"></canvas>
+        </div>
+        <div class="card-info">
+          <div class="card-title">SALA TÁTICA</div>
+          <div class="level-bar-container">
+            <div class="level-dots">
+              <div class="level-dot filled"></div>
+              <div class="level-dot filled"></div>
+              <div class="level-dot filled"></div>
+              <div class="level-dot filled"></div>
+              <div class="level-dot empty"></div>
+            </div>
+            <span class="level-label">NÍVEL 4/5</span>
+          </div>
+          <div class="card-effect">+20% GANHO TÁTICO</div>
+          <button class="card-btn cyan-btn" onclick="upgrade('tact')">💰 5.000 &nbsp; MELHORAR</button>
+        </div>
+      </div>
+
+      <!-- CARD 4: DESCANSO -->
+      <div class="facility-card orange">
+        <div class="card-icon">
+          <canvas id="icon-rest" width="32" height="32"></canvas>
+        </div>
+        <div class="card-info">
+          <div class="card-title" style="font-size:4.5px;">CENTRO DE RECUPERAÇÃO</div>
+          <div class="level-bar-container">
+            <div class="level-dots">
+              <div class="level-dot filled"></div>
+              <div class="level-dot empty"></div>
+              <div class="level-dot empty"></div>
+              <div class="level-dot empty"></div>
+              <div class="level-dot empty"></div>
+            </div>
+            <span class="level-label">NÍVEL 1/5</span>
+          </div>
+          <div class="card-effect">+5% RECUPERAÇÃO</div>
+          <button class="card-btn orange-btn" onclick="upgrade('rest')">💰 1.500 &nbsp; MELHORAR</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- EFFICIENCY SUMMARY -->
+    <div class="efficiency-strip">
+      <div class="efficiency-text">EFICIÊNCIA GLOBAL DO TREINO: <span id="eff-pct">75</span>%</div>
+      <div class="efficiency-bar-track">
+        <div class="efficiency-bar-fill" id="eff-bar" style="width: 0%;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ========== PIXEL ART ICONS ==========
+  function drawPixelArt(canvasId, pixels, colorMap) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, 32, 32);
+    const size = 2;
+    for (let y = 0; y < pixels.length; y++) {
+      for (let x = 0; x < pixels[y].length; x++) {
+        const val = pixels[y][x];
+        if (val && colorMap[val]) {
+          ctx.fillStyle = colorMap[val];
+          ctx.fillRect(x * size, y * size, size, size);
+        }
+      }
+    }
+  }
+
+  // Football icon (green accent)
+  const footballPixels = [
+    [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
+    [0,0,0,0,1,1,2,2,2,2,1,1,0,0,0,0],
+    [0,0,0,1,2,2,2,1,1,2,2,2,1,0,0,0],
+    [0,0,1,2,2,1,1,1,1,1,1,2,2,1,0,0],
+    [0,1,2,2,1,1,2,2,2,2,1,1,2,2,1,0],
+    [0,1,2,1,1,2,2,2,2,2,2,1,1,2,1,0],
+    [1,2,2,1,2,2,2,2,2,2,2,2,1,2,2,1],
+    [1,2,2,1,2,2,2,2,2,2,2,2,1,2,2,1],
+    [1,2,2,1,2,2,2,2,2,2,2,2,1,2,2,1],
+    [0,1,2,1,1,2,2,2,2,2,2,1,1,2,1,0],
+    [0,1,2,2,1,1,2,2,2,2,1,1,2,2,1,0],
+    [0,0,1,2,2,1,1,1,1,1,1,2,2,1,0,0],
+    [0,0,0,1,2,2,2,1,1,2,2,2,1,0,0,0],
+    [0,0,0,0,1,1,2,2,2,2,1,1,0,0,0,0],
+    [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+  ];
+  drawPixelArt('icon-tech', footballPixels, { 1: '#00A859', 2: '#ffffff' });
+
+  // Dumbbell icon (blue accent)
+  const dumbbellPixels = [
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,3,3,0,0,0,0,0,0,0,0,3,3,0,0],
+    [0,3,3,3,3,0,0,0,0,0,0,3,3,3,3,0],
+    [0,3,1,1,3,0,0,0,0,0,0,3,1,1,3,0],
+    [0,3,1,1,3,0,0,0,0,0,0,3,1,1,3,0],
+    [0,3,1,1,3,1,1,1,1,1,1,3,1,1,3,0],
+    [0,3,1,1,3,1,2,2,2,2,1,3,1,1,3,0],
+    [0,3,1,1,3,1,2,2,2,2,1,3,1,1,3,0],
+    [0,3,1,1,3,1,1,1,1,1,1,3,1,1,3,0],
+    [0,3,1,1,3,0,0,0,0,0,0,3,1,1,3,0],
+    [0,3,1,1,3,0,0,0,0,0,0,3,1,1,3,0],
+    [0,3,3,3,3,0,0,0,0,0,0,3,3,3,3,0],
+    [0,0,3,3,0,0,0,0,0,0,0,0,3,3,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+  ];
+  drawPixelArt('icon-phys', dumbbellPixels, { 1: '#3EA0D4', 2: '#8dd8f8', 3: '#2070a0' });
+
+  // Tactics board icon (cyan accent)
+  const tacticsPixels = [
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],
+    [0,1,2,2,2,2,2,2,2,2,2,2,2,2,1,0],
+    [0,1,2,0,0,3,0,2,0,3,0,0,3,2,1,0],
+    [0,1,2,0,0,0,0,2,0,0,0,0,0,2,1,0],
+    [0,1,2,0,3,0,0,2,0,0,3,0,0,2,1,0],
+    [0,1,2,0,0,0,0,2,0,0,0,0,0,2,1,0],
+    [0,1,2,2,2,2,2,2,2,2,2,2,2,2,1,0],
+    [0,1,2,0,0,0,0,2,0,0,0,0,0,2,1,0],
+    [0,1,2,0,3,0,3,2,0,3,0,3,0,2,1,0],
+    [0,1,2,0,0,0,0,2,0,0,0,0,0,2,1,0],
+    [0,1,2,0,0,3,0,2,0,0,3,0,0,2,1,0],
+    [0,1,2,2,2,2,2,2,2,2,2,2,2,2,1,0],
+    [0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+  ];
+  drawPixelArt('icon-tact', tacticsPixels, { 1: '#2a7a5a', 2: '#004d23', 3: '#55e0a0' });
+
+  // Recovery / bed icon (orange accent)
+  const restPixels = [
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,1,2,2,1,0,0,0,0,0,0,0,0,0,0],
+    [0,0,1,2,2,1,0,0,0,0,0,0,0,0,0,0],
+    [0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],
+    [0,1,2,2,2,3,3,3,3,3,3,3,3,3,1,0],
+    [0,1,2,2,2,3,3,3,3,3,3,3,3,3,1,0],
+    [0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],
+    [0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0],
+    [0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0],
+    [0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0],
+    [0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+  ];
+  drawPixelArt('icon-rest', restPixels, { 1: '#b87333', 2: '#FFA500', 3: '#ffd080' });
+
+  // ========== EFFICIENCY BAR ANIMATION ==========
+  setTimeout(() => {
+    document.getElementById('eff-bar').style.width = '75%';
+  }, 300);
+
+  // ========== UPGRADE INTERACTION ==========
+  const facilities = {
+    tech: { level: 3, max: 5, cost: 3000, effect: 15, name: 'TÉCNICO', unit: 'GANHO TÉCNICO' },
+    phys: { level: 2, max: 5, cost: 2000, effect: 10, name: 'FÍSICO', unit: 'GANHO FÍSICO' },
+    tact: { level: 4, max: 5, cost: 5000, effect: 20, name: 'TÁTICO', unit: 'GANHO TÁTICO' },
+    rest: { level: 1, max: 5, cost: 1500, effect: 5, name: 'DESCANSO', unit: 'RECUPERAÇÃO' }
+  };
+
+  let budget = 12500;
+
+  function upgrade(type) {
+    const f = facilities[type];
+    if (f.level >= f.max) return;
+    if (budget < f.cost) {
+      flashCard(type);
+      return;
+    }
+
+    budget -= f.cost;
+    f.level++;
+    f.effect += 5;
+    f.cost = Math.round(f.cost * 1.6);
+
+    updateUI();
+    pulseCard(type);
+  }
+
+  function updateUI() {
+    document.querySelector('.budget-pill').textContent = '💰 ' + budget.toLocaleString('pt-BR');
+
+    const cards = document.querySelectorAll('.facility-card');
+    const types = ['tech', 'phys', 'tact', 'rest'];
+
+    types.forEach((type, i) => {
+      const f = facilities[type];
+      const card = cards[i];
+      const dots = card.querySelectorAll('.level-dot');
+      dots.forEach((dot, di) => {
+        dot.className = 'level-dot ' + (di < f.level ? 'filled' : 'empty');
+      });
+      card.querySelector('.level-label').textContent = `NÍVEL ${f.level}/${f.max}`;
+      card.querySelector('.card-effect').textContent = `+${f.effect}% ${f.unit}`;
+
+      if (f.level >= f.max) {
+        card.querySelector('.card-btn').textContent = '✅ MÁXIMO';
+        card.querySelector('.card-btn').style.opacity = '0.5';
+        card.querySelector('.card-btn').style.cursor = 'default';
+      } else {
+        card.querySelector('.card-btn').innerHTML = `💰 ${f.cost.toLocaleString('pt-BR')} &nbsp; MELHORAR`;
+      }
+    });
+
+    // Recalculate efficiency
+    const totalLevels = types.reduce((sum, t) => sum + facilities[t].level, 0);
+    const maxLevels = types.reduce((sum, t) => sum + facilities[t].max, 0);
+    const eff = Math.round((totalLevels / maxLevels) * 100);
+    document.getElementById('eff-pct').textContent = eff;
+    document.getElementById('eff-bar').style.width = eff + '%';
+  }
+
+  function pulseCard(type) {
+    const types = ['tech', 'phys', 'tact', 'rest'];
+    const idx = types.indexOf(type);
+    const card = document.querySelectorAll('.facility-card')[idx];
+    card.style.boxShadow = '0 0 25px rgba(255,223,0,0.5)';
+    card.style.transform = 'scale(1.02)';
+    card.style.transition = 'all 0.15s ease';
+    setTimeout(() => {
+      card.style.boxShadow = '';
+      card.style.transform = '';
+      setTimeout(() => { card.style.transition = ''; }, 300);
+    }, 250);
+  }
+
+  function flashCard(type) {
+    const types = ['tech', 'phys', 'tact', 'rest'];
+    const idx = types.indexOf(type);
+    const btn = document.querySelectorAll('.facility-card')[idx].querySelector('.card-btn');
+    btn.style.borderColor = '#FF3333';
+    btn.style.color = '#FF3333';
+    setTimeout(() => {
+      btn.style.borderColor = '';
+      btn.style.color = '';
+    }, 500);
+  }
+</script>
+
+</body>
+</html>

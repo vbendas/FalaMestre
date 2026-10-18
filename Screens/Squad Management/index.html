@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FalaMestre! — Elenco</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-navy: #00381a;
+      --gold: #FFDF00;
+      --green-accent: #00A859;
+      --cyan: #55e0a0;
+      --card-bg: #004d23;
+      --pitch-dark: #006600;
+      --pitch-light: #008800;
+      --blue-away: #3EA0D4;
+      --red-danger: #FF3333;
+      --orange-warn: #FFA500;
+      --black: #000000;
+      --muted-gold: rgba(255,223,0,0.55);
+      --frost-bg: rgba(0,18,8,0.72);
+      --frost-border: 1px solid rgba(255,223,0,0.30);
+      --font: 'Press Start 2P', monospace;
+    }
+
+    html, body {
+      width: 844px;
+      height: 390px;
+      overflow: hidden;
+      background: var(--black);
+      font-family: var(--font);
+    }
+
+    /* SVG noise filter */
+    .noise-svg { position: absolute; width: 0; height: 0; }
+
+    .crt-screen {
+      position: relative;
+      width: 844px;
+      height: 390px;
+      background: var(--bg-navy);
+      overflow: hidden;
+      display: flex;
+      animation: flicker 6s infinite;
+    }
+
+    @keyframes flicker {
+      0%, 95%, 100% { opacity: 1; }
+      96% { opacity: 0.97; }
+      97% { opacity: 0.99; }
+      98% { opacity: 0.96; }
+    }
+
+    /* CRT Layers */
+    .crt-screen::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent 0px,
+        transparent 2px,
+        rgba(0,0,0,0.18) 2px,
+        rgba(0,0,0,0.18) 4px
+      );
+      z-index: 99;
+      pointer-events: none;
+    }
+
+    .crt-screen::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.65) 100%);
+      z-index: 98;
+      pointer-events: none;
+    }
+
+    .phosphor-border {
+      position: absolute;
+      inset: 0;
+      box-shadow: inset 0 0 0 2px rgba(255,223,0,0.35);
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    .grain-overlay {
+      position: absolute;
+      inset: 0;
+      filter: url(#noiseFilter);
+      opacity: 0.04;
+      z-index: 97;
+      pointer-events: none;
+      background: transparent;
+    }
+
+    /* LEFT SIDEBAR NAV */
+    .sidebar {
+      width: 200px;
+      min-width: 200px;
+      height: 100%;
+      background: rgba(0,18,8,0.72);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-right: var(--frost-border);
+      display: flex;
+      flex-direction: column;
+      padding: 12px 10px;
+      z-index: 10;
+    }
+
+    .sidebar-logo {
+      font-size: 8px;
+      color: var(--gold);
+      text-shadow: 0 0 10px #FFDF00, 0 0 22px rgba(255,215,0,0.5);
+      margin-bottom: 4px;
+      letter-spacing: 1px;
+    }
+
+    .sidebar-subtitle {
+      font-size: 4px;
+      color: var(--cyan);
+      margin-bottom: 18px;
+      letter-spacing: 0.5px;
+    }
+
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      flex: 1;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 8px;
+      font-size: 5px;
+      color: var(--muted-gold);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: 1px solid transparent;
+      text-decoration: none;
+    }
+
+    .nav-item:hover {
+      color: var(--gold);
+      background: rgba(255,223,0,0.06);
+    }
+
+    .nav-item.active {
+      color: var(--gold);
+      background: rgba(255,223,0,0.10);
+      border: 1px solid rgba(255,223,0,0.30);
+      text-shadow: 0 0 10px #FFDF00, 0 0 22px rgba(255,215,0,0.5);
+    }
+
+    .nav-icon {
+      font-size: 10px;
+      width: 18px;
+      text-align: center;
+      line-height: 1;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255,223,0,0.12);
+    }
+
+    .team-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .team-crest {
+      width: 24px;
+      height: 24px;
+      background: var(--gold);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      line-height: 1;
+    }
+
+    .team-info-name {
+      font-size: 5px;
+      color: var(--gold);
+    }
+
+    .team-info-league {
+      font-size: 3px;
+      color: var(--cyan);
+      margin-top: 2px;
+    }
+
+    .sidebar-stats {
+      display: flex;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .stat-block .stat-val {
+      font-size: 7px;
+      color: var(--gold);
+      text-shadow: 0 0 10px #FFDF00, 0 0 22px rgba(255,215,0,0.5);
+    }
+
+    .stat-block .stat-label {
+      font-size: 3px;
+      color: var(--muted-gold);
+      margin-top: 2px;
+    }
+
+    /* CONTENT AREA */
+    .content-area {
+      flex: 1;
+      display: flex;
+      height: 100%;
+      z-index: 10;
+    }
+
+    /* LEFT CONTENT — PITCH */
+    .pitch-panel {
+      width: 344px;
+      min-width: 344px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: 8px;
+    }
+
+    .pitch-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .pitch-title {
+      font-size: 6px;
+      color: var(--gold);
+      text-shadow: 0 0 10px #FFDF00, 0 0 22px rgba(255,215,0,0.5);
+    }
+
+    .pitch-form-label {
+      font-size: 4px;
+      color: var(--cyan);
+    }
+
+    .pitch-container {
+      flex: 1;
+      position: relative;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid rgba(255,223,0,0.15);
+    }
+
+    .pitch-bg {
+      position: absolute;
+      inset: 0;
+    }
+
+    /* Pitch stripes */
+    .pitch-stripe {
+      width: 100%;
+      position: absolute;
+      left: 0;
+      right: 0;
+    }
+
+    /* Pitch lines */
+    .pitch-lines {
+      position: absolute;
+      inset: 0;
+    }
+
+    .pitch-line {
+      position: absolute;
+      background: rgba(255,255,255,0.25);
+    }
+
+    /* Halfway line */
+    .halfway { top: 50%; left: 5%; width: 90%; height: 1px; }
+
+    /* Center circle */
+    .center-circle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 50px;
+      height: 50px;
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .center-dot {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 4px;
+      height: 4px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    /* Penalty areas */
+    .penalty-area {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 1px solid rgba(255,255,255,0.25);
+      width: 110px;
+      height: 40px;
+    }
+
+    .penalty-top { bottom: 0; }
+    .penalty-bottom { top: 0; }
+
+    .goal-area {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 1px solid rgba(255,255,255,0.25);
+      width: 55px;
+      height: 18px;
+    }
+
+    .goal-top { bottom: 0; }
+    .goal-bottom { top: 0; }
+
+    /* Pitch boundary */
+    .pitch-boundary {
+      position: absolute;
+      inset: 4px;
+      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 2px;
+    }
+
+    /* Corner arcs */
+    .corner-arc {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border: 1px solid rgba(255,255,255,0.25);
+    }
+    .corner-tl { top: 4px; left: 4px; border-radius: 0 0 100% 0; border-top: none; border-left: none; }
+    .corner-tr { top: 4px; right: 4px; border-radius: 0 0 0 100%; border-top: none; border-right: none; }
+    .corner-bl { bottom: 4px; left: 4px; border-radius: 0 100% 0 0; border-bottom: none; border-left: none; }
+    .corner-br { bottom: 4px; right: 4px; border-radius: 100% 0 0 0; border-bottom: none; border-right: none; }
+
+    /* Player markers */
+    .player-marker {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      z-index: 5;
+      transition: transform 0.2s;
+    }
+
+    .player-marker:hover {
+      transform: translate(-50%, -50%) scale(1.15);
+    }
+
+    .player-circle {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 5px;
+      color: #fff;
+      font-family: var(--font);
+      border: 1.5px solid rgba(255,255,255,0.5);
+      box-shadow: 0 0 8px rgba(0,0,0,0.5);
+    }
+
+    .player-circle.gk { background: #c4a800; border-color: var(--gold); }
+    .player-circle.def { background: var(--blue-away); border-color: #6dc0e8; }
+    .player-circle.mid { background: #2a9d6a; border-color: var(--cyan); }
+    .player-circle.fwd { background: var(--red-danger); border-color: #ff7777; }
+
+    .player-name-pitch {
+      font-size: 4px;
+      color: #fff;
+      margin-top: 2px;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+      white-space: nowrap;
+      font-family: var(--font);
+    }
+
+    /* Formation selector */
+    .formation-selector {
+      display: flex;
+      gap: 5px;
+      padding: 6px 8px;
+      justify-content: center;
+    }
+
+    .form-chip {
+      padding: 4px 8px;
+      font-size: 4px;
+      font-family: var(--font);
+      border: 1px solid var(--gold);
+      border-radius: 3px;
+      color: var(--gold);
+      background: transparent;
+      cursor: pointer;
+      transition: all 0.15s;
+      height: 20px;
+      display: flex;
+      align-items: center;
+    }
+
+    .form-chip:hover {
+      background: rgba(255,223,0,0.15);
+    }
+
+    .form-chip.active {
+      background: var(--gold);
+      color: var(--bg-navy);
+    }
+
+    /* RIGHT PANEL — PLAYER LIST */
+    .player-list-panel {
+      flex: 1;
+      height: 100%;
+      border-left: 1px solid rgba(255,223,0,0.20);
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 10px 8px;
+      border-bottom: 1px solid rgba(255,223,0,0.15);
+    }
+
+    .list-title {
+      font-size: 5px;
+      color: var(--cyan);
+    }
+
+    .list-count {
+      font-size: 4px;
+      color: var(--muted-gold);
+    }
+
+    .player-list {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .player-list::-webkit-scrollbar { width: 4px; }
+    .player-list::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+    .player-list::-webkit-scrollbar-thumb { background: rgba(255,223,0,0.3); border-radius: 2px; }
+
+    .player-row {
+      display: flex;
+      align-items: center;
+      height: 40px;
+      padding: 0 8px;
+      border-bottom: 1px solid rgba(255,223,0,0.12);
+      border-left: 2px solid var(--gold);
+      position: relative;
+      gap: 6px;
+      transition: background 0.15s;
+    }
+
+    .player-row:hover {
+      background: rgba(255,223,0,0.04);
+    }
+
+    .player-row.bench {
+      opacity: 0.4;
+      border-left: 2px solid transparent;
+    }
+
+    .player-row.bench:hover {
+      opacity: 0.6;
+    }
+
+    .bench-separator {
+      display: flex;
+      align-items: center;
+      padding: 4px 10px;
+      gap: 6px;
+    }
+
+    .bench-sep-line {
+      flex: 1;
+      height: 1px;
+      background: rgba(255,223,0,0.12);
+    }
+
+    .bench-sep-text {
+      font-size: 3px;
+      color: var(--muted-gold);
+    }
+
+    .jersey-num {
+      font-size: 7px;
+      color: var(--gold);
+      width: 24px;
+      text-align: center;
+      font-family: var(--font);
+      flex-shrink: 0;
+    }
+
+    .pos-badge {
+      width: 22px;
+      height: 12px;
+      border-radius: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4px;
+      color: #fff;
+      font-family: var(--font);
+      flex-shrink: 0;
+    }
+
+    .pos-badge.gol { background: #a89200; }
+    .pos-badge.zag { background: var(--blue-away); }
+    .pos-badge.mei { background: #1a7a50; }
+    .pos-badge.ata { background: var(--red-danger); }
+    .pos-badge.banco { background: rgba(255,223,0,0.15); font-size: 3px; color: var(--cyan); width: 26px; }
+
+    .player-name-list {
+      font-size: 5px;
+      color: #fff;
+      font-family: var(--font);
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .player-overall {
+      font-size: 6px;
+      color: var(--gold);
+      font-family: var(--font);
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    .morale-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .morale-good { background: var(--green-accent); box-shadow: 0 0 4px var(--green-accent); }
+    .morale-ok { background: var(--orange-warn); box-shadow: 0 0 4px var(--orange-warn); }
+    .morale-bad { background: var(--red-danger); box-shadow: 0 0 4px var(--red-danger); }
+
+    .fitness-bar-container {
+      position: absolute;
+      bottom: 2px;
+      left: 40px;
+      width: 28px;
+      height: 4px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 1px;
+      overflow: hidden;
+    }
+
+    .fitness-fill {
+      height: 100%;
+      border-radius: 1px;
+    }
+
+    .fitness-high { background: var(--green-accent); }
+    .fitness-med { background: var(--orange-warn); }
+    .fitness-low { background: var(--red-danger); }
+  </style>
+</head>
+<body>
+
+<svg class="noise-svg">
+  <filter id="noiseFilter">
+    <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4" stitchTiles="stitch"/>
+    <feColorMatrix type="saturate" values="0"/>
+  </filter>
+</svg>
+
+<div class="crt-screen">
+  <div class="phosphor-border"></div>
+  <div class="grain-overlay"></div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-logo">FALA<br>MESTRE!</div>
+    <div class="sidebar-subtitle">TEMPORADA 2026</div>
+
+    <nav class="sidebar-nav">
+      <a class="nav-item" href="javascript:void(0)"><span class="nav-icon">🏠</span> INÍCIO</a>
+      <a class="nav-item active" href="javascript:void(0)"><span class="nav-icon">👥</span> ELENCO</a>
+      <a class="nav-item" href="javascript:void(0)"><span class="nav-icon">⚽</span> PARTIDA</a>
+      <a class="nav-item" href="javascript:void(0)"><span class="nav-icon">📋</span> TÁTICA</a>
+      <a class="nav-item" href="javascript:void(0)"><span class="nav-icon">💰</span> MERCADO</a>
+      <a class="nav-item" href="javascript:void(0)"><span class="nav-icon">🏆</span> TABELA</a>
+      <a class="nav-item" href="javascript:void(0)"><span class="nav-icon">📊</span> STATS</a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="team-badge">
+        <div class="team-crest">⚽</div>
+        <div>
+          <div class="team-info-name">FC TROVÃO</div>
+          <div class="team-info-league">SÉRIE A • 3º LUGAR</div>
+        </div>
+      </div>
+      <div class="sidebar-stats">
+        <div class="stat-block">
+          <div class="stat-val">12</div>
+          <div class="stat-label">VITÓRIAS</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-val">4</div>
+          <div class="stat-label">EMPATES</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-val">2</div>
+          <div class="stat-label">DERROTAS</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content-area">
+
+    <!-- LEFT: PITCH -->
+    <div class="pitch-panel">
+      <div class="pitch-header">
+        <span class="pitch-title">FORMAÇÃO</span>
+        <span class="pitch-form-label">4-3-3 OFENSIVO</span>
+      </div>
+      <div class="pitch-container" id="pitch">
+        <div class="pitch-bg" id="pitchBg"></div>
+
+        <!-- Pitch markings -->
+        <div class="pitch-lines">
+          <div class="pitch-boundary"></div>
+          <div class="pitch-line halfway"></div>
+          <div class="center-circle"><div class="center-dot"></div></div>
+          <div class="penalty-area penalty-top"></div>
+          <div class="penalty-area penalty-bottom"></div>
+          <div class="goal-area goal-top"></div>
+          <div class="goal-area goal-bottom"></div>
+          <div class="corner-arc corner-tl"></div>
+          <div class="corner-arc corner-tr"></div>
+          <div class="corner-arc corner-bl"></div>
+          <div class="corner-arc corner-br"></div>
+        </div>
+
+        <!-- Players injected by JS -->
+        <div id="playerMarkers"></div>
+      </div>
+
+      <div class="formation-selector">
+        <button class="form-chip active" data-form="4-3-3">4-3-3</button>
+        <button class="form-chip" data-form="4-4-2">4-4-2</button>
+        <button class="form-chip" data-form="4-2-4">4-2-4</button>
+        <button class="form-chip" data-form="3-5-2">3-5-2</button>
+      </div>
+    </div>
+
+    <!-- RIGHT: PLAYER LIST -->
+    <div class="player-list-panel">
+      <div class="list-header">
+        <span class="list-title">ELENCO</span>
+        <span class="list-count">11/11 TITULARES</span>
+      </div>
+      <div class="player-list" id="playerList"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const players = [
+  { num: 1, pos: 'GOL', name: 'M. TAFFAREL', ovr: 82, morale: 'good', fitness: 95 },
+  { num: 2, pos: 'ZAG', name: 'D. SANTOS', ovr: 78, morale: 'good', fitness: 88 },
+  { num: 3, pos: 'ZAG', name: 'T. SILVA', ovr: 85, morale: 'good', fitness: 91 },
+  { num: 4, pos: 'ZAG', name: 'R. CARLOS', ovr: 83, morale: 'ok', fitness: 74 },
+  { num: 6, pos: 'ZAG', name: 'A. MARCOS', ovr: 80, morale: 'good', fitness: 82 },
+  { num: 5, pos: 'MEI', name: 'F. DUNGA', ovr: 84, morale: 'good', fitness: 90 },
+  { num: 8, pos: 'MEI', name: 'L. CEREZO', ovr: 81, morale: 'good', fitness: 86 },
+  { num: 10, pos: 'MEI', name: 'R. NEYMAR', ovr: 91, morale: 'good', fitness: 93 },
+  { num: 7, pos: 'ATA', name: 'G. GARRIN', ovr: 87, morale: 'good', fitness: 89 },
+  { num: 9, pos: 'ATA', name: 'A. ROMÁRIO', ovr: 89, morale: 'ok', fitness: 70 },
+  { num: 11, pos: 'ATA', name: 'V. NETO', ovr: 86, morale: 'good', fitness: 85 },
+  { num: 12, pos: 'GOL', name: 'J. CENI', ovr: 76, morale: 'ok', fitness: 100, bench: true },
+  { num: 13, pos: 'ZAG', name: 'P. BREMER', ovr: 75, morale: 'bad', fitness: 65, bench: true },
+  { num: 14, pos: 'MEI', name: 'C. LUCAS', ovr: 77, morale: 'ok', fitness: 92, bench: true },
+];
+
+const formations = {
+  '4-3-3': {
+    positions: [
+      { role: 'gk', x: 50, y: 90 },
+      { role: 'def', x: 15, y: 72 },
+      { role: 'def', x: 38, y: 72 },
+      { role: 'def', x: 62, y: 72 },
+      { role: 'def', x: 85, y: 72 },
+      { role: 'mid', x: 25, y: 48 },
+      { role: 'mid', x: 50, y: 44 },
+      { role: 'mid', x: 75, y: 48 },
+      { role: 'fwd', x: 20, y: 20 },
+      { role: 'fwd', x: 50, y: 16 },
+      { role: 'fwd', x: 80, y: 20 },
+    ]
+  },
+  '4-4-2': {
+    positions: [
+      { role: 'gk', x: 50, y: 90 },
+      { role: 'def', x: 15, y: 72 },
+      { role: 'def', x: 38, y: 72 },
+      { role: 'def', x: 62, y: 72 },
+      { role: 'def', x: 85, y: 72 },
+      { role: 'mid', x: 15, y: 46 },
+      { role: 'mid', x: 38, y: 43 },
+      { role: 'mid', x: 62, y: 43 },
+      { role: 'mid', x: 85, y: 46 },
+      { role: 'fwd', x: 35, y: 18 },
+      { role: 'fwd', x: 65, y: 18 },
+    ]
+  },
+  '4-2-4': {
+    positions: [
+      { role: 'gk', x: 50, y: 90 },
+      { role: 'def', x: 15, y: 72 },
+      { role: 'def', x: 38, y: 72 },
+      { role: 'def', x: 62, y: 72 },
+      { role: 'def', x: 85, y: 72 },
+      { role: 'mid', x: 35, y: 48 },
+      { role: 'mid', x: 65, y: 48 },
+      { role: 'fwd', x: 15, y: 20 },
+      { role: 'fwd', x: 40, y: 16 },
+      { role: 'fwd', x: 60, y: 16 },
+      { role: 'fwd', x: 85, y: 20 },
+    ]
+  },
+  '3-5-2': {
+    positions: [
+      { role: 'gk', x: 50, y: 90 },
+      { role: 'def', x: 25, y: 72 },
+      { role: 'def', x: 50, y: 72 },
+      { role: 'def', x: 75, y: 72 },
+      { role: 'mid', x: 10, y: 48 },
+      { role: 'mid', x: 30, y: 44 },
+      { role: 'mid', x: 50, y: 48 },
+      { role: 'mid', x: 70, y: 44 },
+      { role: 'mid', x: 90, y: 48 },
+      { role: 'fwd', x: 35, y: 18 },
+      { role: 'fwd', x: 65, y: 18 },
+    ]
+  }
+};
+
+const starters = players.filter(p => !p.bench);
+const benchPlayers = players.filter(p => p.bench);
+
+// Build pitch stripes
+function buildPitchBg() {
+  const bg = document.getElementById('pitchBg');
+  const stripeCount = 12;
+  const h = 100 / stripeCount;
+  let html = '';
+  for (let i = 0; i < stripeCount; i++) {
+    const color = i % 2 === 0 ? '#006600' : '#008800';
+    html += `<div class="pitch-stripe" style="top:${i * h}%; height:${h}%; background:${color};"></div>`;
+  }
+  bg.innerHTML = html;
+}
+
+// Render player markers on pitch
+function renderFormation(formName) {
+  const form = formations[formName];
+  const container = document.getElementById('playerMarkers');
+  let html = '';
+
+  const surnames = starters.map(p => p.name.split(' ').pop());
+
+  form.positions.forEach((pos, i) => {
+    const p = starters[i];
+    const surname = p.name.split('. ')[1] || p.name;
+    html += `
+      <div class="player-marker" style="left:${pos.x}%; top:${pos.y}%;">
+        <div class="player-circle ${pos.role}">${p.num}</div>
+        <div class="player-name-pitch">${surname}</div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+// Render player list
+function renderPlayerList() {
+  const list = document.getElementById('playerList');
+  let html = '';
+
+  starters.forEach(p => {
+    const posClass = p.pos.toLowerCase();
+    const fitClass = p.fitness >= 80 ? 'fitness-high' : p.fitness >= 60 ? 'fitness-med' : 'fitness-low';
+    html += `
+      <div class="player-row">
+        <span class="jersey-num">${p.num}</span>
+        <span class="pos-badge ${posClass}">${p.pos}</span>
+        <span class="player-name-list">${p.name}</span>
+        <span class="player-overall">${p.ovr}⭐</span>
+        <span class="morale-dot morale-${p.morale}"></span>
+        <div class="fitness-bar-container">
+          <div class="fitness-fill ${fitClass}" style="width:${p.fitness}%"></div>
+        </div>
+      </div>
+    `;
+  });
+
+  html += `
+    <div class="bench-separator">
+      <span class="bench-sep-line"></span>
+      <span class="bench-sep-text">BANCO DE RESERVAS</span>
+      <span class="bench-sep-line"></span>
+    </div>
+  `;
+
+  benchPlayers.forEach(p => {
+    const fitClass = p.fitness >= 80 ? 'fitness-high' : p.fitness >= 60 ? 'fitness-med' : 'fitness-low';
+    html += `
+      <div class="player-row bench">
+        <span class="jersey-num">${p.num}</span>
+        <span class="pos-badge banco">BANCO</span>
+        <span class="player-name-list">${p.name}</span>
+        <span class="player-overall">${p.ovr}⭐</span>
+        <span class="morale-dot morale-${p.morale}"></span>
+        <div class="fitness-bar-container">
+          <div class="fitness-fill ${fitClass}" style="width:${p.fitness}%"></div>
+        </div>
+      </div>
+    `;
+  });
+
+  list.innerHTML = html;
+}
+
+// Formation chip click
+document.querySelectorAll('.form-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.form-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    renderFormation(chip.dataset.form);
+
+    // Update label
+    const labels = {
+      '4-3-3': '4-3-3 OFENSIVO',
+      '4-4-2': '4-4-2 CLÁSSICO',
+      '4-2-4': '4-2-4 ULTRA-ATAQUE',
+      '3-5-2': '3-5-2 COMPACTO'
+    };
+    document.querySelector('.pitch-form-label').textContent = labels[chip.dataset.form];
+  });
+});
+
+// Init
+buildPitchBg();
+renderFormation('4-3-3');
+renderPlayerList();
+</script>
+</body>
+</html>

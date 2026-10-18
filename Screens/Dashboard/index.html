@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=844, height=390, initial-scale=1.0, user-scalable=no">
+<title>FalaMestre! — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    font-family: 'Press Start 2P', monospace;
+  }
+
+  #crt-cabinet {
+    width: 844px;
+    height: 390px;
+    background: #00381a;
+    position: relative;
+    overflow: hidden;
+    border: 3px solid #111;
+    border-radius: 6px;
+    box-shadow: 0 0 40px rgba(255,223,0,0.12), inset 0 0 0 2px rgba(255,223,0,0.35);
+  }
+
+  /* Scanlines */
+  #crt-cabinet::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent 0px,
+      transparent 2px,
+      rgba(0,0,0,0.18) 2px,
+      rgba(0,0,0,0.18) 4px
+    );
+    z-index: 99;
+    pointer-events: none;
+  }
+
+  /* Vignette */
+  #crt-cabinet::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.65) 100%);
+    z-index: 98;
+    pointer-events: none;
+  }
+
+  /* Film grain overlay */
+  .grain-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 97;
+    pointer-events: none;
+    opacity: 0.04;
+  }
+
+  /* Flicker animation */
+  @keyframes flicker {
+    0%, 95%, 100% { opacity: 1; }
+    96% { opacity: 0.96; }
+    97% { opacity: 1; }
+    98% { opacity: 0.97; }
+  }
+
+  .crt-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    animation: flicker 6s infinite;
+  }
+
+  /* LEFT SIDEBAR */
+  .sidebar {
+    width: 220px;
+    min-width: 220px;
+    height: 100%;
+    background: rgba(0,8,3,0.80);
+    border-right: 1px solid rgba(255,223,0,0.20);
+    display: flex;
+    flex-direction: column;
+    z-index: 10;
+  }
+
+  .sidebar-team {
+    padding: 14px 14px 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid rgba(255,223,0,0.15);
+  }
+
+  .team-badge {
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+    background: #004d23;
+    border: 1px solid rgba(255,223,0,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    image-rendering: pixelated;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .team-badge-art {
+    display: grid;
+    grid-template-columns: repeat(8,4px);
+    grid-template-rows: repeat(8,4px);
+    gap: 0;
+  }
+
+  .team-badge-art span {
+    width: 4px;
+    height: 4px;
+  }
+
+  .team-info .team-name {
+    font-size: 6px;
+    color: #FFDF00;
+    text-shadow: 0 0 8px rgba(255,223,0,0.4);
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+  }
+
+  .team-info .team-league {
+    font-size: 4px;
+    color: #55e0a0;
+    letter-spacing: 0.3px;
+  }
+
+  /* Nav Menu */
+  .nav-menu {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 8px 0;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    height: 44px;
+    padding-left: 16px;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+    text-decoration: none;
+  }
+
+  .nav-item:hover {
+    background: rgba(255,223,0,0.04);
+  }
+
+  .nav-item.active {
+    border-left: 3px solid #FFDF00;
+    background: rgba(255,223,0,0.08);
+  }
+
+  .nav-item .nav-icon {
+    font-size: 16px;
+    width: 22px;
+    text-align: center;
+    line-height: 1;
+  }
+
+  .nav-item .nav-label {
+    font-size: 5px;
+    color: rgba(255,223,0,0.55);
+    letter-spacing: 0.5px;
+  }
+
+  .nav-item.active .nav-label {
+    color: #FFDF00;
+    text-shadow: 0 0 8px rgba(255,223,0,0.4);
+  }
+
+  .nav-item:hover .nav-label {
+    color: rgba(255,223,0,0.8);
+  }
+
+  /* Coin display */
+  .sidebar-coins {
+    padding: 12px;
+    text-align: center;
+    border-top: 1px solid rgba(255,223,0,0.15);
+  }
+
+  .coin-display {
+    font-size: 6px;
+    color: #FFDF00;
+    text-shadow: 0 0 10px #FFDF00, 0 0 22px rgba(255,215,0,0.5);
+    letter-spacing: 0.5px;
+  }
+
+  /* RIGHT CONTENT */
+  .main-content {
+    flex: 1;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,223,0,0.3) transparent;
+  }
+
+  .main-content::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .main-content::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .main-content::-webkit-scrollbar-thumb {
+    background: rgba(255,223,0,0.3);
+    border-radius: 2px;
+  }
+
+  /* Frosted glass card */
+  .glass-card {
+    background: rgba(0,18,8,0.72);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255,223,0,0.30);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+
+  /* SECTION 1 — Next Match */
+  .next-match {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 70px;
+  }
+
+  .match-left {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .match-label {
+    font-size: 4px;
+    color: #55e0a0;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .match-teams {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .match-badge {
+    width: 28px;
+    height: 28px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    background: rgba(0,77,35,0.5);
+    border: 1px solid rgba(255,223,0,0.15);
+  }
+
+  .match-vs {
+    font-size: 6px;
+    color: rgba(255,223,0,0.55);
+  }
+
+  .match-time {
+    font-size: 4px;
+    color: rgba(255,223,0,0.55);
+    letter-spacing: 0.5px;
+  }
+
+  @keyframes pulseGlow {
+    0%, 100% {
+      box-shadow: 0 0 8px rgba(255,223,0,0.4), 0 0 20px rgba(255,223,0,0.15);
+      text-shadow: 0 0 6px rgba(0,0,0,0.3);
+    }
+    50% {
+      box-shadow: 0 0 14px rgba(255,223,0,0.7), 0 0 35px rgba(255,223,0,0.3);
+      text-shadow: 0 0 8px rgba(0,0,0,0.5);
+    }
+  }
+
+  .btn-play {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 6px;
+    height: 38px;
+    padding: 0 18px;
+    background: #FFDF00;
+    color: #00381a;
+    border: 2px solid #FFDF00;
+    border-radius: 5px;
+    cursor: pointer;
+    animation: pulseGlow 2s ease-in-out infinite;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    transition: transform 0.1s;
+  }
+
+  .btn-play:hover {
+    transform: scale(1.05);
+  }
+
+  .btn-play:active {
+    transform: scale(0.97);
+  }
+
+  /* SECTION 2 — Stats Row */
+  .stats-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .stat-card {
+    flex: 1;
+    text-align: center;
+    padding: 8px 6px;
+    min-height: 56px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .stat-value {
+    font-size: 11px;
+    color: #FFDF00;
+    text-shadow: 0 0 10px #FFDF00, 0 0 22px rgba(255,215,0,0.5);
+    letter-spacing: 1px;
+  }
+
+  .stat-label {
+    font-size: 4px;
+    color: #55e0a0;
+    letter-spacing: 1px;
+  }
+
+  /* SECTION 3 — Squad Health */
+  .squad-section {
+    padding-bottom: 8px;
+  }
+
+  .section-title {
+    font-size: 4px;
+    color: #55e0a0;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  .squad-row {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+
+  .player-mini {
+    min-width: 90px;
+    background: rgba(0,77,35,0.3);
+    border: 1px solid rgba(255,223,0,0.15);
+    border-radius: 5px;
+    padding: 6px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .player-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .player-name {
+    font-size: 4px;
+    color: #FFDF00;
+    letter-spacing: 0.3px;
+  }
+
+  .player-pos {
+    font-size: 3px;
+    color: #00381a;
+    background: #55e0a0;
+    padding: 1px 3px;
+    border-radius: 2px;
+    letter-spacing: 0.3px;
+    font-weight: bold;
+  }
+
+  .player-pos.gk { background: #FFA500; }
+  .player-pos.def { background: #3EA0D4; }
+  .player-pos.mid { background: #00A859; }
+  .player-pos.fwd { background: #FF3333; color: #fff; }
+
+  .fitness-bar {
+    height: 4px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 1px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .fitness-fill {
+    height: 100%;
+    border-radius: 1px;
+    transition: width 0.3s;
+  }
+
+  .fitness-fill.green { background: #00A859; }
+  .fitness-fill.orange { background: #FFA500; }
+  .fitness-fill.red { background: #FF3333; }
+
+  .player-injury {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .injury-icon {
+    font-size: 6px;
+    line-height: 1;
+  }
+
+  /* SECTION 4 — Bottom two-column */
+  .bottom-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .bottom-card {
+    flex: 1;
+  }
+
+  .ai-card .ai-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .ai-card .ai-icon {
+    font-size: 14px;
+  }
+
+  .ai-bullets {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 8px;
+  }
+
+  .ai-bullet {
+    font-size: 4px;
+    color: #FFDF00;
+    line-height: 1.6;
+    padding-left: 8px;
+    position: relative;
+  }
+
+  .ai-bullet::before {
+    content: '›';
+    position: absolute;
+    left: 0;
+    color: #55e0a0;
+  }
+
+  .ai-link {
+    font-size: 4px;
+    color: #55e0a0;
+    cursor: pointer;
+    text-decoration: none;
+    letter-spacing: 0.5px;
+  }
+
+  .ai-link:hover {
+    color: #FFDF00;
+    text-shadow: 0 0 6px rgba(255,223,0,0.4);
+  }
+
+  /* Liga table */
+  .liga-table {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .liga-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 4px;
+    border-radius: 3px;
+  }
+
+  .liga-row.highlighted {
+    background: rgba(255,223,0,0.1);
+    border: 1px solid rgba(255,223,0,0.25);
+  }
+
+  .liga-rank {
+    font-size: 4px;
+    color: rgba(255,223,0,0.55);
+    width: 12px;
+    text-align: right;
+  }
+
+  .liga-row.highlighted .liga-rank {
+    color: #FFDF00;
+  }
+
+  .liga-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .liga-name {
+    font-size: 4px;
+    color: rgba(255,223,0,0.55);
+    flex: 1;
+    letter-spacing: 0.3px;
+  }
+
+  .liga-row.highlighted .liga-name {
+    color: #FFDF00;
+    text-shadow: 0 0 6px rgba(255,223,0,0.3);
+  }
+
+  .liga-pts {
+    font-size: 4px;
+    color: rgba(255,223,0,0.55);
+    width: 20px;
+    text-align: right;
+  }
+
+  .liga-row.highlighted .liga-pts {
+    color: #FFDF00;
+  }
+
+  /* Daily reward strip */
+  .reward-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 38px;
+    border: 1px solid rgba(255,223,0,0.35);
+    background: rgba(255,223,0,0.06);
+    padding: 0 12px;
+  }
+
+  .reward-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .reward-streak {
+    font-size: 5px;
+    color: #FFDF00;
+    text-shadow: 0 0 8px rgba(255,223,0,0.4);
+    letter-spacing: 0.5px;
+  }
+
+  .reward-amount {
+    font-size: 5px;
+    color: #FFDF00;
+    text-shadow: 0 0 10px #FFDF00, 0 0 22px rgba(255,215,0,0.5);
+  }
+
+  .btn-reward {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 4px;
+    padding: 6px 12px;
+    background: transparent;
+    color: #FFDF00;
+    border: 1px solid #FFDF00;
+    border-radius: 4px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 0.15s;
+  }
+
+  .btn-reward:hover {
+    background: #FFDF00;
+    color: #00381a;
+  }
+
+  /* Pixel art helper */
+  .px { image-rendering: pixelated; }
+</style>
+</head>
+<body>
+
+<div id="crt-cabinet">
+  <!-- Film grain SVG filter -->
+  <svg class="grain-overlay" width="100%" height="100%">
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="4" stitchTiles="stitch"/>
+    </filter>
+    <rect width="100%" height="100%" filter="url(#grain)" opacity="0.5"/>
+  </svg>
+
+  <div class="crt-content">
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar">
+      <!-- Team Info -->
+      <div class="sidebar-team">
+        <div class="team-badge">
+          <canvas id="badge-canvas" width="32" height="32" class="px"></canvas>
+        </div>
+        <div class="team-info">
+          <div class="team-name">FLAMENGO FC</div>
+          <div class="team-league">SÉRIE D · RD.12/38</div>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <nav class="nav-menu">
+        <a class="nav-item active" href="javascript:void(0)">
+          <span class="nav-icon">⚽</span>
+          <span class="nav-label">JOGO</span>
+        </a>
+        <a class="nav-item" href="javascript:void(0)">
+          <span class="nav-icon">👥</span>
+          <span class="nav-label">ELENCO</span>
+        </a>
+        <a class="nav-item" href="javascript:void(0)">
+          <span class="nav-icon">🏪</span>
+          <span class="nav-label">MERCADO</span>
+        </a>
+        <a class="nav-item" href="javascript:void(0)">
+          <span class="nav-icon">🏆</span>
+          <span class="nav-label">LIGA</span>
+        </a>
+        <a class="nav-item" href="javascript:void(0)">
+          <span class="nav-icon">⚙️</span>
+          <span class="nav-label">MAIS</span>
+        </a>
+      </nav>
+
+      <!-- Coins -->
+      <div class="sidebar-coins">
+        <div class="coin-display">💰 12.500</div>
+      </div>
+    </aside>
+
+    <!-- RIGHT CONTENT -->
+    <main class="main-content">
+
+      <!-- SECTION 1 — Next Match -->
+      <div class="glass-card next-match">
+        <div class="match-left">
+          <div class="match-label">PRÓXIMA PARTIDA</div>
+          <div class="match-teams">
+            <div class="match-badge">🔴</div>
+            <span class="match-vs">VS</span>
+            <div class="match-badge">🔵</div>
+            <span style="font-size:5px;color:#FFDF00;margin-left:4px;">SANTOS</span>
+          </div>
+          <div class="match-time">SÁBADO · 20:00</div>
+        </div>
+        <button class="btn-play">⚡ JOGAR</button>
+      </div>
+
+      <!-- SECTION 2 — Stats Row -->
+      <div class="stats-row">
+        <div class="glass-card stat-card">
+          <div class="stat-value">W7 D3 P2</div>
+          <div class="stat-label">CAMPEONATO</div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-value">#3</div>
+          <div class="stat-label">POSIÇÃO</div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-value">74</div>
+          <div class="stat-label">OVERALL</div>
+        </div>
+      </div>
+
+      <!-- SECTION 3 — Squad Health -->
+      <div class="glass-card squad-section">
+        <div class="section-title">CONDIÇÃO DO ELENCO</div>
+        <div class="squad-row">
+          <div class="player-mini">
+            <div class="player-top">
+              <span class="player-name">GABIGOL</span>
+              <span class="player-pos fwd">ATA</span>
+            </div>
+            <div class="fitness-bar"><div class="fitness-fill green" style="width:92%"></div></div>
+          </div>
+          <div class="player-mini">
+            <div class="player-top">
+              <span class="player-name">ARRASCAETA</span>
+              <span class="player-pos mid">MEI</span>
+            </div>
+            <div class="fitness-bar"><div class="fitness-fill green" style="width:85%"></div></div>
+          </div>
+          <div class="player-mini">
+            <div class="player-top">
+              <span class="player-name">EVERTON R.</span>
+              <span class="player-pos mid">MEI</span>
+            </div>
+            <div class="fitness-bar"><div class="fitness-fill orange" style="width:58%"></div></div>
+          </div>
+          <div class="player-mini">
+            <div class="player-top">
+              <span class="player-name">DAVID LUIZ</span>
+              <span class="player-pos def">ZAG</span>
+            </div>
+            <div class="fitness-bar"><div class="fitness-fill green" style="width:78%"></div></div>
+          </div>
+          <div class="player-mini">
+            <div class="player-top">
+              <div class="player-injury">
+                <span class="player-name">BRUNO H.</span>
+                <span class="injury-icon">❌</span>
+              </div>
+              <span class="player-pos mid">MEI</span>
+            </div>
+            <div class="fitness-bar"><div class="fitness-fill red" style="width:15%"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 4 — Bottom Two Column -->
+      <div class="bottom-row">
+        <!-- AI Insights -->
+        <div class="glass-card bottom-card ai-card">
+          <div class="ai-header">
+            <span class="ai-icon">🤖</span>
+            <span class="section-title" style="margin-bottom:0">IA ASSISTENTE</span>
+          </div>
+          <div class="ai-bullets">
+            <div class="ai-bullet">O adversário joga com 3 zagueiros. Use as pontas!</div>
+            <div class="ai-bullet">Arrascaeta está em forma — escale como titular.</div>
+          </div>
+          <a class="ai-link" href="javascript:void(0)">PERGUNTAR →</a>
+        </div>
+        <!-- Liga Table -->
+        <div class="glass-card bottom-card">
+          <div class="section-title">CLASSIFICAÇÃO</div>
+          <div class="liga-table">
+            <div class="liga-row">
+              <span class="liga-rank">1</span>
+              <span class="liga-dot" style="background:#00A859"></span>
+              <span class="liga-name">PALMEIRAS</span>
+              <span class="liga-pts">28</span>
+            </div>
+            <div class="liga-row">
+              <span class="liga-rank">2</span>
+              <span class="liga-dot" style="background:#FF3333"></span>
+              <span class="liga-name">SÃO PAULO</span>
+              <span class="liga-pts">26</span>
+            </div>
+            <div class="liga-row highlighted">
+              <span class="liga-rank">3</span>
+              <span class="liga-dot" style="background:#FF3333"></span>
+              <span class="liga-name">FLAMENGO</span>
+              <span class="liga-pts">24</span>
+            </div>
+            <div class="liga-row">
+              <span class="liga-rank">4</span>
+              <span class="liga-dot" style="background:#3EA0D4"></span>
+              <span class="liga-name">GRÊMIO</span>
+              <span class="liga-pts">22</span>
+            </div>
+            <div class="liga-row">
+              <span class="liga-rank">5</span>
+              <span class="liga-dot" style="background:#FFA500"></span>
+              <span class="liga-name">SANTOS</span>
+              <span class="liga-pts">20</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAILY REWARD STRIP -->
+      <div class="glass-card reward-strip">
+        <div class="reward-left">
+          <span class="reward-streak">🔥 DIA 7 SEGUIDO</span>
+          <span class="reward-amount">💰 +500</span>
+        </div>
+        <button class="btn-reward">RESGATAR</button>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script>
+  // Draw pixel art team badge
+  const canvas = document.getElementById('badge-canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+
+  const badgeColors = {
+    r: '#CC0000',
+    b: '#111111',
+    g: '#FFDF00',
+    w: '#FFFFFF',
+    t: 'transparent',
+    d: '#880000'
+  };
+
+  const badge = [
+    'ttrrrrtt',
+    'trrrrrrt',
+    'rrrbrrrt',
+    'rrbgbrrt',
+    'rrbgbrrt',
+    'rrrbrrrt',
+    'trrrrrrt',
+    'ttrrrrtt'
+  ];
+
+  const px = 4;
+  badge.forEach((row, y) => {
+    row.split('').forEach((c, x) => {
+      if (c !== 't') {
+        ctx.fillStyle = badgeColors[c];
+        ctx.fillRect(x * px, y * px, px, px);
+      }
+    });
+  });
+
+  // Nav item click handling
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+    });
+  });
+
+  // Reward button interaction
+  const rewardBtn = document.querySelector('.btn-reward');
+  rewardBtn.addEventListener('click', () => {
+    rewardBtn.textContent = '✔ RESGATADO';
+    rewardBtn.style.background = '#00A859';
+    rewardBtn.style.color = '#fff';
+    rewardBtn.style.borderColor = '#00A859';
+    rewardBtn.disabled = true;
+
+    const coinDisplay = document.querySelector('.coin-display');
+    coinDisplay.textContent = '💰 13.000';
+    coinDisplay.style.transition = 'transform 0.2s';
+    coinDisplay.style.transform = 'scale(1.2)';
+    setTimeout(() => { coinDisplay.style.transform = 'scale(1)'; }, 300);
+  });
+
+  // Play button interaction
+  const playBtn = document.querySelector('.btn-play');
+  playBtn.addEventListener('click', () => {
+    playBtn.textContent = '⏳ CARREGANDO...';
+    playBtn.style.animation = 'none';
+    setTimeout(() => {
+      playBtn.textContent = '⚡ JOGAR';
+      playBtn.style.animation = 'pulseGlow 2s ease-in-out infinite';
+    }, 2000);
+  });
+</script>
+
+</body>
+</html>

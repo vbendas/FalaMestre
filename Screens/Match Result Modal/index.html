@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FalaMestre! — Resultado da Partida</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Press Start 2P', monospace;
+      overflow: hidden;
+      background: #000;
+      width: 844px;
+      height: 390px;
+      position: relative;
+    }
+
+    /* === PITCH BACKGROUND === */
+    .pitch {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+    .pitch-stripe {
+      height: calc(100% / 8);
+      width: 100%;
+    }
+    .pitch-stripe:nth-child(odd) { background: #006600; }
+    .pitch-stripe:nth-child(even) { background: #008800; }
+
+    .pitch-lines {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+    }
+    .pitch-center-line {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      width: 2px;
+      height: 100%;
+      background: rgba(255,255,255,0.15);
+    }
+    .pitch-center-circle {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 80px;
+      height: 80px;
+      border: 2px solid rgba(255,255,255,0.15);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .pitch-center-dot {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 6px;
+      height: 6px;
+      background: rgba(255,255,255,0.18);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .pitch-box {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 70px;
+      height: 140px;
+      border: 2px solid rgba(255,255,255,0.12);
+    }
+    .pitch-box.left { left: 0; border-left: none; }
+    .pitch-box.right { right: 0; border-right: none; }
+    .pitch-goal {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 60px;
+      border: 2px solid rgba(255,255,255,0.10);
+    }
+    .pitch-goal.left { left: 0; border-left: none; }
+    .pitch-goal.right { right: 0; border-right: none; }
+
+    /* === DARK OVERLAY === */
+    .dark-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 5;
+      animation: overlayFadeIn 0.4s ease-out forwards;
+    }
+    @keyframes overlayFadeIn {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+
+    /* === CRT EFFECTS === */
+    .crt-scanlines {
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent 0px,
+        transparent 2px,
+        rgba(0,0,0,0.18) 2px,
+        rgba(0,0,0,0.18) 4px
+      );
+      z-index: 99;
+      pointer-events: none;
+    }
+    .crt-vignette {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.65) 100%);
+      z-index: 98;
+      pointer-events: none;
+    }
+    .crt-phosphor {
+      position: absolute;
+      inset: 0;
+      box-shadow: inset 0 0 0 2px rgba(255,223,0,0.35);
+      z-index: 100;
+      pointer-events: none;
+    }
+    .crt-flicker {
+      position: absolute;
+      inset: 0;
+      z-index: 97;
+      pointer-events: none;
+      animation: flicker 6s infinite;
+    }
+    @keyframes flicker {
+      0%, 95%, 100% { opacity: 1; }
+      96% { opacity: 0.97; }
+      97% { opacity: 0.99; }
+      98% { opacity: 0.96; }
+    }
+
+    /* Film grain SVG applied via filter */
+    .crt-grain {
+      position: absolute;
+      inset: 0;
+      z-index: 96;
+      pointer-events: none;
+      opacity: 0.04;
+      filter: url(#grain);
+      background: transparent;
+    }
+
+    /* === CONFETTI === */
+    .confetti-container {
+      position: absolute;
+      inset: 0;
+      z-index: 50;
+      pointer-events: none;
+      overflow: hidden;
+      animation: confettiFadeIn 0.6s ease-out 0.3s both;
+    }
+    @keyframes confettiFadeIn {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    .confetti-pixel {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      animation: confettiFall linear infinite;
+    }
+    @keyframes confettiFall {
+      0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+      70% { opacity: 1; }
+      100% { transform: translateY(400px) rotate(720deg); opacity: 0; }
+    }
+
+    /* === MODAL === */
+    .modal-wrapper {
+      position: absolute;
+      inset: 0;
+      z-index: 60;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-card {
+      background: rgba(0,10,5,0.94);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 2px solid #FFDF00;
+      border-radius: 14px;
+      width: 90%;
+      max-width: 360px;
+      padding: 18px 20px 16px;
+      position: relative;
+      max-height: 370px;
+      overflow-y: auto;
+      scrollbar-width: none;
+      animation: modalEntrance 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes modalEntrance {
+      0% {
+        opacity: 0;
+        transform: scale(0.8) translateY(12px);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+    .modal-card::-webkit-scrollbar { display: none; }
+
+    /* === RESULT HEADER === */
+    .result-header {
+      text-align: center;
+      font-size: 13px;
+      color: #FFDF00;
+      text-shadow: 0 0 15px #FFDF00, 0 0 30px rgba(255,215,0,0.6);
+      animation: scalePulse 2s ease-in-out infinite;
+      margin-bottom: 10px;
+      letter-spacing: 2px;
+    }
+    @keyframes scalePulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+    }
+
+    /* === SCORE === */
+    .score-display {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 70px;
+      gap: 12px;
+    }
+    .score-home {
+      font-size: 36px;
+      color: #FFDF00;
+      text-shadow: 0 0 10px #FFDF00, 0 0 22px rgba(255,215,0,0.5);
+    }
+    .score-dash {
+      font-size: 24px;
+      color: rgba(255,223,0,0.55);
+    }
+    .score-away {
+      font-size: 36px;
+      color: rgba(255,255,255,0.60);
+    }
+
+    /* === TEAM NAMES === */
+    .team-names {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      padding: 0 8px;
+    }
+    .team {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .team-badge {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+    .team-badge.home { background: #C62828; border: 2px solid #FFDF00; }
+    .team-badge.away { background: #00A859; border: 2px solid rgba(255,223,0,0.3); }
+    .team-name {
+      font-size: 5px;
+      letter-spacing: 1px;
+    }
+    .team-name.home { color: #FFDF00; }
+    .team-name.away { color: rgba(255,223,0,0.55); }
+
+    /* === SEPARATOR === */
+    .separator {
+      height: 1px;
+      background: #FFDF00;
+      margin: 8px 0;
+      opacity: 0.6;
+    }
+
+    /* === STATS TABLE === */
+    .stats-table {
+      width: 100%;
+      margin-bottom: 8px;
+    }
+    .stat-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 24px;
+      border-bottom: 1px solid rgba(255,223,0,0.20);
+    }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-val {
+      font-size: 5px;
+      min-width: 42px;
+      text-align: center;
+    }
+    .stat-val.home { color: #FFDF00; }
+    .stat-val.away { color: rgba(255,255,255,0.60); }
+    .stat-label {
+      font-size: 4px;
+      color: #55e0a0;
+      text-align: center;
+      flex: 1;
+      letter-spacing: 1px;
+    }
+
+    /* === PLAYER OF MATCH === */
+    .potm-card {
+      background: rgba(0,18,8,0.72);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,223,0,0.30);
+      border-radius: 8px;
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .potm-jersey {
+      width: 36px;
+      height: 36px;
+      border: 2px solid #FFDF00;
+      border-radius: 4px;
+      background: #004d23;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .jersey-pixel-art {
+      image-rendering: pixelated;
+    }
+    .potm-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .potm-label {
+      font-size: 4px;
+      color: #55e0a0;
+      letter-spacing: 1px;
+      margin-bottom: 3px;
+    }
+    .potm-name {
+      font-size: 7px;
+      color: #FFDF00;
+      margin-bottom: 3px;
+      text-shadow: 0 0 8px rgba(255,223,0,0.4);
+    }
+    .potm-stats {
+      font-size: 5px;
+      color: rgba(255,255,255,0.75);
+    }
+    .potm-rating {
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .potm-star {
+      font-size: 6px;
+      color: #FFDF00;
+      display: block;
+      margin-bottom: 2px;
+    }
+    .potm-rating-val {
+      font-size: 8px;
+      color: #FFDF00;
+      text-shadow: 0 0 10px #FFDF00;
+    }
+
+    /* === REWARDS === */
+    .rewards {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .reward-coins {
+      font-size: 6px;
+      color: #FFDF00;
+      text-shadow: 0 0 10px #FFDF00, 0 0 22px rgba(255,215,0,0.5);
+      margin-bottom: 4px;
+    }
+    .reward-points {
+      font-size: 5px;
+      color: #55e0a0;
+    }
+
+    /* === BUTTONS === */
+    .buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .btn-primary {
+      width: 100%;
+      height: 40px;
+      background: #FFDF00;
+      color: #00381a;
+      border: none;
+      border-radius: 6px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 6px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      animation: btnGlow 2s ease-in-out infinite;
+      transition: all 0.2s;
+    }
+    .btn-primary:hover {
+      transform: scale(1.02);
+      box-shadow: 0 0 20px #FFDF00, 0 0 40px rgba(255,215,0,0.4);
+    }
+    @keyframes btnGlow {
+      0%, 100% { box-shadow: 0 0 8px rgba(255,223,0,0.4); }
+      50% { box-shadow: 0 0 18px rgba(255,223,0,0.7), 0 0 30px rgba(255,223,0,0.3); }
+    }
+    .btn-secondary {
+      width: 100%;
+      height: 32px;
+      background: transparent;
+      color: #FFDF00;
+      border: 1.5px solid #FFDF00;
+      border-radius: 6px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 5px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover {
+      background: #FFDF00;
+      color: #00381a;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SVG Grain Filter -->
+  <svg style="position:absolute;width:0;height:0">
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+    </filter>
+  </svg>
+
+  <!-- PITCH -->
+  <div class="pitch">
+    <div class="pitch-stripe"></div>
+    <div class="pitch-stripe"></div>
+    <div class="pitch-stripe"></div>
+    <div class="pitch-stripe"></div>
+    <div class="pitch-stripe"></div>
+    <div class="pitch-stripe"></div>
+    <div class="pitch-stripe"></div>
+    <div class="pitch-stripe"></div>
+    <div class="pitch-lines">
+      <div class="pitch-center-line"></div>
+      <div class="pitch-center-circle"></div>
+      <div class="pitch-center-dot"></div>
+      <div class="pitch-box left"></div>
+      <div class="pitch-box right"></div>
+      <div class="pitch-goal left"></div>
+      <div class="pitch-goal right"></div>
+    </div>
+  </div>
+
+  <!-- DARK OVERLAY -->
+  <div class="dark-overlay"></div>
+
+  <!-- CONFETTI -->
+  <div class="confetti-container" id="confetti"></div>
+
+  <!-- MODAL -->
+  <div class="modal-wrapper">
+    <div class="modal-card">
+
+      <!-- HEADER -->
+      <div class="result-header">⚽ VITÓRIA! ⚽</div>
+
+      <!-- SCORE -->
+      <div class="score-display">
+        <span class="score-home">3</span>
+        <span class="score-dash">–</span>
+        <span class="score-away">1</span>
+      </div>
+
+      <!-- TEAMS -->
+      <div class="team-names">
+        <div class="team">
+          <div class="team-badge home">
+            <canvas id="badge-home" width="16" height="16" style="image-rendering:pixelated;width:16px;height:16px;"></canvas>
+          </div>
+          <span class="team-name home">FLAMENGO</span>
+        </div>
+        <div class="team">
+          <span class="team-name away">PALMEIRAS</span>
+          <div class="team-badge away">
+            <canvas id="badge-away" width="16" height="16" style="image-rendering:pixelated;width:16px;height:16px;"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="separator"></div>
+
+      <!-- STATS -->
+      <div class="stats-table">
+        <div class="stat-row">
+          <span class="stat-val home">62%</span>
+          <span class="stat-label">POSSE</span>
+          <span class="stat-val away">38%</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-val home">8</span>
+          <span class="stat-label">FINALIZAÇÕES</span>
+          <span class="stat-val away">4</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-val home">5</span>
+          <span class="stat-label">ESCANTEIOS</span>
+          <span class="stat-val away">2</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-val home">1 🟡</span>
+          <span class="stat-label">CARTÕES</span>
+          <span class="stat-val away">2 🟡</span>
+        </div>
+      </div>
+
+      <div class="separator"></div>
+
+      <!-- PLAYER OF THE MATCH -->
+      <div class="potm-card">
+        <div class="potm-jersey">
+          <canvas id="jersey-art" width="28" height="28" style="image-rendering:pixelated;width:28px;height:28px;"></canvas>
+        </div>
+        <div class="potm-info">
+          <div class="potm-label">CRAQUE DA PARTIDA</div>
+          <div class="potm-name">R. NEYMAR</div>
+          <div class="potm-stats">2 GOLS · 1 ASSIST</div>
+        </div>
+        <div class="potm-rating">
+          <span class="potm-star">★</span>
+          <span class="potm-rating-val">9.2</span>
+        </div>
+      </div>
+
+      <!-- REWARDS -->
+      <div class="rewards">
+        <div class="reward-coins">💰 +1.200 ARRECADADOS</div>
+        <div class="reward-points">+3 PONTOS NA CLASSIFICAÇÃO</div>
+      </div>
+
+      <!-- BUTTONS -->
+      <div class="buttons">
+        <button class="btn-primary">PRÓXIMA RODADA →</button>
+        <button class="btn-secondary">REVER PARTIDA</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- CRT LAYERS -->
+  <div class="crt-grain"></div>
+  <div class="crt-flicker"></div>
+  <div class="crt-vignette"></div>
+  <div class="crt-scanlines"></div>
+  <div class="crt-phosphor"></div>
+
+  <script>
+    // === CONFETTI ===
+    const confettiContainer = document.getElementById('confetti');
+    const confettiColors = ['#FFDF00', '#00A859', '#3EA0D4', '#FF3333'];
+
+    function createConfetti() {
+      const el = document.createElement('div');
+      el.className = 'confetti-pixel';
+      el.style.left = Math.random() * 100 + '%';
+      el.style.top = -10 + 'px';
+      el.style.background = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+      el.style.animationDuration = (2 + Math.random() * 3) + 's';
+      el.style.animationDelay = Math.random() * 0.5 + 's';
+      el.style.opacity = 0.7 + Math.random() * 0.3;
+      confettiContainer.appendChild(el);
+      setTimeout(() => el.remove(), 5500);
+    }
+
+    // Initial burst
+    for (let i = 0; i < 40; i++) {
+      setTimeout(() => createConfetti(), i * 60);
+    }
+    // Continuous
+    setInterval(() => {
+      for (let i = 0; i < 3; i++) createConfetti();
+    }, 300);
+
+    // === PIXEL ART: BADGES ===
+    function drawPixelBadge(canvasId, mainColor, accentColor) {
+      const c = document.getElementById(canvasId);
+      const ctx = c.getContext('2d');
+      ctx.imageSmoothingEnabled = false;
+
+      // Simple shield shape
+      const pixels = [
+        [0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0],
+        [0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0],
+        [0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],
+        [1,1,1,2,2,1,1,1,1,1,1,2,2,1,1,1],
+        [1,1,2,2,2,2,1,1,1,1,2,2,2,2,1,1],
+        [1,1,2,2,2,2,1,1,1,1,2,2,2,2,1,1],
+        [1,1,1,2,2,1,1,2,2,1,1,2,2,1,1,1],
+        [1,1,1,1,1,1,2,2,2,2,1,1,1,1,1,1],
+        [1,1,1,1,1,1,2,2,2,2,1,1,1,1,1,1],
+        [1,1,1,2,2,1,1,2,2,1,1,2,2,1,1,1],
+        [0,1,2,2,2,2,1,1,1,1,2,2,2,2,1,0],
+        [0,1,2,2,2,2,1,1,1,1,2,2,2,2,1,0],
+        [0,0,1,2,2,1,1,1,1,1,1,2,2,1,0,0],
+        [0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0],
+        [0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],
+        [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
+      ];
+      const colors = { 0: 'transparent', 1: mainColor, 2: accentColor };
+      for (let y = 0; y < 16; y++) {
+        for (let x = 0; x < 16; x++) {
+          if (pixels[y][x] !== 0) {
+            ctx.fillStyle = colors[pixels[y][x]];
+            ctx.fillRect(x, y, 1, 1);
+          }
+        }
+      }
+    }
+    drawPixelBadge('badge-home', '#C62828', '#111');
+    drawPixelBadge('badge-away', '#00A859', '#fff');
+
+    // === PIXEL ART: JERSEY ===
+    function drawJersey() {
+      const c = document.getElementById('jersey-art');
+      const ctx = c.getContext('2d');
+      ctx.imageSmoothingEnabled = false;
+      const w = 28, h = 28;
+
+      // Jersey shape in red/black stripes (Flamengo style)
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          // Shoulders / sleeves
+          const isTorso = x >= 6 && x <= 21 && y >= 4 && y <= 24;
+          const isSleeve = (y >= 4 && y <= 12) && ((x >= 2 && x < 6) || (x > 21 && x <= 25));
+          const isCollar = y >= 2 && y <= 4 && x >= 10 && x <= 17;
+          const isNeck = y >= 0 && y <= 2 && x >= 12 && x <= 15;
+
+          if (isNeck) {
+            // skin color
+            ctx.fillStyle = '#D4A574';
+            ctx.fillRect(x, y, 1, 1);
+          } else if (isCollar) {
+            ctx.fillStyle = '#222';
+            ctx.fillRect(x, y, 1, 1);
+          } else if (isTorso || isSleeve) {
+            // Flamengo red/black hoops
+            const stripe = Math.floor((y - 4) / 3) % 2;
+            ctx.fillStyle = stripe === 0 ? '#C62828' : '#111';
+            ctx.fillRect(x, y, 1, 1);
+          }
+        }
+      }
+
+      // Number "10"
+      ctx.fillStyle = '#FFDF00';
+      // "1"
+      ctx.fillRect(10, 11, 1, 5);
+      ctx.fillRect(9, 12, 1, 1);
+      ctx.fillRect(9, 16, 3, 1);
+      // "0"
+      ctx.fillRect(14, 11, 3, 1);
+      ctx.fillRect(14, 16, 3, 1);
+      ctx.fillRect(14, 11, 1, 6);
+      ctx.fillRect(16, 11, 1, 6);
+    }
+    drawJersey();
+  </script>
+</body>
+</html>

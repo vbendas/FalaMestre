@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=844, height=390, initial-scale=1.0, user-scalable=no">
+<title>Retro Arcade Football Pre-Match Screen</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg-navy: #00381a;
+    --gold: #FFDF00;
+    --green-accent: #00A859;
+    --cyan: #55e0a0;
+    --card-bg: #004d23;
+    --pitch-dark: #006600;
+    --pitch-light: #008800;
+    --blue-away: #3EA0D4;
+    --red: #FF3333;
+    --orange: #FFA500;
+    --black: #000000;
+    --muted-gold: rgba(255,223,0,0.55);
+    --frost-bg: rgba(0,18,8,0.72);
+    --frost-border: 1px solid rgba(255,223,0,0.30);
+  }
+
+  @keyframes flicker {
+    0%, 95%, 100% { opacity: 1; }
+    96% { opacity: 0.97; }
+    97% { opacity: 0.99; }
+    98% { opacity: 0.96; }
+  }
+
+  @keyframes pulseGlow {
+    0%, 100% {
+      box-shadow: 0 0 8px rgba(255,223,0,0.4), 0 0 20px rgba(255,223,0,0.2), inset 0 0 8px rgba(255,223,0,0.1);
+      text-shadow: 0 0 6px rgba(0,56,26,0.5);
+    }
+    50% {
+      box-shadow: 0 0 16px rgba(255,223,0,0.7), 0 0 40px rgba(255,223,0,0.35), inset 0 0 12px rgba(255,223,0,0.15);
+      text-shadow: 0 0 10px rgba(0,56,26,0.7);
+    }
+  }
+
+  @keyframes vsGlow {
+    0%, 100% { text-shadow: 0 0 15px #FFDF00, 0 0 35px rgba(255,215,0,0.7), 0 0 55px rgba(255,215,0,0.3); }
+    50% { text-shadow: 0 0 20px #FFDF00, 0 0 45px rgba(255,215,0,0.8), 0 0 70px rgba(255,215,0,0.4); }
+  }
+
+  @keyframes grainShift {
+    0% { transform: translate(0,0); }
+    25% { transform: translate(-1px,1px); }
+    50% { transform: translate(1px,-1px); }
+    75% { transform: translate(-1px,-1px); }
+    100% { transform: translate(0,0); }
+  }
+
+  body {
+    font-family: 'Press Start 2P', monospace;
+    background: var(--black);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  .cabinet {
+    width: 844px;
+    height: 390px;
+    background: var(--bg-navy);
+    position: relative;
+    overflow: hidden;
+    animation: flicker 6s infinite;
+    border: 3px solid #000;
+  }
+
+  /* CRT Scanlines */
+  .cabinet::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent 0px,
+      transparent 2px,
+      rgba(0,0,0,0.18) 2px,
+      rgba(0,0,0,0.18) 4px
+    );
+    z-index: 99;
+    pointer-events: none;
+  }
+
+  /* Vignette */
+  .cabinet::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.65) 100%);
+    z-index: 98;
+    pointer-events: none;
+  }
+
+  /* Phosphor border glow */
+  .phosphor-border {
+    position: absolute;
+    inset: 0;
+    box-shadow: inset 0 0 0 2px rgba(255,223,0,0.35);
+    z-index: 100;
+    pointer-events: none;
+  }
+
+  /* Film grain */
+  .grain {
+    position: absolute;
+    inset: 0;
+    z-index: 97;
+    pointer-events: none;
+    opacity: 0.04;
+    animation: grainShift 0.3s steps(4) infinite;
+  }
+
+  .grain svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* SCROLLABLE CONTENT */
+  .screen-content {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+    z-index: 1;
+    scrollbar-width: none;
+  }
+  .screen-content::-webkit-scrollbar { display: none; }
+
+  .inner-wrap {
+    padding: 0 0 12px 0;
+    min-height: 100%;
+  }
+
+  /* VENUE BANNER */
+  .venue-banner {
+    width: 100%;
+    height: 52px;
+    background: var(--frost-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: var(--frost-border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .venue-name {
+    font-size: 6px;
+    color: var(--gold);
+    letter-spacing: 3px;
+    text-shadow: 0 0 10px #FFDF00, 0 0 22px rgba(255,215,0,0.5);
+  }
+
+  .venue-sub {
+    font-size: 5px;
+    color: var(--cyan);
+    margin-top: 6px;
+    letter-spacing: 1.5px;
+  }
+
+  .round-pill {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255,223,0,0.15);
+    border: 1px solid rgba(255,223,0,0.5);
+    border-radius: 10px;
+    padding: 3px 8px;
+    font-size: 4px;
+    color: var(--gold);
+    letter-spacing: 1px;
+  }
+
+  /* TEAM MATCHUP */
+  .matchup {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 24px 10px;
+    gap: 20px;
+  }
+
+  .team-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 120px;
+  }
+
+  .team-badge {
+    width: 64px;
+    height: 64px;
+    image-rendering: pixelated;
+  }
+
+  .team-badge canvas {
+    width: 64px;
+    height: 64px;
+    image-rendering: pixelated;
+  }
+
+  .team-name {
+    font-size: 6px;
+    color: var(--gold);
+    margin-top: 8px;
+    text-shadow: 0 0 8px rgba(255,223,0,0.3);
+    letter-spacing: 1px;
+    text-align: center;
+  }
+
+  .vs-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .star-divider {
+    font-size: 4px;
+    color: var(--gold);
+    opacity: 0.5;
+    letter-spacing: 3px;
+  }
+
+  .vs-text {
+    font-size: 20px;
+    color: var(--gold);
+    animation: vsGlow 2s ease-in-out infinite;
+    line-height: 1;
+  }
+
+  /* MAIN BODY — 2 columns */
+  .body-row {
+    display: flex;
+    gap: 10px;
+    padding: 0 14px;
+    margin-top: 6px;
+  }
+
+  .col-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .col-right {
+    width: 110px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* STATS CARD */
+  .stats-card {
+    background: var(--frost-bg);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: var(--frost-border);
+    border-radius: 8px;
+    padding: 8px 10px;
+  }
+
+  .stats-title {
+    font-size: 5px;
+    color: var(--cyan);
+    text-align: center;
+    letter-spacing: 2px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(255,223,0,0.2);
+    margin-bottom: 6px;
+  }
+
+  .stat-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+    gap: 6px;
+  }
+  .stat-row:last-child { margin-bottom: 0; }
+
+  .stat-val {
+    font-size: 5px;
+    color: var(--gold);
+    min-width: 22px;
+    text-align: center;
+  }
+
+  .stat-val.home { text-align: right; }
+  .stat-val.away { text-align: left; }
+
+  .stat-bar-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .stat-label {
+    font-size: 4px;
+    color: var(--cyan);
+    letter-spacing: 1px;
+    opacity: 0.8;
+  }
+
+  .stat-bar {
+    width: 100%;
+    height: 6px;
+    border-radius: 1px;
+    display: flex;
+    overflow: hidden;
+    background: rgba(0,0,0,0.3);
+  }
+
+  .stat-bar .home-fill {
+    background: var(--green-accent);
+    transition: width 0.6s ease;
+  }
+
+  .stat-bar .away-fill {
+    background: var(--blue-away);
+    transition: width 0.6s ease;
+  }
+
+  /* PREDICTION */
+  .prediction-card {
+    background: var(--frost-bg);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: var(--frost-border);
+    border-radius: 8px;
+    padding: 8px 10px;
+  }
+
+  .pred-label {
+    font-size: 5px;
+    color: var(--cyan);
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+  }
+
+  .pred-bar {
+    width: 100%;
+    height: 14px;
+    border-radius: 4px;
+    display: flex;
+    overflow: hidden;
+    margin-bottom: 4px;
+  }
+
+  .pred-bar .seg-home {
+    background: var(--green-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .pred-bar .seg-draw {
+    background: rgba(255,223,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .pred-bar .seg-away {
+    background: var(--blue-away);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .pred-bar .seg-label {
+    font-size: 4px;
+    color: #fff;
+    text-shadow: 0 0 3px rgba(0,0,0,0.5);
+  }
+
+  .pred-detail {
+    font-size: 4px;
+    color: rgba(255,255,255,0.7);
+    text-align: center;
+    letter-spacing: 0.5px;
+  }
+
+  /* FORMATION PREVIEW */
+  .formation-card {
+    background: var(--frost-bg);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: var(--frost-border);
+    border-radius: 8px;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .formation-label {
+    font-size: 4px;
+    color: var(--cyan);
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+  }
+
+  .mini-pitch {
+    width: 90px;
+    height: 100px;
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .pitch-stripe {
+    width: 100%;
+    height: 20%;
+  }
+
+  .pitch-stripe.dark { background: var(--pitch-dark); }
+  .pitch-stripe.light { background: var(--pitch-light); }
+
+  .pitch-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 4px;
+  }
+
+  .formation-row {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .player-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--gold);
+    border-radius: 50%;
+    box-shadow: 0 0 4px rgba(255,223,0,0.6);
+  }
+
+  .formation-name {
+    font-size: 5px;
+    color: var(--gold);
+    margin-top: 4px;
+    letter-spacing: 1px;
+  }
+
+  /* ACTION BUTTONS */
+  .actions {
+    padding: 8px 14px 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .btn-primary {
+    width: 100%;
+    height: 40px;
+    background: var(--gold);
+    color: var(--bg-navy);
+    border: none;
+    border-radius: 6px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    animation: pulseGlow 2s ease-in-out infinite;
+    transition: transform 0.1s;
+  }
+
+  .btn-primary:hover {
+    transform: scale(1.02);
+  }
+
+  .btn-primary:active {
+    transform: scale(0.98);
+  }
+
+  .btn-secondary {
+    width: 100%;
+    height: 32px;
+    background: transparent;
+    color: var(--muted-gold);
+    border: 1px solid rgba(255,223,0,0.4);
+    border-radius: 6px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 5px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+  }
+
+  .btn-secondary:hover {
+    background: rgba(255,223,0,0.1);
+    color: var(--gold);
+    border-color: var(--gold);
+  }
+
+  /* Stars */
+  .stars { font-size: 5px; letter-spacing: 1px; }
+  .star-on { color: var(--gold); }
+  .star-off { color: rgba(255,223,0,0.2); }
+</style>
+</head>
+<body>
+
+<div class="cabinet" id="cabinet">
+  <!-- CRT Overlays -->
+  <div class="phosphor-border"></div>
+  <div class="grain">
+    <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+      <filter id="noise">
+        <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4" stitchTiles="stitch"/>
+      </filter>
+      <rect width="100%" height="100%" filter="url(#noise)" fill="white"/>
+    </svg>
+  </div>
+
+  <div class="screen-content">
+    <div class="inner-wrap">
+
+      <!-- VENUE BANNER -->
+      <div class="venue-banner">
+        <div class="venue-name">⚽ ESTÁDIO MARACANÃ</div>
+        <div class="venue-sub">RODADA 14 · MANDANTE</div>
+        <div class="round-pill">RD. 14/38</div>
+      </div>
+
+      <!-- TEAM MATCHUP -->
+      <div class="matchup">
+        <div class="team-col">
+          <div class="team-badge">
+            <canvas id="homeBadge" width="64" height="64"></canvas>
+          </div>
+          <div class="team-name">FLAMENGO FC</div>
+        </div>
+        <div class="vs-col">
+          <div class="star-divider">✦ ✦ ✦</div>
+          <div class="vs-text">VS</div>
+          <div class="star-divider">✦ ✦ ✦</div>
+        </div>
+        <div class="team-col">
+          <div class="team-badge">
+            <canvas id="awayBadge" width="64" height="64"></canvas>
+          </div>
+          <div class="team-name">PALMEIRAS</div>
+        </div>
+      </div>
+
+      <!-- BODY: Stats + Formation side by side -->
+      <div class="body-row">
+        <div class="col-left">
+          <!-- STATS COMPARISON -->
+          <div class="stats-card">
+            <div class="stats-title">COMPARAÇÃO</div>
+            <div class="stat-row">
+              <div class="stat-val home">74</div>
+              <div class="stat-bar-wrap">
+                <div class="stat-label">OVERALL</div>
+                <div class="stat-bar">
+                  <div class="home-fill" style="width:51%"></div>
+                  <div class="away-fill" style="width:49%"></div>
+                </div>
+              </div>
+              <div class="stat-val away">71</div>
+            </div>
+            <div class="stat-row">
+              <div class="stat-val home">78</div>
+              <div class="stat-bar-wrap">
+                <div class="stat-label">ATAQUE</div>
+                <div class="stat-bar">
+                  <div class="home-fill" style="width:53%"></div>
+                  <div class="away-fill" style="width:47%"></div>
+                </div>
+              </div>
+              <div class="stat-val away">69</div>
+            </div>
+            <div class="stat-row">
+              <div class="stat-val home">71</div>
+              <div class="stat-bar-wrap">
+                <div class="stat-label">DEFESA</div>
+                <div class="stat-bar">
+                  <div class="home-fill" style="width:49%"></div>
+                  <div class="away-fill" style="width:51%"></div>
+                </div>
+              </div>
+              <div class="stat-val away">74</div>
+            </div>
+            <div class="stat-row">
+              <div class="stat-val home">
+                <span class="stars"><span class="star-on">★★★★</span><span class="star-off">★</span></span>
+              </div>
+              <div class="stat-bar-wrap">
+                <div class="stat-label">FORMA</div>
+                <div class="stat-bar">
+                  <div class="home-fill" style="width:57%"></div>
+                  <div class="away-fill" style="width:43%"></div>
+                </div>
+              </div>
+              <div class="stat-val away">
+                <span class="stars"><span class="star-on">★★★</span><span class="star-off">★★</span></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- PREDICTION -->
+          <div class="prediction-card">
+            <div class="pred-label">PREVISÃO</div>
+            <div class="pred-bar">
+              <div class="seg-home" style="width:55%"><span class="seg-label">55%</span></div>
+              <div class="seg-draw" style="width:20%"><span class="seg-label">20%</span></div>
+              <div class="seg-away" style="width:25%"><span class="seg-label">25%</span></div>
+            </div>
+            <div class="pred-detail">55% VITÓRIA · 20% EMPATE · 25% DERROTA</div>
+          </div>
+        </div>
+
+        <!-- FORMATION -->
+        <div class="col-right">
+          <div class="formation-card">
+            <div class="formation-label">FORMAÇÃO</div>
+            <div class="mini-pitch">
+              <div class="pitch-stripe dark"></div>
+              <div class="pitch-stripe light"></div>
+              <div class="pitch-stripe dark"></div>
+              <div class="pitch-stripe light"></div>
+              <div class="pitch-stripe dark"></div>
+              <div class="pitch-overlay">
+                <!-- 4-3-3 formation -->
+                <div class="formation-row">
+                  <div class="player-dot"></div>
+                  <div class="player-dot"></div>
+                  <div class="player-dot"></div>
+                </div>
+                <div class="formation-row">
+                  <div class="player-dot"></div>
+                  <div class="player-dot"></div>
+                  <div class="player-dot"></div>
+                </div>
+                <div class="formation-row">
+                  <div class="player-dot"></div>
+                  <div class="player-dot"></div>
+                  <div class="player-dot"></div>
+                  <div class="player-dot"></div>
+                </div>
+                <div class="formation-row">
+                  <div class="player-dot" style="background:#00A859;box-shadow:0 0 4px rgba(0,168,89,0.6)"></div>
+                </div>
+              </div>
+            </div>
+            <div class="formation-name">4-3-3</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTIONS -->
+      <div class="actions">
+        <button class="btn-primary">⚡ SIMULAR PARTIDA</button>
+        <button class="btn-secondary">VER ELENCO →</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// --- Pixel Art Badge Renderer ---
+function drawPixelBadge(canvasId, type) {
+  const canvas = document.getElementById(canvasId);
+  const ctx = canvas.getContext('2d');
+  const s = 4; // pixel size
+  ctx.imageSmoothingEnabled = false;
+
+  if (type === 'home') {
+    // Flamengo-style shield: red/black stripes in a shield shape
+    const colors = {
+      bg: '#00381a',
+      outline: '#FFDF00',
+      red: '#CC0000',
+      black: '#1a1a1a',
+      white: '#ffffff',
+      gold: '#FFDF00'
+    };
+
+    // Shield shape
+    const shield = [
+      '..._________...',
+      '.._///////////_..',
+      '._/////////////._',
+      '._/////////////._',
+      '._/////////////._',
+      '._/////////////._',
+      '._/////////////._',
+      '._/////////////._',
+      '._/////////////._',
+      '.._///////////_..',
+      '..._/////////_..',
+      '...._///////._.',
+      '....._/////_...',
+      '......_///._...',
+      '......._/_.....',
+    ];
+
+    // Fill background
+    ctx.fillStyle = colors.bg;
+    ctx.fillRect(0, 0, 64, 64);
+
+    // Draw shield base
+    const shieldPixels = [];
+    for (let y = 0; y < 16; y++) {
+      for (let x = 0; x < 16; x++) {
+        const row = Math.floor(y);
+        const col = Math.floor(x);
+        // Simple shield shape
+        const cx = 8, cy = 6;
+        const dx = Math.abs(x - cx);
+        const dy = y - 2;
+        if (dy >= 0 && dy < 12 && dx < (7 - dy * 0.45)) {
+          shieldPixels.push([x, y]);
+          // Stripes: alternating red and black horizontal
+          if (y % 3 < 2) {
+            ctx.fillStyle = colors.red;
+          } else {
+            ctx.fillStyle = colors.black;
+          }
+          ctx.fillRect(x * s, y * s, s, s);
+        }
+      }
+    }
+
+    // Gold border for shield
+    ctx.strokeStyle = colors.gold;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(8 * s, 2 * s);
+    ctx.lineTo(14 * s, 3 * s);
+    ctx.lineTo(13.5 * s, 10 * s);
+    ctx.lineTo(8 * s, 14 * s);
+    ctx.lineTo(2.5 * s, 10 * s);
+    ctx.lineTo(2 * s, 3 * s);
+    ctx.closePath();
+    ctx.stroke();
+
+    // "F" letter in center
+    ctx.fillStyle = colors.gold;
+    const fx = 6, fy = 5;
+    // F
+    for (let i = 0; i < 5; i++) ctx.fillRect((fx) * s, (fy + i) * s, s, s);
+    ctx.fillRect((fx + 1) * s, fy * s, s, s);
+    ctx.fillRect((fx + 2) * s, fy * s, s, s);
+    ctx.fillRect((fx + 1) * s, (fy + 2) * s, s, s);
+    ctx.fillRect((fx + 2) * s, (fy + 2) * s, s, s);
+
+  } else {
+    // Palmeiras-style: green shield with white stripes
+    const colors = {
+      bg: '#00381a',
+      outline: '#FFDF00',
+      green: '#006B3F',
+      darkGreen: '#004D2C',
+      white: '#ffffff',
+      gold: '#FFDF00'
+    };
+
+    ctx.fillStyle = colors.bg;
+    ctx.fillRect(0, 0, 64, 64);
+
+    // Draw shield
+    for (let y = 0; y < 16; y++) {
+      for (let x = 0; x < 16; x++) {
+        const dx = Math.abs(x - 8);
+        const dy = y - 2;
+        if (dy >= 0 && dy < 12 && dx < (7 - dy * 0.45)) {
+          if ((x + y) % 4 < 2) {
+            ctx.fillStyle = colors.green;
+          } else {
+            ctx.fillStyle = colors.darkGreen;
+          }
+          ctx.fillRect(x * s, y * s, s, s);
+        }
+      }
+    }
+
+    // Border
+    ctx.strokeStyle = colors.gold;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(8 * s, 2 * s);
+    ctx.lineTo(14 * s, 3 * s);
+    ctx.lineTo(13.5 * s, 10 * s);
+    ctx.lineTo(8 * s, 14 * s);
+    ctx.lineTo(2.5 * s, 10 * s);
+    ctx.lineTo(2 * s, 3 * s);
+    ctx.closePath();
+    ctx.stroke();
+
+    // "P" letter
+    ctx.fillStyle = colors.white;
+    const px = 6, py = 5;
+    for (let i = 0; i < 5; i++) ctx.fillRect(px * s, (py + i) * s, s, s);
+    ctx.fillRect((px + 1) * s, py * s, s, s);
+    ctx.fillRect((px + 2) * s, py * s, s, s);
+    ctx.fillRect((px + 2) * s, (py + 1) * s, s, s);
+    ctx.fillRect((px + 1) * s, (py + 2) * s, s, s);
+    ctx.fillRect((px + 2) * s, (py + 2) * s, s, s);
+  }
+}
+
+drawPixelBadge('homeBadge', 'home');
+drawPixelBadge('awayBadge', 'away');
+
+// --- Animated stat bars entrance ---
+document.querySelectorAll('.stat-bar .home-fill, .stat-bar .away-fill').forEach((el, i) => {
+  const target = el.style.width;
+  el.style.width = '0%';
+  setTimeout(() => {
+    el.style.width = target;
+  }, 300 + i * 80);
+});
+
+// --- Button click feedback ---
+document.querySelector('.btn-primary').addEventListener('click', function() {
+  this.textContent = '⚡ SIMULANDO...';
+  this.style.background = '#00A859';
+  setTimeout(() => {
+    this.textContent = '⚡ SIMULAR PARTIDA';
+    this.style.background = '';
+  }, 2000);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FalaMestre! - Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      font-family: 'Press Start 2P', monospace;
+    }
+
+    /* SVG Noise Filter */
+    .noise-svg { position: absolute; width: 0; height: 0; }
+
+    /* CRT Cabinet */
+    .crt-cabinet {
+      width: 844px;
+      height: 390px;
+      background: #000;
+      padding: 5px;
+      border-radius: 14px;
+      position: relative;
+      box-shadow: 0 0 40px rgba(0,0,0,0.9), 0 0 6px rgba(255,223,0,0.1);
+    }
+
+    /* Inner Screen */
+    .crt-screen {
+      width: 100%;
+      height: 100%;
+      background: #00381a;
+      border-radius: 10px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      animation: flicker 6s infinite;
+    }
+
+    @keyframes flicker {
+      0%, 100% { opacity: 1; }
+      48% { opacity: 1; }
+      49% { opacity: 0.97; }
+      50% { opacity: 0.98; }
+      51% { opacity: 0.96; }
+      52% { opacity: 1; }
+      85% { opacity: 1; }
+      86% { opacity: 0.98; }
+      87% { opacity: 1; }
+    }
+
+    /* Scanlines */
+    .crt-screen::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 2px,
+        rgba(0,0,0,0.18) 2px,
+        rgba(0,0,0,0.18) 4px
+      );
+      z-index: 99;
+      pointer-events: none;
+      border-radius: 10px;
+    }
+
+    /* Vignette */
+    .crt-screen::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.65) 100%);
+      z-index: 98;
+      pointer-events: none;
+      border-radius: 10px;
+    }
+
+    /* Phosphor border glow */
+    .phosphor-glow {
+      position: absolute;
+      inset: 0;
+      box-shadow: inset 0 0 0 2px rgba(255,223,0,0.35);
+      z-index: 100;
+      pointer-events: none;
+      border-radius: 10px;
+    }
+
+    /* Film grain */
+    .film-grain {
+      position: absolute;
+      inset: 0;
+      filter: url(#noise);
+      opacity: 0.04;
+      z-index: 97;
+      pointer-events: none;
+      border-radius: 10px;
+    }
+
+    /* LEFT HALF - Pitch */
+    .left-half {
+      width: 420px;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    /* Pitch stripes */
+    .pitch-bg {
+      position: absolute;
+      inset: 0;
+    }
+
+    .pitch-stripe {
+      width: 100%;
+      height: calc(100% / 8);
+    }
+    .pitch-stripe:nth-child(odd) { background: #006600; }
+    .pitch-stripe:nth-child(even) { background: #008800; }
+
+    /* Pitch lines canvas */
+    .pitch-lines {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+    }
+
+    /* Ball canvas */
+    .ball-canvas {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+    }
+
+    /* Logo overlay */
+    .logo-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    .pixel-ball-icon {
+      width: 40px;
+      height: 40px;
+      margin-bottom: 10px;
+      image-rendering: pixelated;
+    }
+
+    .logo-title {
+      font-size: 18px;
+      color: #FFDF00;
+      text-shadow: 0 0 10px #FFDF00, 0 0 22px rgba(255,215,0,0.5);
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    .logo-subtitle {
+      font-size: 5px;
+      color: #55e0a0;
+      letter-spacing: 1.5px;
+      text-align: center;
+    }
+
+    /* RIGHT HALF */
+    .right-half {
+      width: 424px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    /* Auth Card */
+    .auth-card {
+      width: 320px;
+      background: rgba(0,18,8,0.80);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,223,0,0.35);
+      border-radius: 12px;
+      padding: 24px 22px 18px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .welcome-text {
+      font-size: 9px;
+      color: #FFDF00;
+      text-align: center;
+      text-shadow: 0 0 10px #FFDF00, 0 0 22px rgba(255,215,0,0.5);
+      margin-bottom: 18px;
+      letter-spacing: 2px;
+    }
+
+    /* Google Button */
+    .google-btn {
+      width: 100%;
+      height: 40px;
+      background: #00381a;
+      border: 1px solid #FFDF00;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .google-btn:hover {
+      background: #FFDF00;
+    }
+
+    .google-btn:hover .google-btn-text {
+      color: #00381a;
+    }
+
+    .google-btn:hover .google-g path { fill: #00381a; }
+
+    .google-btn-text {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 5.5px;
+      color: #fff;
+      letter-spacing: 0.5px;
+      transition: color 0.2s;
+    }
+
+    .google-g {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Divider */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 14px 0;
+    }
+
+    .divider-line {
+      flex: 1;
+      height: 1px;
+      background: rgba(255,223,0,0.3);
+    }
+
+    .divider-text {
+      font-size: 5px;
+      color: rgba(255,223,0,0.55);
+    }
+
+    /* Email Input */
+    .email-input {
+      width: 100%;
+      height: 36px;
+      background: rgba(255,223,0,0.08);
+      border: 1px solid rgba(255,223,0,0.40);
+      border-radius: 4px;
+      padding: 0 12px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 5.5px;
+      color: #FFDF00;
+      caret-color: #FFDF00;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      margin-bottom: 12px;
+    }
+
+    .email-input::placeholder {
+      color: rgba(255,223,0,0.45);
+    }
+
+    .email-input:focus {
+      border-color: #FFDF00;
+      box-shadow: 0 0 8px rgba(255,223,0,0.25);
+    }
+
+    /* Enter Button */
+    .enter-btn {
+      width: 100%;
+      height: 40px;
+      background: #FFDF00;
+      border: none;
+      border-radius: 6px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 7px;
+      color: #00381a;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: all 0.2s;
+      box-shadow: 0 3px 0 #b89e00, 0 4px 8px rgba(0,0,0,0.4);
+      position: relative;
+      top: 0;
+    }
+
+    .enter-btn:hover {
+      top: 1px;
+      box-shadow: 0 2px 0 #b89e00, 0 3px 6px rgba(0,0,0,0.4);
+      background: #ffe833;
+    }
+
+    .enter-btn:active {
+      top: 3px;
+      box-shadow: 0 0 0 #b89e00, 0 1px 3px rgba(0,0,0,0.4);
+    }
+
+    /* Version */
+    .version-text {
+      font-size: 4px;
+      color: rgba(255,223,0,0.45);
+      text-align: right;
+      margin-top: 12px;
+    }
+
+    /* Pixel stars on pitch */
+    .star {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: rgba(255,255,255,0.15);
+      z-index: 1;
+    }
+
+    /* Responsive scaling */
+    @media (max-width: 860px) or (max-height: 420px) {
+      .crt-cabinet {
+        transform: scale(calc(min(100vw / 860, 100vh / 410)));
+        transform-origin: center center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SVG Noise Filter -->
+  <svg class="noise-svg">
+    <filter id="noise">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" stitchTiles="stitch" />
+      <feColorMatrix type="saturate" values="0" />
+    </filter>
+  </svg>
+
+  <div class="crt-cabinet">
+    <div class="crt-screen">
+
+      <!-- Phosphor Glow -->
+      <div class="phosphor-glow"></div>
+
+      <!-- Film Grain -->
+      <div class="film-grain"></div>
+
+      <!-- LEFT HALF: Pitch -->
+      <div class="left-half">
+        <div class="pitch-bg">
+          <div class="pitch-stripe"></div>
+          <div class="pitch-stripe"></div>
+          <div class="pitch-stripe"></div>
+          <div class="pitch-stripe"></div>
+          <div class="pitch-stripe"></div>
+          <div class="pitch-stripe"></div>
+          <div class="pitch-stripe"></div>
+          <div class="pitch-stripe"></div>
+        </div>
+
+        <canvas class="pitch-lines" id="pitchLines"></canvas>
+        <canvas class="ball-canvas" id="ballCanvas"></canvas>
+
+        <div class="logo-overlay">
+          <canvas class="pixel-ball-icon" id="pixelBall" width="40" height="40"></canvas>
+          <div class="logo-title">FALA<br>MESTRE!</div>
+          <div class="logo-subtitle">O JOGO DE FUTEBOL COM IA</div>
+        </div>
+      </div>
+
+      <!-- RIGHT HALF: Auth -->
+      <div class="right-half">
+        <div class="auth-card">
+          <div class="welcome-text">BEM-VINDO!</div>
+
+          <button class="google-btn" onclick="handleGoogle()">
+            <svg class="google-g" viewBox="0 0 24 24" fill="none">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#FFDF00"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#55e0a0"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FFDF00"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#55e0a0"/>
+            </svg>
+            <span class="google-btn-text">ENTRAR COM GOOGLE</span>
+          </button>
+
+          <div class="divider">
+            <div class="divider-line"></div>
+            <span class="divider-text">ou</span>
+            <div class="divider-line"></div>
+          </div>
+
+          <input type="email" class="email-input" placeholder="SEU EMAIL" />
+
+          <button class="enter-btn" onclick="handleLogin()">ENTRAR</button>
+
+          <div class="version-text">v0.9.0</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Draw pixel football icon
+    const ballCtx = document.getElementById('pixelBall').getContext('2d');
+    ballCtx.imageSmoothingEnabled = false;
+    function drawPixelBall(ctx, x, y, size) {
+      const s = size / 10;
+      ctx.fillStyle = '#fff';
+      // Ball body
+      for (let row = 0; row < 10; row++) {
+        for (let col = 0; col < 10; col++) {
+          const dx = col - 4.5, dy = row - 4.5;
+          if (dx*dx + dy*dy < 22) {
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(x + col * s, y + row * s, s, s);
+          }
+        }
+      }
+      // Pentagon pattern
+      ctx.fillStyle = '#222';
+      const pents = [[4,2],[5,2],[3,4],[4,4],[5,4],[6,4],[4,5],[5,5],[2,6],[3,6],[6,6],[7,6]];
+      pents.forEach(([c, r]) => {
+        ctx.fillRect(x + c * s, y + r * s, s, s);
+      });
+    }
+    drawPixelBall(ballCtx, 0, 0, 40);
+
+    // Draw pitch lines
+    const pitchCanvas = document.getElementById('pitchLines');
+    const leftHalf = pitchCanvas.parentElement;
+    pitchCanvas.width = 420;
+    pitchCanvas.height = 390;
+    const pctx = pitchCanvas.getContext('2d');
+
+    function drawPitchLines() {
+      pctx.clearRect(0, 0, 420, 390);
+      pctx.strokeStyle = 'rgba(255,255,255,0.25)';
+      pctx.lineWidth = 2;
+
+      // Outer boundary
+      pctx.strokeRect(15, 15, 390, 360);
+
+      // Center line
+      pctx.beginPath();
+      pctx.moveTo(210, 15);
+      pctx.lineTo(210, 375);
+      pctx.stroke();
+
+      // Center circle
+      pctx.beginPath();
+      pctx.arc(210, 195, 45, 0, Math.PI * 2);
+      pctx.stroke();
+
+      // Center dot
+      pctx.fillStyle = 'rgba(255,255,255,0.3)';
+      pctx.fillRect(208, 193, 4, 4);
+
+      // Left penalty area
+      pctx.strokeRect(15, 115, 65, 160);
+      // Left goal area
+      pctx.strokeRect(15, 155, 30, 80);
+
+      // Right penalty area
+      pctx.strokeRect(340, 115, 65, 160);
+      // Right goal area
+      pctx.strokeRect(375, 155, 30, 80);
+
+      // Corner arcs
+      const corners = [[15,15],[405,15],[15,375],[405,375]];
+      corners.forEach(([cx, cy]) => {
+        pctx.beginPath();
+        const startAngle = cx < 200 ? (cy < 200 ? 0 : -Math.PI/2) : (cy < 200 ? Math.PI/2 : Math.PI);
+        pctx.arc(cx, cy, 10, startAngle, startAngle + Math.PI/2);
+        pctx.stroke();
+      });
+    }
+    drawPitchLines();
+
+    // Bouncing ball animation
+    const bCanvas = document.getElementById('ballCanvas');
+    bCanvas.width = 420;
+    bCanvas.height = 390;
+    const bctx = bCanvas.getContext('2d');
+    bctx.imageSmoothingEnabled = false;
+
+    let ballX = 60;
+    let ballY = 300;
+    let ballVX = 1.2;
+    let ballVY = -3;
+    const gravity = 0.06;
+    const bounce = 0.72;
+    const groundY = 350;
+    let ballRot = 0;
+
+    function drawSmallBall(x, y) {
+      const size = 8;
+      const s = size / 6;
+      // Shadow
+      bctx.fillStyle = 'rgba(0,0,0,0.3)';
+      bctx.fillRect(x - 3, groundY + 2, 10, 3);
+
+      // Ball
+      for (let row = 0; row < 6; row++) {
+        for (let col = 0; col < 6; col++) {
+          const dx = col - 2.5, dy = row - 2.5;
+          if (dx*dx + dy*dy < 8) {
+            const isPent = (dx*dx + dy*dy < 2.5);
+            bctx.fillStyle = isPent ? '#333' : '#fff';
+            bctx.fillRect(x + col * s, y + row * s, s+0.5, s+0.5);
+          }
+        }
+      }
+    }
+
+    function animateBall() {
+      bctx.clearRect(0, 0, 420, 390);
+
+      ballVY += gravity;
+      ballX += ballVX;
+      ballY += ballVY;
+
+      if (ballY >= groundY) {
+        ballY = groundY;
+        ballVY = -ballVY * bounce;
+        if (Math.abs(ballVY) < 0.5) {
+          ballVY = -3.5;
+        }
+      }
+
+      if (ballX > 400) {
+        ballVX = -Math.abs(ballVX);
+      }
+      if (ballX < 30) {
+        ballVX = Math.abs(ballVX);
+      }
+
+      drawSmallBall(ballX, ballY);
+      requestAnimationFrame(animateBall);
+    }
+    animateBall();
+
+    // ASCII particle effects on pitch
+    const asciiChars = ['.', ':', '+', '/', '1', '7', '-', '*'];
+
+    function createAsciiParticle() {
+      const particle = document.createElement('span');
+      particle.textContent = asciiChars[Math.floor(Math.random() * asciiChars.length)];
+      particle.style.cssText = `
+        position: absolute;
+        font-family: 'Press Start 2P', monospace;
+        font-size: ${2 + Math.random() * 3}px;
+        color: rgba(255,223,0,${0.05 + Math.random() * 0.12});
+        left: ${Math.random() * 420}px;
+        top: ${Math.random() * 390}px;
+        z-index: 4;
+        pointer-events: none;
+        animation: particleFade ${3 + Math.random() * 4}s forwards;
+      `;
+      leftHalf.appendChild(particle);
+      setTimeout(() => particle.remove(), 7000);
+    }
+
+    // Add CSS animation for particles
+    const styleSheet = document.createElement('style');
+    styleSheet.textContent = `
+      @keyframes particleFade {
+        0% { opacity: 0; transform: translateY(0); }
+        20% { opacity: 1; }
+        100% { opacity: 0; transform: translateY(-20px); }
+      }
+    `;
+    document.head.appendChild(styleSheet);
+
+    setInterval(createAsciiParticle, 300);
+
+    // Button handlers
+    function handleGoogle() {
+      const btn = document.querySelector('.google-btn');
+      btn.style.transform = 'scale(0.97)';
+      setTimeout(() => btn.style.transform = '', 150);
+    }
+
+    function handleLogin() {
+      const btn = document.querySelector('.enter-btn');
+      const email = document.querySelector('.email-input').value;
+      if (!email) {
+        document.querySelector('.email-input').style.borderColor = '#FF3333';
+        document.querySelector('.email-input').style.boxShadow = '0 0 8px rgba(255,51,51,0.3)';
+        setTimeout(() => {
+          document.querySelector('.email-input').style.borderColor = 'rgba(255,223,0,0.40)';
+          document.querySelector('.email-input').style.boxShadow = 'none';
+        }, 1200);
+        return;
+      }
+    }
+
+    // Add persistent ASCII texture to pitch
+    function addAsciiTexture() {
+      const container = document.createElement('div');
+      container.style.cssText = `
+        position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden;
+        font-family: 'Press Start 2P', monospace; line-height: 6px; font-size: 3px;
+        color: rgba(255,255,255,0.04);
+      `;
+      let text = '';
+      for (let i = 0; i < 3500; i++) {
+        text += asciiChars[Math.floor(Math.random() * asciiChars.length)];
+        if (i % 70 === 69) text += '\n';
+      }
+      container.textContent = text;
+      container.style.whiteSpace = 'pre';
+      leftHalf.appendChild(container);
+    }
+    addAsciiTexture();
+  </script>
+</body>
+</html>
