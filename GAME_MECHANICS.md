@@ -1,4 +1,4 @@
-# Socios.com Manager - Game Mechanics & Stats
+# Fala Mestre! - Game Mechanics & Stats
 ## Comprehensive Technical Specification
 
 **Version:** 1.0  
@@ -28,7 +28,7 @@
 
 **What Makes Our Game Unique:**
 
-Socios Manager is a text-based football management game powered by AI that simulates running a real football club. Players make strategic decisions through natural conversation, and the game responds with dramatic, realistic outcomes.
+Fala Mestre! is a text-based football management game powered by AI that simulates running a real football club. Players make strategic decisions through natural conversation, and the game responds with dramatic, realistic outcomes.
 
 **Core Gameplay Loop:**
 
@@ -46,7 +46,7 @@ Socios Manager is a text-based football management game powered by AI that simul
 | **Formations** | How you arrange your 11 players (e.g., 4-3-3) | Different formations work better against different opponents |
 | **Virtual Fans** | AI-controlled supporters who react to your decisions | Keep fans happy = better team performance and more money |
 | **Match Simulation** | AI generates realistic match stories with goals, drama | Every match feels unique and exciting |
-| **Socios Points** | In-game currency earned by winning and achieving goals | Spend points to improve team or save for real fan token rewards |
+| **Points** | In-game currency earned by winning and achieving goals | Spend points to improve your team and unlock features |
 | **Morale** | How happy your players and fans are | Happy team = plays better, unhappy = plays worse |
 
 **How Balance Works:**
@@ -61,8 +61,7 @@ Socios Manager is a text-based football management game powered by AI that simul
 1. **Accessible:** Just type what you want to do (no complex menus)
 2. **Quick Sessions:** Play a match in 2-3 minutes
 3. **Strategic Depth:** Master tactics to dominate opponents
-4. **Real Rewards:** Earn actual fan tokens through gameplay
-5. **Always Fresh:** AI ensures no two matches feel the same
+4. **Always Fresh:** AI ensures no two matches feel the same
 
 ---
 
@@ -80,7 +79,6 @@ Socios Manager is a text-based football management game powered by AI that simul
 - Month 2+: Mastery, win 70-75% (PvE)
 
 **Economy Balance:**
-- Time to first fan token voucher: 15-20 hours of gameplay
 - Free vs Premium advantage: ~30% faster progression (not pay-to-win)
 - Points inflation controlled: Rewards scale with difficulty
 
@@ -1463,45 +1461,18 @@ function calculateMatchPoints(
 }
 ```
 
-### 8.2 Token Conversion Economy
+### 8.2 Earning Rates
 
 ```typescript
-const TOKEN_ECONOMY = {
-  points_per_voucher: 10000,
-  voucher_to_fan_token: 1,
-  
+const EARNING_RATES = {
   // Average earning rates
-  casual_player_points_per_hour: 150,     // ~67 hours to voucher
-  regular_player_points_per_hour: 250,    // ~40 hours to voucher
-  hardcore_player_points_per_hour: 400,   // ~25 hours to voucher
-  
+  casual_player_points_per_hour: 150,
+  regular_player_points_per_hour: 250,
+  hardcore_player_points_per_hour: 400,
+
   // Premium boost
   premium_multiplier: 2.0 // Premium earns 2x points
 };
-
-function estimateTimeToToken(
-  playerType: 'casual' | 'regular' | 'hardcore',
-  isPremium: boolean
-): string {
-  const baseRate = TOKEN_ECONOMY[`${playerType}_player_points_per_hour`];
-  const effectiveRate = isPremium ? baseRate * 2 : baseRate;
-  const hoursNeeded = TOKEN_ECONOMY.points_per_voucher / effectiveRate;
-  
-  if (hoursNeeded < 20) {
-    return `~${Math.round(hoursNeeded)} hours of gameplay`;
-  } else if (hoursNeeded < 168) {
-    return `~${Math.round(hoursNeeded / 24)} days of casual play`;
-  } else {
-    return `~${Math.round(hoursNeeded / 168)} weeks of casual play`;
-  }
-}
-
-// Example outputs:
-// Casual free: ~67 hours = ~10 days of 1hr/day play
-// Regular free: ~40 hours = ~6 days of 1hr/day play  
-// Hardcore free: ~25 hours = ~4 days of 1hr/day play
-// Casual premium: ~33 hours = ~5 days
-// Hardcore premium: ~12 hours = ~2 days
 ```
 
 ### 8.3 Anti-Abuse Mechanisms
@@ -1520,8 +1491,7 @@ const ANTI_ABUSE = {
   suspicious_patterns: [
     'match_win_rate_over_95_percent', // Impossibly high win rate
     'identical_match_results',        // Playing same match repeatedly
-    'rapid_account_creation',         // Multiple accounts from same IP
-    'immediate_voucher_redemption'    // Bots redeeming instantly
+    'rapid_account_creation'          // Multiple accounts from same IP
   ],
   
   // Rate limiting
@@ -1909,32 +1879,30 @@ const SEASONAL_REWARDS = {
   
   rewards_by_tier: {
     master: {
-      socios_points: 5000,
+      points: 5000,
       exclusive_badge: 'master_s1',
-      fan_token_bonus: 1,
       title: 'Season 1 Master'
     },
     diamond: {
-      socios_points: 3000,
+      points: 3000,
       exclusive_badge: 'diamond_s1',
-      fan_token_bonus: 0.5,
       title: 'Diamond Manager'
     },
     platinum: {
-      socios_points: 2000,
+      points: 2000,
       exclusive_badge: 'platinum_s1',
       special_kit: true
     },
     gold: {
-      socios_points: 1000,
+      points: 1000,
       exclusive_badge: 'gold_s1'
     },
     silver: {
-      socios_points: 500,
+      points: 500,
       participation_badge: true
     },
     bronze: {
-      socios_points: 250,
+      points: 250,
       participation_badge: true
     }
   },

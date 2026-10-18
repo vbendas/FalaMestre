@@ -160,7 +160,7 @@ src/
 
 ### users
 ```sql
-id (UUID, PK) | email (TEXT) | username (TEXT) | socios_id (TEXT) | 
+id (UUID, PK) | email (TEXT) | username (TEXT) | 
 onboarding_completed (BOOLEAN) | created_at (TIMESTAMP)
 ```
 
@@ -330,17 +330,14 @@ git push origin main
 
 ### Week 5-8: Polish & Scale
 1. Real AI integration
-2. Analytics & clustering
+2. Gameplay analytics
 3. Social features
 4. GDPR compliance
 5. Public launch (1000 users)
 
-### Week 9-12: Monetize & Partner
+### Week 9-12: Grow
 1. Premium features
-2. Socios.com partnership
-3. Club partnerships
-4. Marketing campaign
-5. Scale to 10,000 users
+2. Scale to 10,000 users
 
 ---
 
@@ -355,14 +352,10 @@ git push origin main
 ### Product
 - **Conversational games** are novel and engaging
 - **Brazilian market** is underserved for football management
-- **Fan token angle** is strong differentiator
 - **Low CAC potential** through viral mechanics
 
 ### Business
 - **Speed matters** - faster than traditional development
-- **Data collection** is built-in and valuable
-- **Partnership risk** - don't build assuming Socios deal
-- **Legal review** needed for token rewards
 
 ---
 
@@ -386,7 +379,7 @@ git push origin main
 78' - Gabriel marca!
 
 🏆 Vitória!
-➕ +100 Socios Points
+➕ +100 pontos
 ```
 
 ---

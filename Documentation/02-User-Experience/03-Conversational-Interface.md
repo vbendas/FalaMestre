@@ -19,7 +19,7 @@ last_updated: 2026-03-29
 **Original Concept:** A ChatGPT-style chat that served as the entire game UI.
 
 **Core Philosophy (OLD):**
-> "Chat IS the controller. Natural language IS the interface. Soft training happens through conversation, not marketing."
+> "Chat IS the controller. Natural language IS the interface."
 
 **Why Deprecated:**
 - Mobile-first UX failed with chat-only interface  
@@ -43,18 +43,13 @@ last_updated: 2026-03-29
 
 ---
 
-## Soft Training Impact
+## Progression Phases
 
-The soft-training system was originally designed to work through conversation (phases 1-4 via AI hints). This has been preserved conceptually but shifted to:
+The gameplay unlock phases (predictions, investments, special tournaments) were originally surfaced through AI hints in the chat. They are now reached through dedicated pages:
 
-- **Predictions (Apostas):** Voting 系统 in betting format
-- **Investments (Investir):** Exclusive content access
+- **Predictions (Apostas):** match predictions using virtual in-game currency
+- **Investments (Investir):** in-game investments with daily yields
 - **No longer requires AI conversation**
-
-Players experience the same concepts through:
-1. Making predictions → Voting parallel
-2. Investing in upgrades → Token holder benefits parallel
-3. Accessing exclusive content → VIP experience parallel
 
 ---
 
@@ -81,7 +76,6 @@ Original chat system code exists but is not in use:
 ## Related Documents
 
 - [[03-Interface-Architecture]] - Current design (ALWAYS USE THIS)
-- [[12-Soft-Training-Progression]] - How soft training now works
 
 ---
 

@@ -226,9 +226,7 @@ Used for:
 
 ## Related Documents
 
-- [[04-Soft-Training-Progression]] - Integration with predictions and investments
 - [[02-Onboarding-Flow]] - New user experience
-- [[01-Fan-Token-Integration]] - How soft training maps to real features
 
 ---
 

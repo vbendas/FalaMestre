@@ -2,8 +2,8 @@
 ## "From Zero to Hero: Your Custom Football Team"
 
 **Duration:** 2 minutes 15 seconds  
-**Target Audience:** Socios.com decision makers, investors, casual gamers  
-**Goal:** Showcase team customization, conversational AI, and fan token integration  
+**Target Audience:** Casual gamers and football fans  
+**Goal:** Showcase team customization and conversational AI  
 **Platform:** LinkedIn, YouTube, TikTok (different edits)
 
 ---
@@ -238,7 +238,7 @@
 ### Script (Voiceover)
 > "Manage your team through **everyday conversations**.
 > Ask your AI coach for advice.
-> Earn **Socios Points** with every decision.
+> Earn **points** with every decision.
 > Climb the leaderboards.
 > Build your football empire.
 > **This is Fala Mestre! - The future of football gaming.**"
@@ -248,12 +248,11 @@
 2. AI response appears with strategy
 3. Quick match animation (0:03)
 4. Result: "WIN 2-1" in big bold text
-5. Points earned: "+5 Socios Points"
+5. Points earned: "+5 pontos"
 
 ### On-screen Branding
 - "Fala Mestre! ⚽"
 - "Powered by Claude AI 🤖"
-- "Socios Points Integrated 🏆"
 - "Available now at [website]"
 
 ---
@@ -261,18 +260,16 @@
 ## FINAL SCENE: CALL-TO-ACTION (2:15)
 ### Visuals
 - FalaMestre! logo centers screen
-- Socios.com partnership logo appears
 - "Play Now" button is prominent
 
 ### Script (Voiceover)
-> "**Create your legend. Manage your team. Earn Socios Points.**
+> "**Create your legend. Manage your team. Win the league.**
 > **Fala Mestre!**"
 
 ### On-screen Text
 - "Fala Mestre! 🎮"
 - "Your Football Journey Starts Here"
 - "[Play Now Button]"
-- "Partnerships: Socios.com 🤝"
 
 ### Fade to Black
 - Upbeat stadium sounds continue
@@ -382,7 +379,7 @@
 ## DISTRIBUTION PLAN
 
 ### Launch Platforms
-1. **LinkedIn** (professional audience, Socios.com partners)
+1. **LinkedIn** (professional network)
 2. **YouTube** (long-form, general audience)
 3. **TikTok** (younger demographic, viral potential)
 4. **Instagram** (Reels version, 60-second edit)
@@ -412,11 +409,7 @@
    - Highlight conversational interface
    - Show how natural language works
 
-3. **"Earn Real Rewards"**
-   - Socios Points integration
-   - Fan token ecosystem connection
-
-4. **"No IP Boundaries"**
+3. **"No IP Boundaries"**
    - All original teams and players
    - Your imagination is the only limit
 
@@ -431,7 +424,7 @@
 > "Join thousands of managers. Build your empire. **Create your team today!**"
 
 ### Rewards CTA
-> "Create. Manage. Earn. **Get your Socios Points now!**"
+> "Create. Manage. Win. **Start your first season now!**"
 
 ---
 

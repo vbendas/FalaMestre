@@ -30,10 +30,10 @@ Fala Mestre! development is organized into 5 phases over 12 months, with a clear
 |  PHASE 3: Scale            Weeks 9-12        $5,000              |
 |                    [========] PvP + premium                       |
 |                                                                   |
-|  PHASE 4: Expansion        Months 4-6        (Revenue-funded)    |
+|  PHASE 4: Expansion        Months 4-6        (TBD)               |
 |                            [============]    Real-time + social   |
 |                                                                   |
-|  PHASE 5: Global           Months 7-12       (Revenue-funded)    |
+|  PHASE 5: Global           Months 7-12       (TBD)               |
 |                                        [====================]     |
 |                                        International + esports    |
 +------------------------------------------------------------------+
@@ -89,23 +89,19 @@ Fala Mestre! development is organized into 5 phases over 12 months, with a clear
 
 ### Phase 3: Scale (Weeks 9-12)
 
-**Goal:** Monetization, social features, public launch
+**Goal:** Social features, public launch
 
 | Deliverable | Priority | Week |
 |-------------|----------|------|
 | Premium subscription | P0 | 9 |
 | Payment integration | P0 | 9 |
-| Ad integration | P1 | 9-10 |
 | Friend system | P1 | 10 |
 | PvP matches (async) | P1 | 10-11 |
 | Sharing features | P2 | 11 |
-| Voucher redemption | P0 | 11-12 |
 | Public launch | P0 | 12 |
 
 **Success Criteria:**
-- Revenue generating
 - 10,000+ users
-- Voucher system live
 - Viral coefficient >0.8
 
 ### Phase 4: Expansion (Months 4-6)
@@ -124,7 +120,6 @@ Fala Mestre! development is organized into 5 phases over 12 months, with a clear
 **Success Criteria:**
 - 50,000+ users
 - PvP engagement >30%
-- Monthly revenue >$40,000
 
 ### Phase 5: Global (Months 7-12)
 
@@ -138,7 +133,6 @@ Fala Mestre! development is organized into 5 phases over 12 months, with a clear
 | European leagues | P2 |
 | Esports tournaments | P2 |
 | Streaming integration | P3 |
-| Official partnerships | P1 |
 
 **Success Criteria:**
 - 100,000+ users

@@ -58,7 +58,7 @@ Every evaluation of the Fala Mestre! project (or any similar project) should:
 | A2 | Differentiation | Does the product offer something competitors don't? |
 | A3 | Business Model | Is monetization strategy clear, realistic, and sustainable? |
 | A4 | Value Proposition | Is the core value proposition compelling to the target audience? |
-| A5 | Strategic Alignment | Does the product align with partner/platform goals (e.g., Socios.com)? |
+| A5 | Strategic Alignment | Does the product align with its stated goals and constraints? |
 | A6 | Feasibility | Is the concept technically and operationally achievable with available resources? |
 
 ### B. Architecture & Code Structure (15%)

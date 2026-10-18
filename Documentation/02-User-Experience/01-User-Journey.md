@@ -62,7 +62,7 @@ flowchart LR
 
 > "Wait, you can manage a team just by chatting? That's interesting..."
 > "My friend won't stop talking about this game."
-> "Earn real fan tokens? How does that work?"
+> "I can talk to my assistant coach in Portuguese?"
 
 ### Success Metrics
 
@@ -164,7 +164,7 @@ Que estreia! Seus jogadores mostraram qualidade.
 ⭐ Destaque: Gabigol (2 gols)
 📊 Posse: 58% | Finalizações: 12
 
-Você ganhou: 100 Socios Points! 🎯
+Você ganhou: 100 pontos! 🎯
 
 O que você gostaria de fazer agora?
 1. Jogar outro jogo
@@ -245,12 +245,11 @@ graph TD
 ```
 AI: "🎯 MARCO ALCANÇADO!
 
-Você atingiu 1,000 Socios Points!
+Você atingiu 1,000 pontos!
 
 Isso significa:
-✅ Progresso real em direção a tokens reais
 ✅ Você está jogando como um técnico de verdade
-✅ Mais 9,000 pontos = seu primeiro Fan Token
+✅ Novas opções de treino e torneios a caminho
 
 Próximo objetivo: 2,500 pontos (desbloqueio de conquista)
 
@@ -306,25 +305,6 @@ flowchart TD
 | Slow progress | "2x points speeds things up" | 8% |
 | Friend has premium | Social proof | 10% |
 
-### Token Conversion
-
-```
-AI: "🎟️ PARABÉNS!
-
-Você alcançou 10,000 Socios Points!
-
-Você desbloqueou: 1 FAN TOKEN VOUCHER
-
-Isso pode ser trocado por um token real do seu clube!
-
-Com tokens reais você pode:
-⚽ Votar em decisões do clube
-🎟️ Acesso a experiências exclusivas
-📈 Valor pode aumentar ao longo do tempo
-
-[Resgatar Agora] [Saber Mais] [Continuar Jogando]"
-```
-
 ---
 
 ## Phase 7: Referral
@@ -336,7 +316,7 @@ Com tokens reais você pode:
 | Big win | "Share this victory!" | 50 points |
 | Achievement | "Show your badge!" | 100 points |
 | Tournament win | "You're champion!" | 200 points |
-| Token earned | "You earned real value!" | 500 points (if friend joins) |
+| Season title | "You won the league!" | 500 points (if friend joins) |
 
 ### Referral Flow
 
@@ -361,7 +341,7 @@ Referrer gets ongoing bonus
 
 ```
                      First    First        Streak    First
-                     Match    Win          Bonus     Token
+                     Match    Win          Bonus     Title
                        ↓       ↓             ↓         ↓
 Excitement  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░░░░▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 Engagement  ░░░░░▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
@@ -408,7 +388,6 @@ Seu time ainda está esperando por você."
 - [[00-User-Personas]] - Who our users are
 - [[02-Onboarding-Flow]] - First-time experience details
 - [[01-Gameplay-Loop]] - Core engagement mechanics
-- [[02-Analytics-Clustering]] - User behavior tracking
 
 ---
 

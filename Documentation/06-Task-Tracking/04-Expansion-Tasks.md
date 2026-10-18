@@ -10,7 +10,7 @@ last_updated: 2026-01-19
 
 ## Overview
 
-Detailed task breakdown for Phase 4 (Expansion) and Phase 5 (Global). Total: 120 tasks over 6 months.
+Detailed task breakdown for Phase 4 (Expansion) and Phase 5 (Global). Total: 121 tasks over 6 months.
 
 > [!note] Phases 4-5 Focus
 > Real-time PvP, ranked seasons, guilds, international expansion, and esports.
@@ -219,7 +219,7 @@ Detailed task breakdown for Phase 4 (Expansion) and Phase 5 (Global). Total: 120
 
 ---
 
-## Month 11-12: Esports & Partnerships
+## Month 11-12: Esports
 
 ### Tournament Platform
 
@@ -243,17 +243,6 @@ Detailed task breakdown for Phase 4 (Expansion) and Phase 5 (Global). Total: 120
 | GLB-052 | Integrate with Twitch/YouTube | P2 | 6h | GLB-050 | [ ] |
 | GLB-053 | Create broadcast overlay graphics | P2 | 6h | GLB-050 | [ ] |
 | GLB-054 | Add AI commentary generation | P2 | 8h | GLB-050 | [ ] |
-
-### Official Partnerships
-
-| ID | Task | Priority | Hours | Deps | Status |
-|----|------|----------|-------|------|--------|
-| GLB-055 | Create partnership proposal deck | P1 | 8h | - | [ ] |
-| GLB-056 | Research club licensing requirements | P1 | 6h | - | [ ] |
-| GLB-057 | Build official team badge system | P1 | 4h | GLB-056 | [ ] |
-| GLB-058 | Create club-specific content framework | P1 | 6h | GLB-057 | [ ] |
-| GLB-059 | Implement partnership analytics | P1 | 4h | GLB-058 | [ ] |
-| GLB-060 | Deep Socios.com integration | P0 | 12h | SCL-065 | [ ] |
 
 ---
 
@@ -291,14 +280,14 @@ Months 9-10 (European)
 Estimated: 103 hours
 
 Months 11-12 (Esports)
-[ ] GLB-042 through GLB-060 (19 tasks)
-Estimated: 109 hours
+[ ] GLB-042 through GLB-054 (13 tasks)
+Estimated: 69 hours
 
-PHASE 5 SUBTOTAL: 60 tasks, 311 hours
+PHASE 5 SUBTOTAL: 54 tasks, 271 hours
 
 ===============================
 
-GRAND TOTAL: 127 tasks, 540 hours
+GRAND TOTAL: 121 tasks, 500 hours
 ```
 
 ---
@@ -317,8 +306,8 @@ GRAND TOTAL: 127 tasks, 540 hours
 
 | Priority | Tasks | Hours | Focus |
 |----------|-------|-------|-------|
-| P0 | 28 | 131h | Localization, content |
-| P1 | 24 | 139h | Esports, partnerships |
+| P0 | 27 | 119h | Localization, content |
+| P1 | 19 | 111h | Esports |
 | P2 | 8 | 41h | Advanced streaming |
 
 ---
@@ -424,7 +413,6 @@ GRAND TOTAL: 127 tasks, 540 hours
 | PvP participation | >30% | Yes |
 | Ranked placement | >50% of PvP | No |
 | Guild membership | >20% | No |
-| Revenue | >$40,000/month | Yes |
 
 ### Phase 5 Targets
 
@@ -434,7 +422,6 @@ GRAND TOTAL: 127 tasks, 540 hours
 | International users | >20% | Yes |
 | Languages supported | 3+ | Yes |
 | Leagues available | 10+ | Yes |
-| Revenue | >$100,000/month | Yes |
 
 ---
 
@@ -444,7 +431,6 @@ GRAND TOTAL: 127 tasks, 540 hours
 - [[03-Scale-Tasks]] - Previous phase tasks
 - [[04-Phase-4-Expansion]] - Phase 4 overview
 - [[05-Phase-5-Global]] - Phase 5 overview
-- [[04-Financial-Projections]] - Revenue targets
 
 ---
 

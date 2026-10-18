@@ -1,7 +1,7 @@
 # Phase 3: Scale
 
 ---
-tags: #roadmap #scale #phase-3 #monetization #launch
+tags: #roadmap #scale #phase-3 #launch
 status: complete
 priority: high
 phase: planning
@@ -12,23 +12,22 @@ budget: $5,000
 
 ## Overview
 
-Phase 3 focuses on monetization, social features, and public launch. This phase transforms the product from beta into a sustainable business.
+Phase 3 focuses on premium features, social features, and public launch. Fala Mestre! is a standalone game; it has no crypto or ad-platform integrations.
 
 > [!important] Phase 3 Focus
-> Make money, grow users, build virality.
+> Grow users, build virality.
 
 ---
 
 ## Goals
 
-1. **Revenue generation**: Premium subscriptions and ads
+1. **Premium tier**: Optional premium subscription
 2. **Social features**: Friends, sharing, viral mechanics
-3. **Token integration**: Voucher redemption live
-4. **Public launch**: 10,000+ users
+3. **Public launch**: 10,000+ users
 
 ---
 
-## Week 9: Monetization
+## Week 9: Premium Subscription
 
 ### Day 57-59: Premium Subscription
 
@@ -42,19 +41,6 @@ Tasks:
 [ ] Receipt/invoice system
 
 Deliverable: Premium subscriptions purchasable
-```
-
-### Day 60-63: Ad Integration
-
-```
-Tasks:
-[ ] Rewarded video integration
-[ ] Ad placement strategy
-[ ] Ad-free for premium
-[ ] Daily ad limits
-[ ] Ad analytics
-
-Deliverable: Ads generating revenue
 ```
 
 ---
@@ -89,7 +75,7 @@ Deliverable: Users can challenge friends
 
 ---
 
-## Week 11: Virality & Tokens
+## Week 11: Virality
 
 ### Day 71-73: Sharing Features
 
@@ -102,19 +88,6 @@ Tasks:
 [ ] WhatsApp/Instagram optimization
 
 Deliverable: Viral sharing mechanics live
-```
-
-### Day 74-77: Voucher Redemption
-
-```
-Tasks:
-[ ] Socios.com OAuth integration
-[ ] Voucher claim flow
-[ ] Token selection UI
-[ ] Redemption confirmation
-[ ] Balance sync
-
-Deliverable: Real fan tokens can be claimed
 ```
 
 ---
@@ -155,9 +128,7 @@ Deliverable: Public launch complete
 
 - [ ] Premium subscription (Stripe)
 - [ ] PIX payments
-- [ ] Rewarded video ads
 - [ ] Friend system
-- [ ] Voucher redemption
 - [ ] Share cards
 - [ ] Referral program
 - [ ] Public launch
@@ -167,7 +138,6 @@ Deliverable: Public launch complete
 - [ ] Async PvP
 - [ ] Friend leaderboards
 - [ ] Achievement sharing
-- [ ] Interstitial ads
 
 ### Nice to Have (P2)
 
@@ -185,8 +155,6 @@ Deliverable: Public launch complete
 |---------|---------|
 | Stripe | Payment processing |
 | PIX (via Stripe) | Brazilian instant payments |
-| AdMob/IronSource | Ad mediation |
-| Socios.com API | Token redemption |
 | Branch.io | Deep linking |
 
 ### New API Endpoints
@@ -198,24 +166,11 @@ Deliverable: Public launch complete
 | `/api/friends/add` | POST | Send friend request |
 | `/api/friends/list` | GET | Get friends |
 | `/api/pvp/challenge` | POST | Challenge friend |
-| `/api/rewards/redeem` | POST | Redeem voucher |
 | `/api/share/card` | GET | Generate share card |
 
 ---
 
-## Monetization Model
-
-### Revenue Streams Active
-
-| Stream | Target Month 12 |
-|--------|-----------------|
-| Subscriptions | $10,000/month |
-| Token attribution | $7,000/month |
-| Advertising | $4,000/month |
-| One-time purchases | $2,000/month |
-| **Total** | **$23,000/month** |
-
-### Pricing
+## Pricing
 
 | Product | Price (USD) | Price (BRL) |
 |---------|-------------|-------------|
@@ -234,8 +189,6 @@ Deliverable: Public launch complete
 | Premium conversion | >5% | Yes |
 | D30 retention | >20% | Yes |
 | Viral coefficient | >0.8 | Yes |
-| Revenue | >$5,000 | Yes |
-| Voucher redemptions | 100+ | Yes |
 
 ---
 
@@ -256,13 +209,11 @@ Deliverable: Public launch complete
 
 Phase 3 is complete when:
 
-1. [ ] Subscriptions generating revenue
-2. [ ] Ads live and earning
-3. [ ] Voucher redemption working
-4. [ ] 10,000+ public users
-5. [ ] Viral coefficient >0.8
-6. [ ] Friend system functional
-7. [ ] PvP matches playable
+1. [ ] Premium subscription purchasable
+2. [ ] 10,000+ public users
+3. [ ] Viral coefficient >0.8
+4. [ ] Friend system functional
+5. [ ] PvP matches playable
 
 ---
 
@@ -271,9 +222,7 @@ Phase 3 is complete when:
 - [[02-Phase-2-Enhancement]] - Previous phase
 - [[04-Phase-4-Expansion]] - Next phase
 - [[03-Scale-Tasks]] - Detailed tasks
-- [[00-Monetization]] - Revenue model
-- [[01-Fan-Token-Integration]] - Token system
 
 ---
 
-*"Revenue is oxygen. Without it, the dream dies."*
+*"Ship it, then make it better."*

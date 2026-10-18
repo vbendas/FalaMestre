@@ -148,11 +148,11 @@ if (cached) return cached;
 **2. Tiered AI Models (Week 6)**
 - Match narration: Fast model (cheaper)
 - Conversations: Better model (more expensive)
-- Analytics: Batch processing (cheapest)
+- Background jobs: Batch processing (cheapest)
 
 **3. Batch Processing (Week 7)**
-- Process analytics in batches
-- Use cheaper models for clustering
+- Run non-interactive LLM work in batches
+- Use cheaper models for background tasks
 - Run overnight
 
 **Target:** Get to $0.10-0.20/user/month
@@ -184,15 +184,13 @@ if (cached) return cached;
 ## 📈 ANALYTICS SETUP
 
 ### Week 5: Basic Tracking
-- Mixpanel integration
+- First-party event logging (stored in the app database)
 - Track: session start, match played, points earned
 - Track: user retention (D1, D7, D30)
 
-### Week 6: Behavioral Clustering
-- Intent classification
-- Play style detection
-- Spending pattern analysis
-- Engagement scoring
+### Week 6: Gameplay Insights
+- Intent classification for the chat assistant
+- Aggregate gameplay balance metrics (win rates, economy flow)
 
 ### Week 7: A/B Testing
 - Test different AI personalities
@@ -214,7 +212,6 @@ if (cached) return cached;
 - Terms of service
 - Age verification (18+)
 - Gambling compliance (no real money)
-- Fan token disclaimer
 
 ### Week 10: Security Audit
 - Penetration testing
@@ -224,49 +221,9 @@ if (cached) return cached;
 
 ---
 
-## 🤝 PARTNERSHIP STRATEGY
+## 🧭 PRODUCT DIRECTION
 
-### Option A: Socios.com Partnership (Ideal)
-**Pros:**
-- Real token integration
-- Marketing budget
-- Club licenses
-- Revenue share
-
-**Cons:**
-- Dependent on deal
-- May take months
-- Less control
-
-**Action:** Build MVP → Present data → Negotiate
-
-### Option B: Direct Club Partnerships
-**Pros:**
-- Faster deals
-- More control
-- Authentic content
-
-**Cons:**
-- Limited to 1-2 clubs
-- Smaller scale
-- More complexity
-
-**Action:** Partner with 2-3 clubs for pilot
-
-### Option C: Independent Launch (Fallback)
-**Pros:**
-- Full control
-- Faster to market
-- Can pivot easily
-
-**Cons:**
-- No real tokens
-- Smaller appeal
-- Harder to scale
-
-**Action:** Launch with gamified points, add tokens later
-
-**Recommendation:** Start with Option C, pursue A & B simultaneously
+Fala Mestre! is a standalone game; it has no crypto or ad-platform integrations. Rewards use in-game points and club money only.
 
 ---
 
@@ -328,7 +285,7 @@ Week 5-8:  Beta Polish
   - Goal: 1,000 users
 
 Week 9-12: Scale & Launch
-  - Marketing, partnerships, optimization
+  - Marketing, optimization
   - Budget: $10,000
   - Goal: 10,000 users
 
@@ -389,20 +346,7 @@ Total: 12 weeks, $20,000
 
 **Recommendation:** Start with OpenRouter, switch to Claude if needed
 
-### Decision 2: Token Integration
-**Option A:** Real fan tokens (Socios)
-- Requires partnership
-- Real value for users
-- Regulatory complexity
-
-**Option B:** Gamified points only
-- No partnership needed
-- Simpler legally
-- Can add tokens later
-
-**Recommendation:** Start with gamified points
-
-### Decision 3: Monetization
+### Decision 2: Monetization
 **Option A:** Premium subscription ($4.99/month)
 - No ads
 - 2x points
@@ -413,11 +357,7 @@ Total: 12 weeks, $20,000
 - Cosmetics
 - Energy refills
 
-**Option C:** Fan token commission
-- 10% on token sales
-- Requires partnership
-
-**Recommendation:** A + B, pursue C
+**Recommendation:** A + B
 
 ---
 

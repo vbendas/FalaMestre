@@ -124,7 +124,7 @@ Open [http://localhost:3000](http://localhost:3000) to see the app.
 2. **Chat:** Type "Olá!" or any message to start
 3. **Play Match:** Click the "Jogo" tab and press "JOGAR AGORA"
 4. **View Squad:** Click the "Elenco" tab to see team stats
-5. **Earn Points:** Win matches to earn Socios Points
+5. **Earn Points:** Win matches to earn points
 
 ## API Endpoints
 
@@ -188,7 +188,6 @@ Simulate a football match.
 - `id` (UUID, primary key)
 - `email` (TEXT, unique)
 - `username` (TEXT)
-- `socios_id` (TEXT)
 - `onboarding_completed` (BOOLEAN)
 - `created_at` (TIMESTAMP)
 
@@ -226,9 +225,9 @@ Goal Probability = (Attack / Defense) + Random + Home Advantage
 ```
 
 ### Points System
-- Win: +100 Socios Points, +3 league points
-- Draw: +50 Socios Points, +1 league point
-- Loss: +20 Socios Points, +0 league points
+- Win: +100 points, +3 league points
+- Draw: +50 points, +1 league point
+- Loss: +20 points, +0 league points
 
 ### Teams (Fictional - IP-Safe)
 **User-created teams:** Players create their own team with custom name, colors, and badge
@@ -241,7 +240,7 @@ Goal Probability = (Attack / Defense) + Random + Home Advantage
 - Serra Brava (Red/Orange - Physical, passionate)
 - Estrela do Sul (White/Gold - Technical, elegant)
 
-*Note: Fictional teams eliminate all IP liability. Official club branding available through Socios.com partnership.*
+*Note: Fictional teams avoid using any real club's trademarks.*
 
 ## Next Steps for Production
 
@@ -264,8 +263,7 @@ Goal Probability = (Attack / Defense) + Random + Home Advantage
 - Social sharing
 
 ### 4. Analytics
-- Mixpanel integration
-- Behavioral clustering
+- First-party gameplay analytics (stored in the app database)
 - A/B testing framework
 
 ### 5. Legal & Compliance

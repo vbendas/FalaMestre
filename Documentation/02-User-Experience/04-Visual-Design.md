@@ -28,7 +28,6 @@ Our visual style draws inspiration from:
 | **Duolingo** | Friendly characters, clean UI |
 | **Head Soccer** | Cute player representations |
 | **Kurzgesagt** | Sophisticated flat illustrations |
-| **Socios.com** | Professional sports branding |
 
 ### Core Principles
 

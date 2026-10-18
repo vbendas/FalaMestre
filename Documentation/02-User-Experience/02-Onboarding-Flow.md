@@ -224,15 +224,15 @@ AI: "🎉 VITÓRIA NA ESTREIA!
    2 gols + 1 assistência
 
 💰 RECOMPENSAS GANHAS:
-• +100 Socios Points (vitória)
-• +50 Socios Points (bônus estreia)
-• +25 Socios Points (goleada)
-= 175 Socios Points! 🎯
+• +100 pontos (vitória)
+• +50 pontos (bônus estreia)
+• +25 pontos (goleada)
+= 175 pontos! 🎯
 
 ─────────────────────────────────────
 
-Seu progresso para o primeiro Fan Token:
-[█░░░░░░░░░] 175 / 10,000 (2%)
+Próxima conquista:
+[█░░░░░░░░░] 175 / 1,000 pontos
 
 Continue jogando para ganhar mais!
 
@@ -241,7 +241,7 @@ O que você quer fazer agora?
 [Jogar Outro Jogo]  [Ver Meu Elenco]  [Explorar]"
 ```
 
-**Emotion:** Pride, curiosity about tokens
+**Emotion:** Pride, curiosity about what comes next
 **Metric:** Continue playing: >80%
 
 ### Step 6: Account Creation (After 2-3 matches)
@@ -250,7 +250,7 @@ O que você quer fazer agora?
 AI: "⚠️ SALVAR SEU PROGRESSO
 
 Você já tem:
-• 450 Socios Points
+• 450 pontos
 • 3 vitórias consecutivas
 • Raio em ótima forma
 
@@ -258,7 +258,6 @@ Crie uma conta gratuita para:
 ✅ Salvar seu progresso
 ✅ Jogar em qualquer dispositivo
 ✅ Receber notificações de jogos
-✅ Resgatar tokens no futuro
 
 [Criar Conta com Email]
 [Continuar com Google]
@@ -296,13 +295,6 @@ Crie uma conta gratuita para:
 - Show sharing capability
 - Community aspect visible
 - Social proof elements
-
-#### Crypto Pedro
-
-- Token earning prominent
-- Fair economy explanation
-- Professional presentation
-- Value proposition clear
 
 ### By Entry Point
 
@@ -348,7 +340,7 @@ First time losing:
 💡 "Derrotas acontecem! Tente ajustar sua tática"
 
 First time at 1000 points:
-💡 "Continue assim! 10,000 pontos = 1 Fan Token real"
+💡 "Continue assim! Novas conquistas desbloqueadas"
 ```
 
 ---
@@ -428,8 +420,8 @@ AI: "Precisa de ajuda? 🤔
 Posso explicar:
 1. Como jogar uma partida
 2. Como funciona o elenco
-3. O que são Socios Points
-4. Como ganhar Fan Tokens
+3. Como funcionam os pontos
+4. Como desbloquear torneios especiais
 
 Ou só diga 'jogar' e vamos direto para a ação!"
 ```

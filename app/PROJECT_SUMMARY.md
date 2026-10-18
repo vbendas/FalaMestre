@@ -132,7 +132,7 @@ AI:  "⚽ Vamos lá! Dragões do Cerrado vs Leões do Norte...
 {
   userId: "user_abc123",
   team: "Dragões do Cerrado",
-  sociosPoints: 150,
+  money: 150,
   season: {
     week: 3,
     position: 8,
@@ -270,21 +270,19 @@ git push origin main
 2. **Transfer market** (buy/sell players)
 3. **Training system** (improve attributes)
 4. **Season progression** (league standings)
-5. **Basic analytics** (Mixpanel integration)
+5. **Basic analytics** (first-party, stored in the app database)
 
 ### Medium Term (Weeks 5-8)
 1. **Real AI integration** (OpenRouter with caching)
 2. **GDPR compliance** (consent flow)
 3. **Social features** (share results)
 4. **Leaderboards** (weekly tournaments)
-5. **Fan token integration** (Socios.com API)
 
 ### Long Term (Months 3-6)
 1. **PvP matches** (real-time or async)
-2. **Club partnerships** (official licenses)
-3. **Mobile app** (React Native)
-4. **Voice interaction** (speech-to-text)
-5. **Esports ecosystem** (competitive play)
+2. **Mobile app** (React Native)
+3. **Voice interaction** (speech-to-text)
+4. **Esports ecosystem** (competitive play)
 
 ---
 
@@ -362,14 +360,10 @@ app/
 ### Product
 - **Conversational games** are novel and engaging
 - **Brazilian market** is underserved for football management
-- **Fan token angle** is strong differentiator
 - **Low CAC potential** through viral mechanics
 
 ### Business
 - **Speed matters** - faster than traditional development
-- **Data collection** is built-in and valuable
-- **Partnership risk** - don't build assuming Socios deal
-- **Legal review** needed for token rewards
 
 ---
 
@@ -395,7 +389,7 @@ app/
 78' - Gabriel marca!
 
 🏆 Vitória!
-➕ +100 Socios Points
+➕ +100 pontos
 ```
 
 ---

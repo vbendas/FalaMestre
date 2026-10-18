@@ -38,13 +38,11 @@ Fala Mestre! is a genuinely compelling concept -- "ChatGPT meets Football Manage
 
 - **Exceptional market insight.** The Brazilian football market (70M+ fans, $2.3B gaming market) is massive, passionate, and underserved by conversational game experiences. The documentation in `Documentation/00-Overview/02-Market-Analysis.md` is thorough.
 - **Strong differentiation.** The "ChatGPT meets Football Manager" positioning is unique. No competitor is doing conversational football management in Portuguese.
-- **Clear Socios.com alignment.** The partnership pitch in `PARTNERSHIP_ONE_PAGER.md` is well-articulated. User acquisition funnel for fan tokens is a strong value proposition.
 - **Realistic cost modeling.** The `LLM_STRATEGY.md` shows awareness of AI costs, with a 3-tier approach reducing costs by 96.7% compared to premium models.
-- **Comprehensive business documentation.** 17+ business documents covering monetization, analytics, compliance, and financial projections.
 
 ### Weaknesses
 
-- **Unvalidated assumptions.** The 15-20% token conversion rate and $400-600K Year 1 revenue projections need market validation. No user research or prototype testing data exists yet.
+- **Unvalidated assumptions.** Engagement and retention assumptions need validation. No user research or prototype testing data exists yet.
 - **Single-market dependency.** The concept is deeply tied to Brazilian football culture; internationalization would require significant content redesign.
 
 ### Sub-scores
@@ -53,9 +51,9 @@ Fala Mestre! is a genuinely compelling concept -- "ChatGPT meets Football Manage
 |-----------|-------|-------|
 | A1 Market Opportunity | 5 | Brazil market deeply researched, 70M fan base documented |
 | A2 Differentiation | 5 | Unique concept with no direct competitor |
-| A3 Business Model | 4 | F2P + premium + token conversion well-designed but unvalidated |
-| A4 Value Proposition | 5 | Compelling for both users and Socios.com |
-| A5 Strategic Alignment | 5 | Direct synergy with Socios.com ecosystem |
+| A3 Business Model | 4 | F2P + premium well-designed but unvalidated |
+| A4 Value Proposition | 5 | Compelling for users |
+| A5 Strategic Alignment | 5 | Scored against an earlier strategy that has since been dropped; Fala Mestre! is now a standalone game |
 | A6 Feasibility | 3 | Ambitious scope for the team size; dependency on AI quality is a risk |
 
 ---
@@ -175,7 +173,7 @@ Fala Mestre! is a genuinely compelling concept -- "ChatGPT meets Football Manage
 
 - **AI integration is effectively non-functional.** The real `callAI` is never called (see bug in C above). The mock provides only 4 response patterns (play_match, view_squad, transfer_market, default). There is no actual conversational intelligence.
 
-- **Transfer market is a dead feature.** Clicking "transfer market" produces a mock response mentioning Socios Points, but there is no transfer system, no player market, no buying/selling mechanism.
+- **Transfer market is a dead feature.** Clicking "transfer market" produces a mock response mentioning points, but there is no transfer system, no player market, no buying/selling mechanism.
 
 - **Team selection is hardcoded.** All new users are assigned to Flamengo (`api/conversation/route.ts:30`). The 5-team system exists in `game-engine.ts` and `team-data.ts` but is never exposed to users.
 
@@ -242,7 +240,6 @@ Fala Mestre! is a genuinely compelling concept -- "ChatGPT meets Football Manage
 
 - **Environment variables for secrets.** API keys are stored in `.env` files and not committed to the repo (`.gitignore` includes `.env*`).
 - **Drizzle ORM parameterization.** Queries through Drizzle are parameterized by default, protecting against SQL injection.
-- **GDPR documentation exists.** `Documentation/03-Technical-Architecture/09-GDPR-Compliance.md` shows awareness of data protection requirements.
 
 ### Weaknesses
 
@@ -260,7 +257,7 @@ Fala Mestre! is a genuinely compelling concept -- "ChatGPT meets Football Manage
 
 - **No rate limiting.** API routes can be called unlimited times, enabling:
   - Spam attacks on the conversation endpoint
-  - Rapid match simulation to farm Socios Points
+  - Rapid match simulation to farm points
   - AI API cost abuse (when real AI is enabled)
 
 - **No CORS configuration.** The default Next.js CORS allows any origin to call the API.
@@ -278,7 +275,7 @@ Fala Mestre! is a genuinely compelling concept -- "ChatGPT meets Football Manage
 | F3 Input Validation | 1 | Zero validation on all API inputs |
 | F4 API Security | 1 | No rate limiting, no CORS config, no CSRF |
 | F5 Secrets Management | 3 | Env vars used; .env in gitignore |
-| F6 Data Privacy | 2 | GDPR docs exist but nothing implemented |
+| F6 Data Privacy | 2 | Privacy handling drafted in docs but nothing implemented |
 | F7 SQL Injection / XSS | 3 | ORM parameterizes queries; no XSS review done |
 | F8 Dependency Vulnerabilities | 2 | No `npm audit` in CI; deps are modern but unaudited |
 
@@ -359,7 +356,7 @@ The `package.json` has no `test` script. The documentation mentions Vitest and P
 
 ### Strengths
 
-- **Exceptional volume and quality.** 50+ documentation files in the Obsidian vault covering every aspect of the project from market analysis to GDPR compliance.
+- **Exceptional volume and quality.** 50+ documentation files in the Obsidian vault covering every aspect of the project from market analysis to technical architecture.
 - **Well-organized structure.** The `00-Overview` through `06-Task-Tracking` folder structure follows a logical progression from strategy to execution.
 - **Multiple README files.** `app/README.md` (354 lines), `SETUP.md`, `PROJECT_SUMMARY.md`, `COMPLETION_SUMMARY.md`, and `NEXT_STEPS.md` provide multiple entry points for different audiences.
 - **Technical architecture docs.** System overview, tech stack decisions, database schema, API design, and LLM strategy are all documented.
@@ -371,7 +368,7 @@ The `package.json` has no `test` script. The documentation mentions Vitest and P
 - **No inline code documentation.** Complex functions like `simulateMatch` and `calculateTeamPower` have no JSDoc comments explaining their algorithms.
 - **No contributing guide.** There's no guide for how to contribute code, run tests, or follow coding standards.
 - **Scattered documentation locations.** Docs exist in 3 places: root `/`, `app/`, and `Documentation/`. No single entry point links them all.
-- **Some documentation is aspirational, presented as fact.** Documents like the financial projections read as if validated, but the underlying assumptions haven't been tested.
+- **Some documentation is aspirational, presented as fact.** Some planning documents read as if validated, but the underlying assumptions haven't been tested.
 
 ### Sub-scores
 
@@ -439,7 +436,7 @@ Create a league system where users compete against each other:
 - Weekly league tables based on real match results
 - Head-to-head challenges
 - Chat between managers (trash talk in Portuguese)
-- Leaderboards by Socios Points
+- Leaderboards by points
 - This drives retention and virality without additional AI cost.
 
 ### Idea 4: Voice Input for Brazilian Portuguese

@@ -39,8 +39,8 @@ Fala Mestre! is built on a modern, serverless architecture optimized for rapid d
 |  |  /api/auth/*        - Authentication flows                 |  |
 |  |  /api/game/*        - Game actions & state                 |  |
 |  |  /api/conversation  - AI chat interactions                 |  |
-|  |  /api/rewards/*     - Points & voucher management          |  |
-|  |  /api/analytics/*   - Event tracking                       |  |
+|  |  /api/rewards/*     - In-game points & rewards             |  |
+|  |  /api/analytics/*   - First-party event tracking           |  |
 |  +------------------------------------------------------------+  |
 +------------------------------------------------------------------+
                               |
@@ -50,12 +50,12 @@ Fala Mestre! is built on a modern, serverless architecture optimized for rapid d
 +----------------+  +------------------+  +------------------+
 |   AI SERVICE   |  |    DATABASE      |  |    ANALYTICS     |
 |  +----------+  |  |  +------------+  |  |  +------------+  |
-|  | OpenRouter|  |  |  | Supabase  |  |  |  | Mixpanel   |  |
-|  | (Claude)  |  |  |  | PostgreSQL|  |  |  | LiveRamp   |  |
+|  | OpenRouter|  |  |  | Supabase  |  |  |  | First-party|  |
+|  | (Claude)  |  |  |  | PostgreSQL|  |  |  | events     |  |
 |  +----------+  |  |  +------------+  |  |  +------------+  |
 |                |  |  | Auth       |  |  |                  |
-|  Tier 1: Haiku |  |  | Storage    |  |  | User Clustering |
-|  Tier 2: Sonnet|  |  | Realtime   |  |  | CDP Integration |
+|  Tier 1: Haiku |  |  | Storage    |  |  | Gameplay stats   |
+|  Tier 2: Sonnet|  |  | Realtime   |  |  | (no export)      |
 +----------------+  +------------------+  +------------------+
 ```
 
@@ -85,7 +85,6 @@ Fala Mestre! is built on a modern, serverless architecture optimized for rapid d
 | `/api/game/action` | POST | Execute game action |
 | `/api/conversation` | POST | Send message to AI |
 | `/api/rewards/balance` | GET | Get points balance |
-| `/api/rewards/claim` | POST | Claim voucher |
 
 ### 3. AI Service
 
@@ -93,7 +92,7 @@ Fala Mestre! is built on a modern, serverless architecture optimized for rapid d
 |------|-------|----------|---------|
 | 1 | Claude Haiku | Intent detection, quick responses | <500ms |
 | 2 | Claude Sonnet | Match simulation, negotiations | <2s |
-| 3 | Claude Sonnet+ | User clustering, complex analysis | <5s |
+| 3 | Claude Sonnet+ | Complex narrative / analysis | <5s |
 
 ### 4. Database (Supabase)
 
@@ -104,37 +103,12 @@ Fala Mestre! is built on a modern, serverless architecture optimized for rapid d
 | `players` | Player database (all teams) |
 | `matches` | Match history and results |
 | `conversations` | Chat message history |
-| `rewards` | Points and voucher tracking |
-| `analytics_events` | User behavior events |
+| `rewards` | In-game points and rewards |
+| `analytics_events` | First-party gameplay events |
 
-### 5. Analytics Pipeline
+### 5. Analytics
 
-```
-User Action
-    |
-    v
-+-------------------+
-| Event Capture     | <- Mixpanel SDK
-+-------------------+
-    |
-    v
-+-------------------+
-| Behavioral        | <- Daily batch process
-| Clustering        |    Claude Sonnet
-+-------------------+
-    |
-    v
-+-------------------+
-| CDP Sync          | <- LiveRamp integration
-| (User Segments)   |
-+-------------------+
-    |
-    v
-+-------------------+
-| Ad Platforms      | <- Facebook, Google, TikTok
-| Audience Sync     |
-+-------------------+
-```
+Gameplay events (conversation intent, LLM cost/latency, match results) are written to the `analytics_events` table in the app's own database for debugging and balancing. Nothing is exported to third parties. Fala Mestre! is a standalone game; it has no crypto or ad-platform integrations.
 
 ---
 
@@ -338,7 +312,7 @@ const logEntry = {
 | Error rate | Sentry | >1% |
 | AI response time | Custom | >5000ms |
 | Database queries/sec | Supabase | >80% capacity |
-| Active users | Mixpanel | N/A (tracking) |
+| Active users | Database query | N/A (tracking) |
 
 ### Health Checks
 
@@ -367,7 +341,7 @@ GET /api/health
 | Database | Daily | 30 days | Supabase automatic |
 | User uploads | Real-time | Indefinite | Supabase Storage |
 | Conversation logs | Weekly | 90 days | Export to S3 |
-| Analytics | Daily | 1 year | Mixpanel retention |
+| Analytics events | Daily | 1 year | Database backup |
 
 ### Recovery Procedures
 
@@ -394,10 +368,6 @@ SUPABASE_SERVICE_ROLE_KEY=xxx
 
 # AI
 OPENROUTER_API_KEY=xxx
-
-# Analytics
-NEXT_PUBLIC_MIXPANEL_TOKEN=xxx
-LIVERAMP_API_KEY=xxx
 
 # Payments (Future)
 STRIPE_SECRET_KEY=xxx

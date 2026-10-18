@@ -83,7 +83,7 @@ Each player has FIFA-style attributes (50-99 range):
 - **Opponents:** 6 fictional teams (Leões do Norte, Falcões de Aço, Trovão FC, Maré Alta, Serra Brava, Estrela do Sul)
 
 ### Points System
-**Socios Points (in-game currency):**
+**Points (in-game currency):**
 - Win: +100 points
 - Draw: +50 points
 - Loss: +20 points
@@ -110,7 +110,6 @@ Each player has FIFA-style attributes (50-99 range):
 - Passionate Brazilian football coach persona
 - Uses emojis for visual appeal
 - Provides 2-4 contextual action options after each message
-- Tracks player behavior patterns (playing style, spending, engagement)
 
 ### Intent Recognition
 The AI understands:
@@ -176,4 +175,4 @@ This game offers a unique blend of **conversational AI** and **football manageme
 
 ## IP Protection Note
 
-This game uses **zero third-party intellectual property**. All teams, player names, and stadiums are either user-created or fictional. This design eliminates all licensing risks and positions official branding as a premium upgrade through Socios.com partnership. See `Documentation/04-Business/19-IP-Protection-Team-Naming-Strategy.md` for details.
+This game uses **zero third-party intellectual property**. All teams, player names, and stadiums are either user-created or fictional. This design avoids licensing real club or player trademarks. See `Documentation/04-Business/19-IP-Protection-Team-Naming-Strategy.md` for details.

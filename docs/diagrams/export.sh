@@ -11,10 +11,6 @@ PNG_DIR="$SCRIPT_DIR/png"
 mkdir -p "$SVG_DIR" "$PNG_DIR"
 
 DIAGRAMS=(
-  "01-platform-overview"
-  "02-data-flow"
-  "03-fan-token-loop"
-  "04-intent-clustering"
   "05-system-architecture"
 )
 

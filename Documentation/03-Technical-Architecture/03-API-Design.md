@@ -15,6 +15,9 @@ The API is built on Next.js API Routes, providing a serverless REST API. All end
 > [!note] API Philosophy
 > Simple, predictable, and well-documented.
 
+> [!note] Implemented routes
+> This page records the original API design. The routes the app actually serves live under `app/src/app/api/`. Fala Mestre! is a standalone game; the API has no crypto or ad-platform endpoints.
+
 ---
 
 ## Base Configuration
@@ -497,22 +500,14 @@ List a player for sale.
 
 ### GET /api/rewards/balance
 
-Get current points balance and progress.
+Get current in-game points balance.
 
 **Response:**
 ```typescript
 {
   success: true,
   data: {
-    sociosPoints: number;
-    vouchersAvailable: number;
-    vouchersClaimed: number;
-    
-    progress: {
-      currentPoints: number;
-      nextVoucherAt: number;
-      percentComplete: number;
-    },
+    points: number;
     
     recentRewards: [
       {
@@ -527,41 +522,12 @@ Get current points balance and progress.
 }
 ```
 
-### POST /api/rewards/claim
-
-Claim a voucher.
-
-**Request:**
-```typescript
-{
-  voucherId?: string;  // Optional, claims first available
-}
-```
-
-**Response:**
-```typescript
-{
-  success: true,
-  data: {
-    voucher: {
-      id: string;
-      code: string;
-      value: "1 Fan Token",
-      expiresAt: string;
-      redeemUrl: string;
-    },
-    remainingBalance: number;
-    vouchersRemaining: number;
-  }
-}
-```
-
 ### GET /api/rewards/history
 
 Get reward history.
 
 **Query Parameters:**
-- `type`: points | voucher | achievement
+- `type`: points | achievement
 - `page`: number
 - `limit`: number
 
@@ -624,7 +590,6 @@ Get user statistics (for profile).
       cleanSheets: number;
       
       totalPointsEarned: number;
-      vouchersClaimed: number;
       
       bestWin: {
         opponent: string;
@@ -687,18 +652,6 @@ X-RateLimit-Limit: 30
 X-RateLimit-Remaining: 25
 X-RateLimit-Reset: 1705579200
 ```
-
----
-
-## Webhooks (Future)
-
-### POST /api/webhooks/socios
-
-Webhook for Socios.com events.
-
-**Events:**
-- `voucher.redeemed` - User redeemed voucher for token
-- `token.transferred` - Token sent to user wallet
 
 ---
 

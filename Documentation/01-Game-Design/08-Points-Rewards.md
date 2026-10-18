@@ -1,7 +1,7 @@
 # Points & Rewards Economy
 
 ---
-tags: #game-design #economy #points #rewards #tokens #mvp
+tags: #game-design #economy #points #rewards #mvp
 status: complete
 priority: critical
 phase: planning
@@ -10,10 +10,10 @@ last_updated: 2026-01-18
 
 ## Overview
 
-The points economy is the bridge between gameplay and real-world value. Players earn Socios Points through gameplay and can convert them to actual Fan Token vouchers.
+The points economy rewards good management. Players earn points through gameplay and spend them on training, scouting, fan engagement and cosmetic items. Points exist only inside the game; Fala Mestre! is a standalone game with no crypto or ad-platform integrations.
 
 > [!important] Core Balance
-> Casual players reach first voucher in ~40-60 hours. Active players in ~25-35 hours. This feels achievable without being too easy.
+> Meaningful unlocks should arrive every few sessions for casual players, without being too easy for active players.
 
 ---
 
@@ -94,31 +94,13 @@ The points economy is the bridge between gameplay and real-world value. Players 
 
 ---
 
-## Token Conversion
+## Earning Rates
 
-### Voucher System
-
-```
-10,000 Socios Points = 1 Fan Token Voucher
-```
-
-### Earning Rates
-
-| Player Type | Points/Hour | Time to Voucher |
-|-------------|-------------|-----------------|
-| Casual | 150-200 | 50-67 hours |
-| Regular | 250-350 | 29-40 hours |
-| Hardcore | 400-500 | 20-25 hours |
-
-### Premium Multiplier
-
-Premium subscribers earn **2x points** on all activities.
-
-| Player Type | Premium Points/Hour | Time to Voucher |
-|-------------|---------------------|-----------------|
-| Casual | 300-400 | 25-33 hours |
-| Regular | 500-700 | 14-20 hours |
-| Hardcore | 800-1000 | 10-12.5 hours |
+| Player Type | Points/Hour |
+|-------------|-------------|
+| Casual | 150-200 |
+| Regular | 250-350 |
+| Hardcore | 400-500 |
 
 ---
 
@@ -203,11 +185,11 @@ To prevent exploitation and maintain economy health:
 
 ### Monthly Projection
 
-| Player Type | Monthly Points | Vouchers/Month |
-|-------------|----------------|----------------|
-| Casual (5hr/week) | 3,000-4,000 | 0.3-0.4 |
-| Regular (10hr/week) | 8,000-12,000 | 0.8-1.2 |
-| Hardcore (20hr/week) | 20,000-30,000 | 2-3 |
+| Player Type | Monthly Points |
+|-------------|----------------|
+| Casual (5hr/week) | 3,000-4,000 |
+| Regular (10hr/week) | 8,000-12,000 |
+| Hardcore (20hr/week) | 20,000-30,000 |
 
 ---
 
@@ -238,7 +220,6 @@ const SUSPICIOUS_PATTERNS = [
   'win_rate_over_95_percent',      // Impossible consistency
   'identical_match_results',        // Bot behavior
   'rapid_account_creation',         // Multi-accounting
-  'immediate_voucher_redemption',   // Automated farming
   'inhuman_reaction_times',         // Script detection
   'same_ip_multiple_accounts'       // IP tracking
 ];
@@ -272,53 +253,12 @@ function checkForAbuse(user: User, action: Action): AbuseCheck {
 
 ---
 
-## Voucher Redemption
-
-### The Redemption Flow
-
-```mermaid
-flowchart TD
-    A[Reach 10K Points] --> B[Voucher Earned!]
-    B --> C{Redeem Now?}
-    C -->|Yes| D[Choose Club Token]
-    C -->|Later| E[Store Voucher]
-    D --> F[Create/Link Socios Account]
-    F --> G[Receive Token]
-    G --> H[Use in Socios.com]
-```
-
-### Redemption Message
-
-```
-AI: "🎉 CONGRATULATIONS!
-
-You've earned 10,000 Socios Points!
-
-You've unlocked: 1 FAN TOKEN VOUCHER 🎟️
-
-This voucher can be redeemed for a REAL fan token 
-from any supported club!
-
-Popular choices:
-⚫🔴 Flamengo ($MENGO)
-⚪⚫ Corinthians ($SCCP)
-🔵⚪ Barcelona ($BAR)
-⚪ Real Madrid (coming soon)
-
-[Redeem Now] [Learn More] [Save for Later]
-
-No pressure - vouchers never expire!"
-```
-
----
-
 ## Premium Benefits
 
 ### Season Pass ($4.99/month)
 
 | Benefit | Description |
 |---------|-------------|
-| 2x Points | Double earning on all activities |
 | No Ads | Remove all advertisements |
 | Exclusive Formations | 3 premium formations |
 | Extra Saves | 3 save slots (vs 1) |
@@ -326,17 +266,8 @@ No pressure - vouchers never expire!"
 | Early Access | New features first |
 | Weekly Bonus | 500 bonus points/week |
 
-### Value Proposition
-
-```
-Without Premium: ~40 hours to first voucher
-With Premium: ~20 hours to first voucher
-
-$4.99/month = faster progression + better experience
-Token value: $5-10+ each
-
-Break-even: Earn 1 extra voucher/month = positive ROI
-```
+> [!note] Status
+> Premium is a design idea only; it is not implemented in the game.
 
 ---
 
@@ -347,9 +278,7 @@ Break-even: Earn 1 extra voucher/month = positive ROI
 | Metric | Healthy Range | Action if Outside |
 |--------|---------------|-------------------|
 | Avg Daily Earn | 150-400 pts | Adjust rewards |
-| Time to Voucher | 30-60 hours | Rebalance |
 | Premium Conversion | 8-15% | Adjust benefits |
-| Voucher Redemption | 60-80% | Improve flow |
 | Economy Inflation | <5%/month | Cap adjustments |
 
 ### Tracking Dashboard
@@ -358,9 +287,6 @@ Break-even: Earn 1 extra voucher/month = positive ROI
 interface EconomyMetrics {
   totalPointsIssued: number;
   totalPointsSpent: number;
-  totalVouchersEarned: number;
-  totalVouchersRedeemed: number;
-  avgTimeToFirstVoucher: number;
   premiumConversionRate: number;
   dailyActiveEarners: number;
   topEarnersCapped: number;  // Hit daily limit
@@ -371,10 +297,7 @@ interface EconomyMetrics {
 
 ## Related Documents
 
-- [[00-Monetization]] - Revenue model
-- [[01-Fan-Token-Integration]] - Token system details
 - [[01-Gameplay-Loop]] - Earning in game loop
-- [[02-Analytics-Clustering]] - Player segmentation
 
 ---
 

@@ -14,8 +14,7 @@ Fala Mestre! operates with **zero third-party intellectual property exposure**. 
 
 1. **Eliminates all IP liability** from clubs, leagues, and players
 2. **Enables immediate launch** without licensing negotiations
-3. **Positions official branding** as premium partnership value for Socios.com
-4. **Demonstrates legal sophistication** to potential investors and partners
+3. **Lets the code and assets be shared openly**, since nothing in them belongs to a club, league or player
 
 ---
 
@@ -26,9 +25,8 @@ Fala Mestre! operates with **zero third-party intellectual property exposure**. 
 Indie games like Brasfoot and Elifoot have used real team names for decades without legal action. However:
 
 - **They operate on tolerance, not legality** — clubs choose not to sue, but legally could at any moment
-- **Scale matters** — small niche audiences vs. our web3/marketing product ambitions
-- **Context matters** — casual indie game vs. commercial fan token marketing platform
-- **Partner expectations** — Socios.com holds official club licensing rights; showing up with bootleg branding undermines our credibility
+- **Public code matters** — club names and badges committed to an open repository would be redistributed with every copy
+- **Clean by default** — avoiding real branding from day one is cheaper than removing it later
 
 **The test courts apply:** *Would a reasonable person identify which club/player is being referenced?*
 
@@ -162,45 +160,14 @@ AI: "Quer adicionar um mascote ao seu escudo?
 
 ---
 
-## The Partnership Selling Point
-
-This IP-clean approach is a **strategic strength**, not a limitation.
-
-### The Pitch to Socios.com
-
-> *"Fala Mestre! ships completely free of third-party IP. We've deliberately avoided using club branding because we respect the licensing model — and that's exactly where your value comes in. With your official club licenses, we can offer:*
-> 
-> - *Real team names, logos, and kits*
-> - *Official player names and likenesses*  
-> - *Real stadiums with authentic atmosphere*
-> 
-> *Official branding becomes a premium upgrade you bring to the partnership. This is how we grow together."*
-
-### What We Bring to the Table
-
-- Complete, playable MVP ready to launch immediately
-- User acquisition engine proven to work without club branding
-- Marketing data capabilities that don't depend on official licenses
-
-### What Socios.com Brings to the Table
-
-- Official club licensing rights
-- Fan token infrastructure and compliance
-- The premium upgrade: official branding
-
-**Synergy:** The game works without them, but thrives with them. That's a partnership, not a dependency.
-
----
-
 ## Comparison with Prior Art
 
 ### Brasfoot / Elifoot Model
 
-| Aspect | Brasfoot Approach | Why It Doesn't Work for Us |
-|--------|-------------------|---------------------------|
-| Scale | Niche indie game | Web3 commercial platform |
-| Monetization | Small donations | Revenue share with Socios.com |
-| Risk tolerance | Can be shut down | Must be legally sound for partnership |
+| Aspect | Brasfoot Approach | Our Approach |
+|--------|-------------------|--------------|
+| Distribution | Closed binary | Public source repository |
+| Risk tolerance | Can be shut down | Must be legally sound to share openly |
 | Legal basis | Tolerance, not legality | Zero IP exposure strategy |
 
 ### PES / eFootball Model
@@ -212,7 +179,7 @@ Konami's Pro Evolution Soccer shipped for years with:
 
 **What happened:** The community created and distributed "option files" that restored real names. Konami stayed legally clean; fans got what they wanted.
 
-**Our version:** Ship with fictional teams. If we later get official licensing (via Socios.com), that's a premium upgrade. Users who love their custom teams can keep them; others can "switch to official."
+**Our version:** Ship with fictional teams and user-created custom teams only. No official branding is planned.
 
 ---
 
@@ -257,15 +224,11 @@ Konami's Pro Evolution Soccer shipped for years with:
 | Trademark infringement | Zero real club names/logos/slangs | None |
 | Image rights violation | Generated fictional player names only | None |
 | Passing off claims | Fictional teams don't resemble real clubs | Low |
-| Partnership credibility | IP-clean approach demonstrates professionalism | N/A |
 
 ---
 
 ## Related Documents
 
-- [[16-Legal-Compliance-FAQ]] — Legal Q&A including IP protection
-- [[15-Socios-Risk-Assessment]] — Risk assessment now reduced due to IP strategy
-- [[01-Fan-Token-Integration]] — Fan token integration architecture
 - [[00-Core-Concept]] — Updated core concept with custom teams
 - [[02-Onboarding-Flow]] — User team creation flow
 
@@ -275,7 +238,7 @@ Konami's Pro Evolution Soccer shipped for years with:
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
-| 2026-02-07 | Adopt zero real IP strategy | Eliminate all liability; position as partnership strength |
+| 2026-02-07 | Adopt zero real IP strategy | Eliminate all liability |
 | 2026-02-07 | Create 6 fictional PvE teams | Provide variety without real club references |
 | 2026-02-07 | User-created custom teams | Player ownership, zero third-party IP |
 | 2026-02-07 | Generated player names only | Avoid image rights violations |
@@ -283,4 +246,4 @@ Konami's Pro Evolution Soccer shipped for years with:
 
 ---
 
-*"We don't compete with clubs for their IP. We compete with boring onboarding experiences for fan attention."*
+*"We don't compete with clubs for their IP. We compete with boring onboarding experiences for players' attention."*

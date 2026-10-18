@@ -10,13 +10,12 @@ last_updated: 2026-01-20
 
 ## Overview
 
-Our tech stack is optimized for rapid development, cost efficiency, and behavioral analytics for lead generation. Every choice prioritizes LLM cost optimization while maintaining quality for presentation to Socios.com.
+Our tech stack is optimized for rapid development and cost efficiency. Every choice prioritizes LLM cost optimization while maintaining response quality. Fala Mestre! is a standalone game; it has no crypto or ad-platform integrations.
 
 > [!note] Selection Criteria
 > 1. LLM cost efficiency (77% reduction target)
-> 2. Session-level data collection (GDPR compliant)
-> 3. Developer productivity
-> 4. Scalability path
+> 2. Developer productivity
+> 3. Scalability path
 
 ---
 
@@ -49,8 +48,7 @@ const techStack = {
     model: "zhipu/glm-4.7",
     tiers: {
       match_narration: "real-time, <500ms latency, temperature 0.8",
-      user_conversation: "personality-focused, <1.5s latency, temperature 0.6",
-      behavioral_clustering: "batch processing, <5s latency, temperature 0.2"
+      user_conversation: "assistant persona, <1.5s latency, temperature 0.6"
     }
   },
   
@@ -62,10 +60,7 @@ const techStack = {
   },
   
   analytics: {
-    product: "Mixpanel",
-    behavioral_tracking: "Session-level (not per-action)",
-    data_export: "CSV/JSON with anonymization",
-    gdpr_compliance: "Granular consent management"
+    product: "First-party analytics_events table (no third-party export)"
   }
 };
 ```
@@ -113,7 +108,7 @@ interface GameState {
   user: {
     id: string;
     team: string;
-    sociosPoints: number;
+    money: number;
   };
   season: {
     week: number;
@@ -222,7 +217,7 @@ export const useGameStore = create<GameStore>((set) => ({
   setGameState: (gameState) => set({ gameState }),
   updatePoints: (points) => set((state) => ({
     gameState: state.gameState 
-      ? { ...state.gameState, user: { ...state.gameState.user, sociosPoints: points }}
+      ? { ...state.gameState, user: { ...state.gameState.user, money: points }}
       : null
   })),
 }));
@@ -265,24 +260,15 @@ const getUser = async (userId: string) => {
 - Lightweight authentication
 - Flexible for custom needs
 - Better than Supabase Auth for this use case
-- Easy GDPR consent management
 
 ```typescript
-// Example: Lucia auth with consent
+// Example: Lucia auth
 import { lucia } from 'lucia';
 import { neon } from '@lucia/neon';
 
 const auth = lucia(neon(process.env.DATABASE_URL!));
 
-const session = await auth.createSession(userId, {
-  attributes: {
-    consents: {
-      essential: true,
-      behavioral_analysis: consentValue,
-      affiliate_sharing: consentValue
-    }
-  }
-});
+const session = await auth.createSession(userId, {});
 ```
 
 ### Vercel KV (Redis)
@@ -349,7 +335,7 @@ const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
 - Via OpenRouter with z.ai direct fallback
 
 ```typescript
-// Three-tier GML-4.7 strategy
+// Two-tier GML-4.7 strategy
 interface GMLStrategy {
   tier1_match_narration: {
     purpose: "real-time match commentary",
@@ -394,52 +380,6 @@ REGISTROS:
 - Seja consistente com o histórico
 - Não invente eventos que não aconteceram
 - Ofereça 2-4 opções de ação quando apropriado
-    `
-  },
-  
-  tier3_behavioral_clustering: {
-    purpose: "user segmentation and lead scoring",
-    temperature: 0.2,
-    maxTokens: 750,
-    latency: "<5s",
-    caching: "weekly_per_user",  // 7 days TTL
-    systemPrompt: `
-Você é um analista comportamental especializado em fãs de futebol brasileiros.
-OBJETIVO:
-Analisar o comportamento do usuário e criar perfil para segmentação.
-
-SAÍDA (JSON apenas):
-{
-  "risk_appetite": 0-100,
-  "competitiveness": 0-100,
-  "crypto_awareness": 0-100,
-  "purchase_intent": 0-100,
-  "social_influence": 0-100,
-  "engagement_level": 0-100,
-  "primary_segment": "string",
-  "is_hot_lead": boolean,
-  "hot_lead_reasons": ["string"],
-  "secondary_traits": {},
-  "team_loyalty_strength": "weak" | "moderate" | "strong",
-  "decision_style": "impulsive" | "analytical" | "balanced"
-}
-
-DADOS A ANALISAR:
-- Frequência de sessões
-- Duração média
-- Estilo tático (agressivo vs defensivo)
-- Menções a crypto/tokens
-- Perguntas sobre tokens
-- Comportamento em derrotas
-- Comportamento em vitórias
-- Compartilhamento social
-- Padrões de decisão
-
-SEGMENTOS POSSÍVEIS:
-- "high_intent_token_buyer" (compra >80, crypto >70, engajamento >top 20%)
-- "warm_crypto_curious" (compra 40-79, crypto 30-69)
-- "social_influencer" (influência social >70)
-- "casual_fan" (baixa intenção, baixo engajamento)
     `
   }
 }
@@ -524,47 +464,7 @@ const cacheStrategy = {
 
 ## Analytics
 
-### Mixpanel
-
-**Why Mixpanel?**
-- Event-based analytics
-- User journey tracking
-- Funnel analysis
-- Retention reports
-
-```typescript
-// Example: Tracking events
-import mixpanel from 'mixpanel-browser';
-
-mixpanel.track('Match Completed', {
-  result: 'win',
-  score: '3-1',
-  opponent: 'Palmeiras',
-  points_earned: 100
-});
-```
-
-### LiveRamp
-
-**Why LiveRamp?**
-- Identity resolution
-- Audience syndication
-- Cross-platform targeting
-- GDPR compliant
-
-```typescript
-// Example: User segment sync
-const userSegment = {
-  user_id: userId,
-  segments: ['high_value', 'tactical_master'],
-  behaviors: {
-    spending_pattern: 'moderate',
-    engagement_level: 'hardcore'
-  }
-};
-
-await syncToLiveRamp(userSegment);
-```
+Gameplay events are stored in the app's own PostgreSQL database (`analytics_events`) and are not sent to third-party analytics or ad platforms.
 
 ---
 
@@ -635,8 +535,7 @@ describe('Match Engine', () => {
 | Supabase | $0 (Free) | $25 (Pro) | $100 |
 | OpenRouter | $50 | $500 | $2,500 |
 | Vercel KV | $0 | $10 | $50 |
-| Mixpanel | $0 | $0 | $100 |
-| **Total** | **$50** | **$555** | **$2,900** |
+| **Total** | **$50** | **$555** | **$2,800** |
 
 ---
 

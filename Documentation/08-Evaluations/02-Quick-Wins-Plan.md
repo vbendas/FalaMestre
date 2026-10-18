@@ -289,9 +289,6 @@ This plan identifies 8 quick-win initiatives broken into 42 actionable tasks. Th
       WIN_POINTS: 3,
       DRAW_POINTS: 1,
       LOSS_POINTS: 0,
-      WIN_SOCIOS_POINTS: 100,
-      DRAW_SOCIOS_POINTS: 50,
-      LOSS_SOCIOS_POINTS: 20,
       SEASON_LENGTH: 38,
       BASE_RATINGS: { GK: 70, DEF: 68, MID: 72, FWD: 75 },
       POSITION_WEIGHTS: { GK: 0.8, DEF: 1.0, MID: 1.1, FWD: 1.2 },
@@ -374,7 +371,7 @@ This plan identifies 8 quick-win initiatives broken into 42 actionable tasks. Th
   - **Option B: Lucia Auth** -- Already mentioned in docs. Lightweight, flexible. Good for custom flows.
   - **Option C: Clerk** -- Hosted auth, minimal code, beautiful UI. Fastest to implement.
 - **Subtasks:**
-  - [ ] 8.1.1 Evaluate each option against requirements (speed to implement, Socios.com integration potential, cost)
+  - [ ] 8.1.1 Evaluate each option against requirements (speed to implement, cost)
   - [ ] 8.1.2 Choose and document the decision
 
 ### Task 8.2: Implement basic auth (Effort: L)

@@ -7,12 +7,12 @@ priority: medium
 phase: planning
 last_updated: 2026-01-18
 timeline: Months 4-6
-budget: Revenue-funded
+budget: TBD
 ---
 
 ## Overview
 
-Phase 4 expands competitive features, deepens social systems, and optimizes for scale. This phase is funded by revenue from previous phases.
+Phase 4 expands competitive features, deepens social systems, and optimizes for scale.
 
 > [!note] Phase 4 Focus
 > Build the competitive ecosystem that keeps users engaged long-term.
@@ -184,7 +184,6 @@ const rtInfrastructure = {
 | PvP engagement | >30% of users | Yes |
 | Ranked participation | >50% of PvP | No |
 | Guild membership | >20% | No |
-| Revenue | >$40,000/month | Yes |
 | Retention D30 | >25% | Yes |
 
 ---
@@ -199,7 +198,7 @@ const rtInfrastructure = {
 
 ---
 
-## Budget (Revenue-Funded)
+## Budget (Estimate)
 
 | Item | Monthly Cost |
 |------|--------------|
@@ -208,9 +207,6 @@ const rtInfrastructure = {
 | Team (part-time) | $3,500 |
 | Marketing | $5,000 |
 | **Total** | **$15,500/month** |
-
-Expected revenue: $30,000-50,000/month
-Net: Profitable
 
 ---
 
@@ -222,9 +218,8 @@ Phase 4 is complete when:
 2. [ ] Ranked seasons running
 3. [ ] 50,000+ active users
 4. [ ] Guild system functional
-5. [ ] Revenue >$40,000/month
-6. [ ] First live event completed
-7. [ ] Anti-cheat effective
+5. [ ] First live event completed
+6. [ ] Anti-cheat effective
 
 ---
 

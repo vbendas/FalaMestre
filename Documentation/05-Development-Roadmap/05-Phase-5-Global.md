@@ -7,12 +7,12 @@ priority: medium
 phase: planning
 last_updated: 2026-01-18
 timeline: Months 7-12
-budget: Revenue-funded
+budget: TBD
 ---
 
 ## Overview
 
-Phase 5 takes Fala Mestre! international, adds major leagues, builds an esports ecosystem, and positions for acquisition.
+Phase 5 takes Fala Mestre! international, adds major leagues and builds an esports ecosystem.
 
 > [!note] Phase 5 Focus
 > From Brazilian hit to global phenomenon.
@@ -24,7 +24,7 @@ Phase 5 takes Fala Mestre! international, adds major leagues, builds an esports 
 1. **International expansion**: Portugal, LATAM, then worldwide
 2. **Major leagues**: European leagues, international teams
 3. **Esports**: Official tournaments with prizes
-4. **Scale**: 100,000+ users, acquisition-ready
+4. **Scale**: 100,000+ users
 
 ---
 
@@ -52,7 +52,6 @@ Tasks:
 [ ] Liga MX teams
 [ ] Argentine Primera teams
 [ ] Regional tournaments
-[ ] Local influencer partnerships
 
 Deliverable: Regional content live
 ```
@@ -90,7 +89,7 @@ Deliverable: English version live
 
 ---
 
-## Month 11-12: Esports & Partnerships
+## Month 11-12: Esports
 
 ### Esports Ecosystem
 
@@ -104,19 +103,6 @@ Tasks:
 [ ] World Championship format
 
 Deliverable: First major tournament
-```
-
-### Official Partnerships
-
-```
-Tasks:
-[ ] Club licensing discussions
-[ ] Socios.com deep integration
-[ ] Streaming platform deals
-[ ] Media partnerships
-[ ] Merchandise licensing
-
-Deliverable: First official partnership signed
 ```
 
 ---
@@ -135,7 +121,6 @@ Deliverable: First official partnership signed
 
 - [ ] Esports prize pools
 - [ ] Streaming integration
-- [ ] Official partnerships
 - [ ] Regional servers
 - [ ] Cross-region play
 
@@ -218,7 +203,6 @@ Deliverable: First official partnership signed
 |--------|--------|----------|
 | Total users | 100,000+ | Yes |
 | International users | >20% | Yes |
-| Monthly revenue | >$100,000 | Yes |
 | Esports viewers | 10,000+ | No |
 | Languages supported | 3+ | Yes |
 | Leagues available | 10+ | Yes |
@@ -238,7 +222,7 @@ Deliverable: First official partnership signed
 
 ---
 
-## Budget (Revenue-Funded)
+## Budget (Estimate)
 
 | Item | Monthly Cost |
 |------|--------------|
@@ -246,35 +230,7 @@ Deliverable: First official partnership signed
 | Infrastructure | $5,000 |
 | Marketing | $15,000 |
 | Esports prizes | $5,000 |
-| Licensing (future) | $10,000 |
-| **Total** | **$59,000/month** |
-
-Expected revenue: $80,000-120,000/month
-Net: Profitable with reinvestment
-
----
-
-## Acquisition Positioning
-
-### Value Drivers for Acquirers
-
-| Value | Description |
-|-------|-------------|
-| User base | 100K+ engaged football fans |
-| AI technology | Proven conversational game engine |
-| Data assets | Rich behavioral data |
-| Revenue | $1M+ annual run rate |
-| Token integration | Proven acquisition funnel |
-| Brand | "ChatGPT for football" recognition |
-
-### Potential Acquirers
-
-| Company | Interest Level | Estimated Range |
-|---------|---------------|-----------------|
-| Socios.com/Chiliz | Very High | $10-20M |
-| EA Sports | Medium | $15-30M |
-| Take-Two | Medium | $10-25M |
-| Crypto platforms | Low-Medium | $5-15M |
+| **Total** | **$49,000/month** |
 
 ---
 
@@ -287,9 +243,6 @@ Phase 5 is complete when:
 3. [ ] 10+ leagues available
 4. [ ] International users >20%
 5. [ ] First major esports event held
-6. [ ] Revenue >$100,000/month
-7. [ ] First partnership signed
-8. [ ] Acquisition discussions initiated
 
 ---
 
@@ -297,7 +250,6 @@ Phase 5 is complete when:
 
 - [[04-Phase-4-Expansion]] - Previous phase
 - [[04-Expansion-Tasks]] - Task details
-- [[04-Financial-Projections]] - Financial model
 - [[01-Vision-and-Strategy]] - Long-term vision
 
 ---

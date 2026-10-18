@@ -432,8 +432,6 @@ function evolveFactionsizes(clubHistory: ClubHistory): void {
 ## Related Documents
 
 - [[03-Match-Simulation]] - Fan impact on matches
-- [[00-Monetization]] - Revenue impact
-- [[01-Fan-Token-Integration]] - Real fan token parallels
 - [[02-Onboarding-Flow]] - Fan introduction
 
 ---

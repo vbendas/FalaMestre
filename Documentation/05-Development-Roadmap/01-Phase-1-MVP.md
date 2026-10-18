@@ -147,7 +147,6 @@ Tasks:
 [x] Season week progression
 [x] League standings
 [x] Points balance display
-[x] Progress bar to voucher
 [x] Daily login bonus
 [x] Win streak tracking
 
@@ -160,7 +159,7 @@ Deliverable: Season progression works
 Tasks:
 [x] Bug fixes
 [x] Performance optimization
-[x] Analytics setup (Mixpanel)
+[x] Analytics setup (first-party events table)
 [x] Beta invite system
 [x] Feedback collection
 [x] Documentation
@@ -184,7 +183,7 @@ const mvpStack = {
   auth: "Supabase Auth",
   ai: "OpenRouter (Claude Haiku/Sonnet)",
   hosting: "Vercel",
-  analytics: "Mixpanel"
+  analytics: "First-party analytics_events table"
 };
 ```
 
@@ -202,7 +201,7 @@ const mvpStack = {
 
 | Table | Columns |
 |-------|---------|
-| `users` | id, email, username, socios_points, created_at |
+| `users` | id, email, username, created_at |
 | `game_states` | user_id, team, squad, season, week, points |
 | `players` | id, name, team, position, attributes |
 | `matches` | id, user_id, score, events, played_at |
@@ -236,7 +235,6 @@ const mvpStack = {
 - [ ] Training (Phase 2)
 - [ ] PvP (Phase 3)
 - [ ] Premium features (Phase 3)
-- [ ] Token redemption (Phase 3)
 
 ---
 

@@ -110,8 +110,7 @@ const cacheTTL = {
   staticContent: 604800,    // 7 days
   
   // Never cache
-  matchNarrative: 0,        // Always unique
-  userCluster: 0            // Computed fresh
+  matchNarrative: 0         // Always unique
 };
 ```
 
@@ -362,7 +361,7 @@ async function playMatch() {
     isSimulating: false,
     lastMatch: result.match,
     week: prev.week + 1,
-    sociosPoints: prev.sociosPoints + result.pointsEarned
+    points: prev.points + result.pointsEarned
   }));
 }
 ```
@@ -408,8 +407,8 @@ self.addEventListener('fetch', (event) => {
 function trackPerformance(operation: string, startTime: number) {
   const duration = Date.now() - startTime;
   
-  // Log to analytics
-  mixpanel.track('performance_metric', {
+  // Log to first-party analytics
+  logEvent('performance_metric', {
     operation,
     duration,
     percentile: getPercentile(duration, operation)
@@ -438,12 +437,12 @@ class CacheMetrics {
   
   recordHit(key: string) {
     this.hits++;
-    mixpanel.track('cache_hit', { key_prefix: key.split(':')[0] });
+    logEvent('cache_hit', { key_prefix: key.split(':')[0] });
   }
   
   recordMiss(key: string) {
     this.misses++;
-    mixpanel.track('cache_miss', { key_prefix: key.split(':')[0] });
+    logEvent('cache_miss', { key_prefix: key.split(':')[0] });
   }
   
   getHitRate(): number {

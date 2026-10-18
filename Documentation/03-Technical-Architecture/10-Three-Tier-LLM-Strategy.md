@@ -1,4 +1,4 @@
-# Three-Tier LLM Strategy
+# LLM Tier Strategy
 
 ---
 tags: #technical #ai #llm #optimization #gml-4.7
@@ -10,10 +10,12 @@ last_updated: 2026-01-20
 
 ## Overview
 
-FalaMestre! uses z.ai GML-4.7 through OpenRouter for all AI functions with a three-tier strategy to optimize cost, latency, and quality. Each tier serves a specific purpose with different prompt engineering, caching strategies, and latency targets.
+FalaMestre! uses z.ai GML-4.7 through OpenRouter for all AI functions with a tiered strategy to optimize cost, latency, and quality. Each tier serves a specific purpose with different prompt engineering, caching strategies, and latency targets.
+
+> [!note] The original design had a third tier that profiled user behaviour. It was removed: Fala Mestre! is a standalone game and does not profile players.
 
 > [!important] Core Principle
-> **Route to the appropriate tier based on use case: match narration (no cache), conversation (semantic cache), clustering (weekly cache).**
+> **Route to the appropriate tier based on use case: match narration (no cache), conversation (semantic cache).**
 
 ---
 
@@ -225,188 +227,11 @@ await cacheStore(cacheKey, {
 
 ---
 
-## Tier 3: Behavioral Clustering
-
-### Purpose
-
-Batch process user behavior data to generate comprehensive behavioral profiles, segment users into lead categories, and predict purchase intent for affiliate sharing. Runs weekly per user, not real-time.
-
-### Configuration
-
-```typescript
-const tier3BehavioralClustering = {
-  model: "zhipu/glm-4.7",
-  provider: "openrouter",
-  
-  // Latency not critical (async batch processing)
-  latency_target: "<5s",
-  caching_strategy: "weekly_per_user",  // Cache result for 7 days
-  processing_frequency: "weekly_per_user",
-  
-  // Prompt configuration
-  temperature: 0.2,  // Lower for consistency
-  max_tokens: 750,   // Detailed analysis
-  top_p: 0.95,  // Focus on accuracy
-  frequency_penalty: 0.1,  // Comprehensive output
-  
-  // System prompt
-  system_prompt: `
-Você é um analista comportamental especializado em fãs de futebol brasileiros.
-
-OBJETIVO PRINCIPAL:
-Analisar o comportamento do usuário e criar perfil para segmentação de leads 
-empresas de fan tokens e criptomoedas.
-
-SAÍDA REQUERIDA:
-JSON estritamente com a seguinte estrutura:
-{
-  "risk_appetite": 0-100,
-  "competitiveness": 0-100,
-  "crypto_awareness": 0-100,
-  "purchase_intent": 0-100,
-  "social_influence": 0-100,
-  "engagement_level": 0-100,
-  "primary_segment": "string",
-  "is_hot_lead": boolean,
-  "hot_lead_reasons": ["string"],
-  "secondary_traits": {},
-  "team_loyalty_strength": "weak" | "moderate" | "strong",
-  "decision_style": "impulsive" | "analytical" | "balanced"
-}
-
-DADOS PARA ANÁLISE:
-1. Histórico de sessões (últimas 7-14 sessões):
-   - Duração média por sessão
-   - Frequência de sessões
-   - Horários de jogo
-
-2. Padrões de jogo (nível de sessão, não por ação):
-   - Partidas jogadas por sessão
-   - Transferências tentadas
-   - Treinos realizados
-   - Decisões táticas (agressivo vs defensivo vs equilibrado)
-   - Composição de time (foco em jovens vs estrelas vs balanceado)
-
-3. Padrões conversacionais (nível de sessão):
-   - Mensagens enviadas por sessão
-   - Menções a crypto/tokens
-   - Perguntas sobre tokens
-   - Tipo de perguntas (técnicas vs educacionais)
-
-4. Engajamento:
-   - Tela visualizada com mais frequência
-   - Tempo médio por tela
-   - Taxa de retenção de sessões
-
-5. Comportamento em resultados:
-   - Reação a derrotas (continua ou para)
-   - Comportamento em vitórias (comemora ou quer mais)
-   - Adaptação tática após derrotas
-
-SEGMENTOS POSSÍVEIS:
-- "high_intent_token_buyer" (compra >80, crypto >70, engajamento >top 20%)
-- "warm_crypto_curious" (compra 40-79, crypto 30-69)
-- "social_influencer" (influência social >70)
-- "casual_fan" (baixa intenção, baixo engajamento)
-
-CRITÉRIOS DE "HOT LEAD":
-1. Intenção de compra > 80%
-   OU
-2. Consciência crypto > 70%
-   OU
-3. Engajamento top 20%
-
-SECUNDÁRIOS:
-- Estilo tático (agressivo, defensivo, equilibrado)
-- Preferência de composição (foco em jovens, estrelas, balanceado)
-- Sensibilidade a preço (conservador vs gastador)
-- Nível de competitividade
-  `
-};
-```
-
-### Weekly Caching
-
-```typescript
-// Cache clustering result for 7 days per user
-const clusteringCache = {
-  implementation: "user_weekly",
-  ttl: 604800,  // 7 days
-  storage: "neon_database",
-  
-  cache_key: (userId: string, weekOfYear: string) => string,
-  cache_lookup: async (key: string) => Promise<Cluster | null>,
-  cache_store: async (key: string, cluster: Cluster) => Promise<void>
-}
-
-// Run clustering weekly per user
-async function generateWeeklyCluster(userId: string) {
-  const weekKey = getWeekOfYear();
-  const cacheKey = `cluster:${userId}:${weekKey}`;
-  
-  // Check cache
-  const cached = await clusteringCacheLookup(cacheKey);
-  if (cached) return cached;
-  
-  // Generate new cluster if not cached
-  const userData = await fetchUserSessionHistory(userId, 14); // 2 weeks of data
-  const cluster = await callGML4_7(userData, tier3Config);
-  
-  // Store for 7 days
-  await clusteringCacheStore(cacheKey, cluster);
-  
-  return cluster;
-}
-```
-
-### Cluster Output Structure
-
-```typescript
-interface BehavioralCluster {
-  // Metadata
-  id: string;
-  user_id: string;
-  week_of_year: number;
-  computed_at: Date;
-  
-  // Primary classification
-  primary_segment: string;
-  is_hot_lead: boolean;
-  hot_lead_reasons: string[];
-  
-  // Scores (0-100)
-  risk_appetite: number;
-  competitiveness: number;
-  crypto_awareness: number;
-  purchase_intent: number;
-  social_influence: number;
-  engagement_level: number;
-  
-  // Secondary traits
-  secondary_traits: {
-    tactical_preference: string;  // aggressive, balanced, defensive
-    spending_pattern: string;  // conservative, moderate, aggressive
-    values_young_players: boolean;
-    price_sensitive: boolean;
-    competitive_but_strategic: boolean;
-  };
-  
-  // Team loyalty
-  team_loyalty_strength: "weak" | "moderate" | "strong";
-  decision_style: "impulsive" | "analytical" | "balanced";
-  
-  // Full analysis (JSON from GML-4.7)
-  full_analysis: jsonb;
-}
-```
-
----
-
 ## LLM Routing Logic
 
 ```typescript
 async function routeLLMRequest(
-  purpose: 'match' | 'conversation' | 'clustering',
+  purpose: 'match' | 'conversation',
   input: LLMInput
 ): Promise<LLMResponse> {
   
@@ -433,22 +258,6 @@ async function routeLLMRequest(
         similarity_score: 1.0
       });
       return response;
-    
-    case 'clustering':
-      // TIER 3: Behavioral Clustering - WEEKLY CACHE CHECK
-      const weekKey = getWeekOfYear();
-      const cacheKey = `cluster:${input.userId}:${weekKey}`;
-      const cached = await weeklyCacheLookup(cacheKey);
-      
-      if (cached) {
-        logCacheHit('weekly_clustering', input.userId);
-        return cached;
-      }
-      
-      // Generate new cluster if not cached
-      const cluster = await callGML4_7(input, tier3BehavioralClustering);
-      await weeklyCacheStore(cacheKey, cluster);
-      return cluster;
   }
 }
 ```
@@ -463,11 +272,8 @@ async function routeLLMRequest(
 |------|----------------|----------------|------------------|-------------|
 | 1 (Match) | None | 0% | 100% of requests | Full cost |
 | 2 (Chat) | Semantic (24h) | 25% | 75% of requests | 75% cost savings |
-| 3 (Clustering) | Weekly (7d) | 90% | 10% of requests | 90% cost savings |
 
-### Overall Hit Rate: ~60%
-
-**Result:** 60% reduction in LLM API costs vs uncached approach.
+Match narration is never cached, so overall savings depend on the chat/narration mix.
 
 ---
 
@@ -481,29 +287,25 @@ const llmMetrics = {
   total_cost_usd: number,
   requests_by_tier: {
     tier1_match: number,
-    tier2_chat: number,
-    tier3_cluster: number
+    tier2_chat: number
   },
   
   // Cache performance
   cache_hits: {
-    semantic: number,
-    weekly_clustering: number
+    semantic: number
   },
-  cache_hit_rate: number,  // Target: 60%+
+  cache_hit_rate: number,
   
   // Latency tracking (p50, p95, p99)
   latency_by_tier: {
     tier1_p50: number,  // Target: <500ms
-    tier2_p95: number,  // Target: <1.5s
-    tier3_p99: number   // Target: <5s
+    tier2_p95: number   // Target: <1.5s
   },
   
   // Quality metrics
   response_quality: {
     tier1_narrative_engagement: number,  // User ratings 1-5
-    tier2_helpfulness: number,  // User ratings 1-5
-    tier3_accuracy: number  // Manual review sample
+    tier2_helpfulness: number   // User ratings 1-5
   }
 };
 ```
@@ -513,9 +315,8 @@ const llmMetrics = {
 ## Related Documents
 
 - [[01-Tech-Stack]] - Overall technology choices
-- [[02-Database-Schema]] - Data storage for clusters and cache
-- [[09-GDPR-Compliance]] - Consent management for data collection
-- [[10-Hot-Lead-Definition]] - How clustering determines lead quality
+- [[02-Database-Schema]] - Data storage
+- [[04-AI-LLM-Strategy]] - AI architecture
 
 ---
 

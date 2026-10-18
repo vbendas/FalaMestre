@@ -40,7 +40,7 @@ Fala Mestre! uses a tiered AI architecture to balance cost, latency, and quality
      |   Haiku        |  |   Sonnet       |  |   Sonnet+      |
      |   (85%)        |  |   (12%)        |  |   (3%)         |
      +----------------+  +----------------+  +----------------+
-     | Quick replies  |  | Match sims     |  | User clustering|
+     | Quick replies  |  | Match sims     |  | Season analysis|
      | Intent detect  |  | Negotiations   |  | Complex analysis|
      | Confirmations  |  | Tactical advice|  | Fraud detection|
      +----------------+  +----------------+  +----------------+
@@ -52,7 +52,7 @@ Fala Mestre! uses a tiered AI architecture to balance cost, latency, and quality
 |------|-------|----------------|------------------|-----------|
 | 1 | Claude 3.5 Haiku | <500ms | $0.15 | Intent detection, quick responses |
 | 2 | Claude 3.5 Sonnet | <2000ms | $1.50 | Match narratives, negotiations |
-| 3 | Claude 3.5 Sonnet (extended) | <5000ms | $5.00 | Clustering, deep analysis |
+| 3 | Claude 3.5 Sonnet (extended) | <5000ms | $5.00 | Season analysis, deep analysis |
 
 ---
 
@@ -92,7 +92,6 @@ function selectModelTier(intent: string, context: RequestContext): ModelTier {
   
   // Tier 3: Analytical, batch operations
   const tier3Intents = [
-    'user_clustering',
     'fraud_detection',
     'personalized_onboarding',
     'season_analysis'
@@ -240,72 +239,6 @@ OUTPUT:
   "counterOffer": number | null,
   "message": "Dialogue in Portuguese",
   "playerReaction": "Player's reaction to the move"
-}
-`;
-```
-
-**User Clustering Prompt (Tier 3):**
-
-```typescript
-const clusteringPrompt = `
-${baseSystemPrompt}
-
-TASK: Analyze user behavior and assign to marketing clusters.
-
-USER DATA:
-${JSON.stringify(userData, null, 2)}
-
-CLUSTER DEFINITIONS:
-
-1. CASUAL_FAN
-   - Plays <5 sessions/week
-   - Short sessions (<10 min)
-   - Skips narrative often
-   - Price-sensitive
-   
-2. TACTICAL_MASTER
-   - Changes formations frequently
-   - Reads all tactical info
-   - Long sessions
-   - Values depth over speed
-   
-3. SOCIAL_COMPETITOR
-   - High tournament participation
-   - Shares achievements
-   - Cares about rankings
-   - Responsive to challenges
-   
-4. COLLECTOR
-   - High transfer activity
-   - Squad variety focus
-   - Achievement hunter
-   - Completionist tendencies
-   
-5. STORY_ENTHUSIAST
-   - Never skips narrative
-   - Long read times
-   - Engages with all content
-   - Values immersion
-
-ANALYZE:
-1. Primary cluster assignment
-2. Secondary cluster (if any)
-3. Cluster confidence (0-1)
-4. Key behavioral signals
-5. Churn risk (0-1)
-6. Conversion probability (0-1)
-7. Estimated LTV
-
-OUTPUT:
-{
-  "primaryCluster": "string",
-  "secondaryCluster": "string | null",
-  "confidence": number,
-  "signals": ["signal1", "signal2"],
-  "churnRisk": number,
-  "conversionProbability": number,
-  "estimatedLTV": number,
-  "recommendations": ["action1", "action2"]
 }
 `;
 ```
@@ -525,7 +458,7 @@ function generateSemanticCacheKey(
 1. **Prompt Compression**: Minimize system prompt tokens
 2. **Response Length Limits**: Cap max_tokens appropriately
 3. **Caching**: 40-60% cache hit rate target
-4. **Batching**: Batch Tier 3 operations (clustering)
+4. **Batching**: Batch Tier 3 operations (season analysis)
 5. **Off-Peak Processing**: Run analysis during low-traffic hours
 
 ---
@@ -562,41 +495,9 @@ interface QualityMetrics {
 
 ---
 
-## Future: Fine-Tuned Model
+## Model Usage Policy
 
-### Phase 2: Distillation Strategy
-
-```
-Phase 1 (Current):
-- Use Claude via OpenRouter
-- Collect high-quality logs
-- Build training dataset
-
-Phase 2 (50K+ users):
-- Fine-tune Llama 3 8B
-- Deploy on Nebius AI
-- 10x cost reduction
-- Owned intellectual property
-```
-
-### Training Data Collection
-
-```typescript
-interface TrainingExample {
-  systemPrompt: string;
-  userMessage: string;
-  aiResponse: string;
-  
-  // Quality signals
-  userContinued: boolean;
-  intentMatched: boolean;
-  manualRating?: number;
-  
-  // Metadata
-  tier: ModelTier;
-  timestamp: string;
-}
-```
+Fala Mestre! uses hosted models through API calls (OpenRouter). There is no model training or fine-tuning, and player conversations are not collected as training data.
 
 ---
 
@@ -605,7 +506,6 @@ interface TrainingExample {
 - [[00-System-Overview]] - Architecture overview
 - [[01-Tech-Stack]] - Technology stack
 - [[05-Caching-Performance]] - Caching details
-- [[02-Analytics-Clustering]] - Clustering implementation
 
 ---
 

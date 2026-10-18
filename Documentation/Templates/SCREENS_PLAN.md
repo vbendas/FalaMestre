@@ -1097,7 +1097,7 @@ CRT effects. pt-BR.
 
 ## 17 — Investments / Investir
 
-**Description:** Fan token investment system. Invest in-game coins for daily yield returns. Multiple investment tiers with different rates.
+**Description:** In-game investment system. Invest in-game coins for daily yield returns. Multiple investment tiers with different rates.
 
 **Layout:** CRT frame. Investment portfolio overview + tier selection cards.
 
@@ -1118,7 +1118,7 @@ COLORS: navy #00381a, gold #FFDF00, cyan #55e0a0.
 
 HEADER:
   "📈 INVESTIMENTOS" in 7px gold, centered
-  "Fan Tokens & Rendimentos" in 5px cyan
+  "Investimentos & Rendimentos" in 5px cyan
 
 PORTFOLIO SUMMARY (frosted glass card, full-width, ~90px, 3-column):
   "💰 25.000 INVESTIDO" in 5px gold | "💰 +350/DIA RENDIMENTO" in 5px cyan | "💰 8.200 TOTAL GANHO" in 5px gold
@@ -1439,7 +1439,7 @@ CRT scanlines through modal. pt-BR.
 7. **Match Result (09)** — ends match flow
 8. **Transfer Market (10) + Standings (11)** — secondary game loop
 9. **Stadium (12) + Facilities (13) + Youth (14) + Staff (15)** — management views
-10. **Predictions (16) + Investments (17)** — monetization/engagement
+10. **Predictions (16) + Investments (17)** — engagement
 11. **Modals & overlays (18, 19, 22)** — polish
 12. **Season End (21)** — special moment
 13. **Settings (20)** — utility

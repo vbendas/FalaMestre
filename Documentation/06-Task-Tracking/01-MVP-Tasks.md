@@ -129,14 +129,13 @@ Detailed task breakdown for Phase 1 (MVP). Total: 52 tasks over 4 weeks.
 | MVP-055 | Build league standings display | P1 | 2h | MVP-054 | [ ] |
 | MVP-056 | Implement points earning system | P0 | 3h | MVP-038 | [ ] |
 | MVP-057 | Create points balance display | P0 | 1h | MVP-056 | [ ] |
-| MVP-058 | Add progress bar to voucher | P1 | 1h | MVP-057 | [ ] |
 | MVP-059 | Implement daily login bonus | P1 | 2h | MVP-056 | [ ] |
 
 ### Testing & Launch
 
 | ID | Task | Priority | Hours | Deps | Status |
 |----|------|----------|-------|------|--------|
-| MVP-060 | Set up Mixpanel analytics | P0 | 2h | - | [ ] |
+| MVP-060 | Set up first-party analytics events table | P0 | 2h | - | [ ] |
 | MVP-061 | Add core event tracking | P0 | 3h | MVP-060 | [ ] |
 | MVP-062 | Performance optimization | P0 | 4h | All | [ ] |
 | MVP-063 | Bug fixing sprint | P0 | 8h | All | [ ] |

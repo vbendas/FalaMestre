@@ -126,20 +126,12 @@ Requires 3D character models (not 2D sprites):
 - Virtual stadium with crowd
 - Voice chat integration
 
-### Branded VR Glasses
-
-Marketing opportunity:
-- Custom VR glasses with FalaMestre!/Socios branding
-- Send to Chiliz team as demo device
-- Premium reward for users (token purchase milestone)
-
 ---
 
 ## Related Documents
 
 - [[03-Match-Simulation]] - Core match engine
 - [[FLAMENGO_ASSET_GENERATION]] - PixelLab character assets
-- [[18-Chiliz-Blockchain-Integration-Strategy]] - Marketing alignment
 
 ---
 

@@ -194,7 +194,7 @@ Rewards:
 | League Position | Final standing | 1000-10000 points |
 | Cup Run | Tournament depth | 500-5000 points |
 | Player Development | Youth → Star | Achievement + value |
-| Fan Token Voucher | 10,000 points | Real token |
+| Special Tournament Access | Tournament ticket | Entry to Copa Mestre events |
 
 ---
 
@@ -225,7 +225,7 @@ Rewards:
 | Season Climax | Title/relegation drama | Very High |
 | New Season | Fresh start | High |
 | Special Events | Holiday themes | Medium |
-| Major Rewards | Token vouchers | Very High |
+| Major Rewards | Special tournaments and unlocks | Very High |
 
 ---
 
@@ -277,12 +277,6 @@ flowchart TD
         E --> H[Stadium]
         E --> I[Premium Items]
     end
-    
-    subgraph Conversion
-        E --> J[Accumulate 10K]
-        J --> K[Fan Token Voucher]
-        K --> L[Real Token]
-    end
 ```
 
 ### Balance Targets
@@ -291,7 +285,6 @@ flowchart TD
 |--------|--------|
 | Points per hour (casual) | 150-200 |
 | Points per hour (active) | 300-400 |
-| Time to first voucher | 30-50 hours |
 | Weekly earning cap | 5,000 points |
 
 ---

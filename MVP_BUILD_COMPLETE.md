@@ -109,7 +109,7 @@ git push origin main
 78' - Gabriel marca!
 
 🏆 Vitória!
-➕ +100 Socios Points
+➕ +100 pontos
 ```
 
 ---
@@ -193,16 +193,15 @@ git push origin main
 
 ### Week 5-8: Polish
 1. Real AI integration
-2. Analytics & clustering
+2. Gameplay analytics
 3. Social features
 4. GDPR compliance
 5. Public launch (1000 users)
 
 ### Week 9-12: Scale
-1. Monetization
-2. Partnerships
-3. Marketing
-4. Scale to 10,000 users
+1. Performance and reliability
+2. Content and polish
+3. Scale to more players
 
 ---
 
@@ -240,7 +239,7 @@ git push origin main
 
 ### Strategic
 ✅ Reduced risk (working code, not just plans)  
-✅ Created demo for Socios meeting  
+✅ Created a playable demo  
 ✅ Built foundation for rapid iteration  
 ✅ Established development patterns  
 ✅ Documented for team handoff  
@@ -265,30 +264,7 @@ git push origin main
 ### Success Probability
 - **Technical risk:** Low (code works)
 - **Market risk:** Medium (need user validation)
-- **Business risk:** Medium (partnership dependent)
 - **Overall:** **HIGH SUCCESS PROBABILITY**
-
----
-
-## 📈 OPPORTUNITY SUMMARY
-
-### Market
-- **70M+ Brazilian football fans**
-- **<0.5% fan token penetration**
-- **$2.3B gaming market**
-- **Mobile-first culture**
-
-### Product
-- **First conversational football game**
-- **10x cheaper to build**
-- **5x faster to market**
-- **Built-in analytics**
-
-### Business
-- **CAC: <$1** (viral potential)
-- **LTV: $20+** (token conversion)
-- **ROI: 2000%+** (Year 1)
-- **Scalable globally**
 
 ---
 

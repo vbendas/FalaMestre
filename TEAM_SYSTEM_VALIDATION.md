@@ -216,15 +216,11 @@ em um jogo muito equilibrado."
 ✅ Component props properly typed
 
 ### Runtime Checks
-✅ All 11 routes compile correctly:
+✅ All routes compile correctly (list below excludes the user-profiling routes, which have since been removed):
 ```
 - POST /api/conversation
 - POST /api/match
 - POST /api/onboarding/create-team ✨ NEW
-- POST /api/wallet/connect
-- POST /api/cron/aggregate-features
-- POST /api/cron/discover-intents
-- POST /api/cron/personality-assessment
 - GET / (Main game page)
 - GET /onboarding ✨ NEW
 - GET /_not-found
@@ -321,11 +317,6 @@ em um jogo muito equilibrado."
    - Capture screenshots of each onboarding step
    - Test with various team names and colors
 
-3. **Socios.com Integration**
-   - Document API contract for team creation
-   - Prepare integration guide
-   - Plan for official club branding upgrade path
-
 ---
 
 ## Conclusion
@@ -338,7 +329,7 @@ The team system is **fully functional and ready for deployment**:
 - ✅ All data persisting correctly
 - ✅ Build compiling successfully
 
-**Recommendation:** Ready for Socios.com pitch and beta testing.
+**Recommendation:** Ready for beta testing.
 
 ---
 

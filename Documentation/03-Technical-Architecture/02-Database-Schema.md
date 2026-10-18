@@ -15,6 +15,9 @@ The database is built on PostgreSQL via Supabase, using a JSON-heavy approach fo
 > [!important] Design Philosophy
 > Store structured data relationally, store game state as JSON for flexibility.
 
+> [!note] Implemented schema
+> This page records the original schema design. The schema the app actually uses is defined with Drizzle in `app/src/db/schema.ts`. Fala Mestre! is a standalone game; the database holds no crypto, ad-platform or user-profiling tables.
+
 ---
 
 ## Entity Relationship Diagram
@@ -26,8 +29,8 @@ The database is built on PostgreSQL via Supabase, using a JSON-heavy approach fo
 | id (PK)          |<----->| user_id (PK, FK)  |
 | email            |       | team              |
 | username         |       | current_state     |
-| socios_id        |       | squad (JSON)      |
-| socios_points    |       | season_progress   |
+| points           |       | squad (JSON)      |
+|                  |       | season_progress   |
 | created_at       |       +-------------------+
 +------------------+              |
        |                          |
@@ -55,20 +58,11 @@ The database is built on PostgreSQL via Supabase, using a JSON-heavy approach fo
        |                 +-------------------+
        |                 |     rewards       |
        +---------------->+-------------------+
-       |                 | id (PK)           |
-       |                 | user_id (FK)      |
-       |                 | type              |
-       |                 | amount            |
-       |                 | claimed           |
-       |                 +-------------------+
-       |
-       |                 +-------------------+
-       |                 |  user_clusters    |
-       +---------------->+-------------------+
-                         | user_id (PK, FK)  |
-                         | primary_cluster   |
-                         | cluster_scores    |
-                         | behavior_profile  |
+                         | id (PK)           |
+                         | user_id (FK)      |
+                         | type              |
+                         | amount            |
+                         | claimed           |
                          +-------------------+
 
 
@@ -110,14 +104,10 @@ CREATE TABLE users (
     language TEXT DEFAULT 'pt-BR',
     avatar_url TEXT,
     
-    -- Socios Integration
-    socios_id TEXT UNIQUE,
-    socios_wallet TEXT,
-    
     -- Game Stats
     level INTEGER DEFAULT 1,
     xp INTEGER DEFAULT 0,
-    socios_points INTEGER DEFAULT 0,
+    points INTEGER DEFAULT 0,
     total_matches INTEGER DEFAULT 0,
     total_wins INTEGER DEFAULT 0,
     
@@ -139,7 +129,6 @@ CREATE TABLE users (
 -- Indexes
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_referral_code ON users(referral_code);
-CREATE INDEX idx_users_socios_id ON users(socios_id);
 
 -- Triggers
 CREATE TRIGGER update_users_updated_at
@@ -427,7 +416,7 @@ CREATE INDEX idx_conversations_created ON conversations(created_at DESC);
 
 ### rewards
 
-Points and voucher tracking.
+In-game points and achievement tracking.
 
 ```sql
 CREATE TABLE rewards (
@@ -435,7 +424,7 @@ CREATE TABLE rewards (
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     
     -- Reward Details
-    type TEXT NOT NULL CHECK (type IN ('points', 'voucher', 'achievement', 'bonus')),
+    type TEXT NOT NULL CHECK (type IN ('points', 'achievement', 'bonus')),
     amount INTEGER NOT NULL,
     description TEXT,
     
@@ -457,54 +446,9 @@ CREATE INDEX idx_rewards_user ON rewards(user_id);
 CREATE INDEX idx_rewards_unclaimed ON rewards(user_id) WHERE claimed = FALSE;
 ```
 
-### user_clusters
-
-Behavioral clustering data for analytics.
-
-```sql
-CREATE TABLE user_clusters (
-    user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-    
-    -- Primary Cluster
-    primary_cluster TEXT NOT NULL,
-    cluster_confidence DECIMAL(3,2),
-    
-    -- Cluster Scores (0-1)
-    casual_fan_score DECIMAL(3,2) DEFAULT 0,
-    tactical_master_score DECIMAL(3,2) DEFAULT 0,
-    social_competitor_score DECIMAL(3,2) DEFAULT 0,
-    collector_score DECIMAL(3,2) DEFAULT 0,
-    story_enthusiast_score DECIMAL(3,2) DEFAULT 0,
-    
-    -- Behavioral Signals
-    tactical_preference TEXT,
-    spending_pattern TEXT,
-    engagement_level TEXT,
-    session_frequency TEXT,
-    
-    -- Predictions
-    churn_risk DECIMAL(3,2),
-    ltv_estimate INTEGER,
-    conversion_probability DECIMAL(3,2),
-    
-    -- Full Profile (JSON)
-    behavior_profile JSONB DEFAULT '{}',
-    
-    -- Timestamps
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Trigger
-CREATE TRIGGER update_user_clusters_updated_at
-    BEFORE UPDATE ON user_clusters
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-```
-
 ### analytics_events
 
-Raw event tracking for analysis.
+First-party gameplay event tracking (kept in this database, never exported).
 
 ```sql
 CREATE TABLE analytics_events (
@@ -525,12 +469,6 @@ CREATE TABLE analytics_events (
     browser TEXT,
     os TEXT,
     screen_size TEXT,
-    
-    -- Location
-    ip_hash TEXT,
-    country TEXT,
-    region TEXT,
-    city TEXT,
     
     -- Timestamps
     created_at TIMESTAMPTZ DEFAULT NOW()
@@ -565,7 +503,7 @@ $$ LANGUAGE plpgsql;
 ### Add Points to User
 
 ```sql
-CREATE OR REPLACE FUNCTION add_socios_points(
+CREATE OR REPLACE FUNCTION add_points(
     p_user_id UUID,
     p_amount INTEGER,
     p_source TEXT,
@@ -576,9 +514,9 @@ DECLARE
 BEGIN
     -- Update user balance
     UPDATE users 
-    SET socios_points = socios_points + p_amount
+    SET points = points + p_amount
     WHERE id = p_user_id
-    RETURNING socios_points INTO new_balance;
+    RETURNING points INTO new_balance;
     
     -- Log reward
     INSERT INTO rewards (user_id, type, amount, description, source, source_id, claimed, claimed_at)
@@ -600,7 +538,6 @@ ALTER TABLE game_states ENABLE ROW LEVEL SECURITY;
 ALTER TABLE matches ENABLE ROW LEVEL SECURITY;
 ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE rewards ENABLE ROW LEVEL SECURITY;
-ALTER TABLE user_clusters ENABLE ROW LEVEL SECURITY;
 
 -- Users table policies
 CREATE POLICY "Users can view own profile"

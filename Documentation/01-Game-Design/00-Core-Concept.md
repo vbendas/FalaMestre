@@ -33,14 +33,14 @@ Fala Mestre!:
 
 ### 2. Football Comes First
 
-The game must be fun independently of tokens or rewards. It's a football game that happens to reward players, not a rewards platform with football theming.
+The game must be fun independently of rewards. It's a football game that happens to reward players, not a rewards platform with football theming.
 
 ```mermaid
 pie title Experience Priority
     "Core Gameplay Fun" : 50
     "Progression & Growth" : 25
     "Social & Community" : 15
-    "Rewards & Tokens" : 10
+    "Rewards" : 10
 ```
 
 ### 3. Authenticity Over Simulation
@@ -89,7 +89,6 @@ Month 1:   Deep tactical knowledge
 | Action game | No real-time player control |
 | Simulation | Not obsessed with realism |
 | P2W | Skill matters more than money |
-| Crypto game | Football first, tokens second |
 | Time sink | Respect players' time |
 
 ---
@@ -123,7 +122,7 @@ The game mechanics are inspired by **Elifoot**, a beloved Brazilian football man
 |--------------------|----------------|
 | Static UI | Conversational interface |
 | Single-player only | Social and PvP features |
-| No rewards | Real token earning |
+| No rewards | Achievements, unlocks and in-game rewards |
 | Limited narratives | AI-generated drama |
 | Manual everything | Smart suggestions |
 
@@ -177,7 +176,7 @@ Players work toward:
 - League titles
 - Player development
 - Team upgrades
-- Token milestones
+- Unlock milestones
 
 ### 3. Social Validation
 
@@ -203,9 +202,9 @@ Players express:
 
 Nobody else has done this. The interface IS the innovation.
 
-### 2. Real Rewards
+### 2. Meaningful Progression
 
-Earn actual fan tokens, not just virtual points that die with the game.
+Points, club money and unlocks reflect real decisions made in the game.
 
 ### 3. Brazilian Authenticity
 

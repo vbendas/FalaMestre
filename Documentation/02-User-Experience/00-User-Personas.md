@@ -10,7 +10,7 @@ last_updated: 2026-01-18
 
 ## Overview
 
-Four primary personas represent our target audience. Each has distinct motivations, behaviors, and needs that inform our design decisions.
+Three primary personas represent our target audience. Each has distinct motivations, behaviors, and needs that inform our design decisions.
 
 ---
 
@@ -59,7 +59,6 @@ Football Engagement:
 - Limited time for complex games
 - Limited budget for gaming
 - Overwhelmed by complicated UIs
-- Skeptical of crypto/tokens
 
 ### How We Serve Carlos
 
@@ -69,7 +68,6 @@ Football Engagement:
 | Simple UI | Conversational interface |
 | No complexity | AI suggestions |
 | Free progression | Generous free rewards |
-| Token skepticism | Learn through play |
 
 ### Key Metrics
 
@@ -211,82 +209,15 @@ Football Engagement:
 
 ---
 
-## Persona 4: Crypto Pedro (10%)
-
-> "I'm always looking for quality projects with real utility."
-
-### Profile
-
-```yaml
-Demographics:
-  Age: 20-35
-  Occupation: Tech/finance/entrepreneurial
-  Income: Moderate to high
-  Location: Major cities, globally connected
-  
-Devices:
-  Primary: Latest iPhone/Android
-  Secondary: Multiple devices, crypto wallets
-  
-Football Engagement:
-  Team: Moderate fan, investment angle
-  Watches: Selectively, follows trends
-  Games: P2E games, crypto gaming
-```
-
-### Behavior Patterns
-
-| Pattern | Description |
-|---------|-------------|
-| Session Length | Goal-oriented, efficient |
-| Session Frequency | Daily check-ins |
-| Peak Times | Throughout day, news-driven |
-| Spending | Willing to invest significantly |
-| Social | Crypto Twitter, Discord communities |
-
-### Goals
-
-- Earn valuable tokens
-- Early adoption advantage
-- Portfolio diversification
-- Support quality innovation
-- Find undervalued opportunity
-
-### Pain Points
-
-- Most P2E games are low quality
-- Wants real gameplay, not just grinding
-- Wants legitimate, professional project
-- Seeks long-term value
-
-### How We Serve Pedro
-
-| Need | Solution |
-|------|----------|
-| Quality first | Fun game, tokens secondary |
-| Legitimacy | Socios.com backing |
-| Fair distribution | Skill-based earning |
-| Real utility | Actual fan token rewards |
-| Growth potential | Early adopter benefits |
-
-### Key Metrics
-
-- D7 Retention target: 40%
-- Token conversion: 50%+
-- Average purchase: R$100+
-
----
-
 ## Persona Comparison
 
-| Aspect | Carlos | Thiago | Sofia | Pedro |
-|--------|--------|--------|-------|-------|
-| % of Users | 40% | 30% | 20% | 10% |
-| Session Length | 10 min | 20 min | Varies | 15 min |
-| Spending | Low | Medium | Medium | High |
-| Motivation | Entertainment | Mastery | Social | Investment |
-| Token Interest | Curious | Interested | Moderate | Primary |
-| Retention Driver | Fun | Challenge | Friends | Rewards |
+| Aspect | Carlos | Thiago | Sofia |
+|--------|--------|--------|-------|
+| % of Users (estimate) | 40% | 30% | 20% |
+| Session Length | 10 min | 20 min | Varies |
+| Spending | Low | Medium | Medium |
+| Motivation | Entertainment | Mastery | Social |
+| Retention Driver | Fun | Challenge | Friends |
 
 ---
 
@@ -313,13 +244,6 @@ Football Engagement:
 - Community visible
 - Social proof (others playing)
 
-### For Pedro (Crypto)
-
-- Clear token economy explanation
-- Transparent earning mechanics
-- Real value proposition
-- Professional presentation
-
 ---
 
 ## Persona Evolution
@@ -330,7 +254,6 @@ Football Engagement:
 flowchart LR
     A[Carlos] -->|Becomes engaged| B[Thiago]
     A -->|Brings friends| C[Sofia]
-    B -->|Discovers tokens| D[Pedro]
     C -->|Gets competitive| B
 ```
 
@@ -340,7 +263,6 @@ flowchart LR
 |------|-----|---------|
 | Carlos | Thiago | Deep engagement, skill development |
 | Carlos | Sofia | Friend discovery, social features |
-| Thiago | Pedro | Token milestone, value realization |
 | Sofia | Thiago | Competitive drive, wanting to win |
 
 ---
@@ -350,7 +272,6 @@ flowchart LR
 - [[01-User-Journey]] - Experience across personas
 - [[02-Onboarding-Flow]] - First-time experience
 - [[02-Market-Analysis]] - Market context
-- [[02-Analytics-Clustering]] - Behavioral segmentation
 
 ---
 

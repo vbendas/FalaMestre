@@ -4,18 +4,18 @@ Last updated: 2026-02-12
 Branch: `codex/restore-point-2026-02-12`
 
 ## 1) Program Goal
-Deliver a partnership-demo-ready, production-hardened MVP in a staged roadmap:
+Deliver a production-hardened MVP in a staged roadmap:
 1. Stabilize build/runtime and schema consistency.
 2. Improve core gameplay reliability and API safety.
-3. Harden operational/security boundaries (cron/admin/consent).
-4. Continue toward demo packaging, reporting, and release readiness.
+3. Harden operational/security boundaries (cron/admin).
+4. Continue toward demo packaging and release readiness.
 
 ## 2) Roadmap (Status Overview)
 - Phase 1: Stabilization and Build Recovery -> **In Progress (major tranche completed)**
 - Phase 2: Core Product Integrity -> **In Progress (major tranche completed)**
-- Phase 3: Analytics and Partner Narrative Layer -> **Partially Started**
-- Phase 4: Security/Consent/Operational Controls -> **In Progress (auth + consent tranche completed)**
-- Phase 5: Demo Polish and Commercial Packaging -> **Not Started**
+- Phase 3: Gameplay Analytics -> **Not Started**
+- Phase 4: Security/Operational Controls -> **In Progress (cron auth completed)**
+- Phase 5: Demo Polish -> **Not Started**
 - Phase 6: Hardening and Release Readiness -> **Not Started**
 
 ---
@@ -48,13 +48,6 @@ Status: **Mostly completed for current tranche**
   - [x] Use `SYNTHETIC_API_KEY` for real AI path checks
   - [x] Normalize `useMock` fallback logic
 
-### Task 1.4 - Build-safe fallback for optional Web3 integration
-- [x] Replace hard compile-time dependency paths with fallback-safe modules
-  - [x] `app/src/lib/web3/chain-config.ts` made dependency-free
-  - [x] `app/src/lib/web3/wallet-profiler.ts` fallback implementation added
-  - [x] `app/src/lib/web3/wallet-provider.tsx` lightweight provider fallback
-- [x] Preserve exported interfaces to avoid app-level breakage
-
 ### Task 1.5 - Layout and environment stability
 - [x] Removed runtime dependency on remote Google fonts in root layout
   - [x] Updated `app/src/app/layout.tsx`
@@ -70,8 +63,7 @@ Status: **Mostly completed for current tranche**
   - [x] Config updated in `app/eslint.config.mjs`
 
 ### Task 1.8 - Phase 1 implementation commit
-- [x] Commit created: `c69b39a`
-  - [x] Message: `feat: phase-1 stabilization and build-safe web3 fallback`
+- [x] Phase 1 changes committed
 
 ---
 
@@ -96,36 +88,25 @@ Status: **Major tranche completed**
   - [x] Use stable bucketed recomputation logic
 
 ### Task 2.3 - Phase 2 implementation commit
-- [x] Commit created: `9aadb61`
-  - [x] Message: `feat: add API rate limiting and fix match simulation consistency`
+- [x] Phase 2 changes committed
 
 ---
 
-## Phase 4 - Security, Consent, and Operational Controls
-Status: **Core tranche completed (cron auth + consent enforcement)**
+## Phase 4 - Security and Operational Controls
+Status: **Core tranche completed (cron auth)**
 
 ### Task 4.1 - Centralized cron authentication hardening
 - [x] Added reusable cron auth module
   - [x] `app/src/lib/cron-auth.ts`
   - [x] Bearer validation + constant-time secret comparison
 - [x] Applied to all cron routes
-  - [x] `api/cron/aggregate-features`
-  - [x] `api/cron/discover-intents`
-  - [x] `api/cron/personality-assessment`
-  - [x] `api/cron/sync-audiences`
+  - [x] `api/cron/daily-yield`
+  - [x] `api/cron/expire-yields`
 
-### Task 4.2 - Consent-aware audience sync enforcement
-- [x] Strengthened segment payload shape and export policy in `segment-definitions`
-  - [x] Keep `consentDataExport = true` as base filter
-  - [x] Replace raw wallet export with hashed wallet (`walletAddressHash`)
-  - [x] Include `consentMarketing` for downstream channel gating
-  - [x] Corrected fan-token-holder JSONB condition
-- [x] Enforced marketing consent for Braze sync in `sync-router`
-  - [x] Braze receives only users with `consentMarketing === true`
+### Task 4.2 - Phase 4 implementation commit
+- [x] Phase 4 changes committed
 
-### Task 4.3 - Phase 4 implementation commit
-- [x] Commit created: `f2212a9`
-  - [x] Message: `feat: harden cron auth and enforce consent-aware audience sync`
+> Note: the user-profiling and ad-platform sync code that this workstream also touched has since been removed. Fala Mestre! is a standalone game; it has no crypto or ad-platform integrations.
 
 ---
 
@@ -154,40 +135,17 @@ Status: **Core tranche completed (cron auth + consent enforcement)**
   - [ ] conversation route body size threshold
   - [ ] match route body size threshold
 
-## Priority B - Continue Phase 3 (analytics/partner narrative)
-- [ ] Add internal reporting endpoint for daily summary
-  - [ ] activation/engagement/funnel snapshots
-  - [ ] segment distribution output
+## Priority B - Phase 3 (gameplay analytics)
+- [ ] Add internal reporting endpoint for daily gameplay summary
+  - [ ] matches played, decision usage, economy balance
 - [ ] Add reproducible demo data seed flow
   - [ ] deterministic sample users + events
-- [ ] Add segment/report export shape for partner demos (JSON/CSV)
 
 ## Priority C - Continue Phase 4 controls
-- [ ] Add retention job scaffolding for old analytics/embedding data
+- [ ] Add retention job scaffolding for old analytics data
 - [ ] Add correlation IDs and structured logging format for key routes
 - [ ] Add admin-secret gate to any future non-cron privileged endpoints
 
 ## Priority D - Demo packaging (Phase 5)
 - [ ] Implement deterministic demo mode toggle and scripted demo scenario
 - [ ] Align app copy and docs with actually shipped behavior
-- [ ] Generate partner-facing report artifact template
-
----
-
-## 6) Commit Ledger (This Workstream)
-1. `90d290a` - `chore: restoration snapshot before codex project hardening`
-2. `c69b39a` - `feat: phase-1 stabilization and build-safe web3 fallback`
-3. `9aadb61` - `feat: add API rate limiting and fix match simulation consistency`
-4. `f2212a9` - `feat: harden cron auth and enforce consent-aware audience sync`
-
----
-
-## 7) Practical Restore Instructions
-- Restore backup snapshot state:
-  1. `git checkout codex/restore-point-2026-02-12`
-  2. `git reset --hard 90d290a` (only if exact restore is desired)
-
-- Continue from latest implemented point:
-  1. `git checkout codex/restore-point-2026-02-12`
-  2. `git log --oneline -n 6`
-  3. Continue from commit `f2212a9`

@@ -50,39 +50,6 @@ pie title Mobile Gaming Age Distribution (Brazil)
 
 ---
 
-## Fan Token Opportunity
-
-### Current State
-
-| Metric | Value |
-|--------|-------|
-| Current Penetration | <0.5% of fans |
-| Target Penetration Y1 | 0.14% (100K users) |
-| Growth Potential | 100x in 3 years |
-| Avg Token Holder Value | $50-200 |
-
-### Barriers to Adoption
-
-| Barrier | Severity | Our Solution |
-|---------|----------|--------------|
-| Complexity | High | Learn through gameplay |
-| Risk Perception | Medium | Free-to-play entry, earn first |
-| Lack of Understanding | High | Natural education via game |
-| Access/Onboarding | Medium | Seamless in-game redemption |
-| Perceived Value | Medium | Tangible in-game benefits |
-
-### Brazilian Clubs with Fan Tokens
-
-| Club | Token | Market Cap | Holders |
-|------|-------|------------|---------|
-| Flamengo | $MENGO | ~$15M | 50K+ |
-| Corinthians | $SCCP | ~$8M | 35K+ |
-| Santos | $SANTOS | ~$5M | 25K+ |
-| Palmeiras | - | Pending | - |
-| São Paulo | $SPFC | ~$4M | 20K+ |
-
----
-
 ## Competitive Landscape
 
 ### Direct Competitors
@@ -94,7 +61,7 @@ pie title Mobile Gaming Age Distribution (Brazil)
 | Strengths | Deep simulation, brand recognition, loyal fanbase |
 | Weaknesses | Complex, expensive, time-consuming, PC-focused |
 | Market Share | Dominant in hardcore segment |
-| **Our Advantage** | Accessibility, mobile-first, real rewards |
+| **Our Advantage** | Accessibility, mobile-first, conversational |
 
 #### FIFA Mobile (EA Sports)
 
@@ -103,7 +70,7 @@ pie title Mobile Gaming Age Distribution (Brazil)
 | Strengths | EA brand, graphics, licenses |
 | Weaknesses | Pay-to-win, shallow management, exploitative |
 | Market Share | Largest casual audience |
-| **Our Advantage** | Fair progression, strategy depth, authentic rewards |
+| **Our Advantage** | Fair progression, strategy depth |
 
 #### Top Eleven (Nordeus)
 
@@ -128,7 +95,6 @@ pie title Mobile Gaming Age Distribution (Brazil)
 | Competitor | Overlap | Differentiation |
 |------------|---------|-----------------|
 | Fantasy Football | Player engagement | We offer full simulation, not just picks |
-| Socios.com App | Token holders | We onboard non-holders through gameplay |
 | Sports Betting | Prediction engagement | Entertainment, not gambling |
 | Social Games | Time competition | Sports passion adds depth |
 
@@ -137,7 +103,6 @@ pie title Mobile Gaming Age Distribution (Brazil)
 | Feature | FM | FIFA Mobile | Top Eleven | **Fala Mestre!** |
 |---------|-----|-------------|------------|------------------|
 | Complexity | High | Medium | Medium | **Low** |
-| Real Rewards | No | No | No | **Yes** |
 | Brazilian Focus | Limited | Limited | Generic | **Deep** |
 | Free to Play | Paid | F2P | F2P | **F2P** |
 | Session Length | 60+ min | 20 min | 30 min | **15 min** |
@@ -154,7 +119,6 @@ pie title Mobile Gaming Age Distribution (Brazil)
 |-------|--------|--------|
 | AI Adoption | Accelerating | High - validates conversational approach |
 | Mobile Gaming Growth | Strong | High - our primary platform |
-| Crypto/Web3 Awareness | Growing | Medium - token adoption opening |
 | 5G Rollout | Expanding | Medium - enables richer experience |
 | Social Gaming | Increasing | High - viral mechanics |
 
@@ -163,7 +127,6 @@ pie title Mobile Gaming Age Distribution (Brazil)
 | Factor | Timeline | Opportunity |
 |--------|----------|-------------|
 | 2026 World Cup (North America) | July 2026 | Massive Brazil hype window |
-| Brazilian Clubs Adopting Tokens | Ongoing | Education opportunity |
 | Economic Recovery | 2025-2026 | Disposable income rising |
 | Post-Pandemic Mobile Habits | Established | Mobile-first behavior locked in |
 
@@ -214,16 +177,14 @@ flowchart TD
 Brazilian Football Fans: 70M
 ├── Active Mobile Gamers: 45M (64%)
 │   ├── Sports Game Players: 10M (22%)
-│   │   ├── Management Interest: 3M (30%)
-│   │   │   └── Token-Curious: 600K (20%)
-│   │   │       └── Year 1 Target: 100K (17%)
+│   │   └── Management Interest: 3M (30%)
 ```
 
-| Market Level | Size | Revenue Potential |
-|--------------|------|-------------------|
-| TAM (All Brazilian Football Fans) | 70M | $1.4B |
-| SAM (Mobile Sports Gamers) | 10M | $200M |
-| SOM (Realistic Year 1) | 100K | $500K |
+| Market Level | Size |
+|--------------|------|
+| TAM (All Brazilian Football Fans) | 70M |
+| SAM (Mobile Sports Gamers) | 10M |
+| Management-game interest | 3M |
 
 ---
 
@@ -237,7 +198,6 @@ Brazilian Football Fans: 70M
 | Influencer | $0.50 | Medium | P0 |
 | Social Ads | $1.00 | High | P1 |
 | App Store | $2.00 | Medium | P1 |
-| Partnerships | $0.25 | Medium | P2 |
 
 ### Viral Mechanics
 
@@ -254,23 +214,21 @@ Brazilian Football Fans: 70M
 ## Key Insights
 
 > [!important] Blue Ocean Opportunity
-> No competitor combines: Conversational AI + Football Management + Real Token Rewards + Brazilian Focus
+> No competitor combines: Conversational AI + Football Management + Brazilian Focus
 
 ### Strategic Implications
 
 1. **First-Mover Window:** 6-12 months before potential copycats
-2. **Data Advantage:** Conversational data is more valuable than clicks
+2. **Accessibility:** Natural language removes the menu-learning barrier
 3. **Cost Efficiency:** AI-native = 10x cheaper development
 4. **Cultural Moat:** Brazilian authenticity is hard to replicate
-5. **Partnership Potential:** Unique value proposition for Socios/Chiliz
 
 ---
 
 ## Related Documents
 
-- [[00-Executive-Summary]] - Business overview
+- [[00-Executive-Summary]] - Product overview
 - [[01-Vision-and-Strategy]] - Strategic planning
-- [[03-Go-To-Market]] - Launch strategy
 - [[00-User-Personas]] - Target user profiles
 
 ---

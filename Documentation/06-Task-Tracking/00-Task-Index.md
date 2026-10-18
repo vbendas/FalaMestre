@@ -109,14 +109,13 @@ This document provides a master view of all development tasks across all phases.
 
 ## Phase 3: Scale Tasks (Weeks 9-12)
 
-### Monetization
+### Premium & Payments
 
 | ID | Task | Priority | Est. | Status |
 |----|------|----------|------|--------|
 | SCL-001 | Stripe integration | P0 | 8h | Pending |
 | SCL-002 | PIX payments | P0 | 4h | Pending |
 | SCL-003 | Subscription logic | P0 | 8h | Pending |
-| SCL-004 | Ad integration | P1 | 8h | Pending |
 
 ### Social Features
 
@@ -126,14 +125,6 @@ This document provides a master view of all development tasks across all phases.
 | SCL-006 | Async PvP | P1 | 12h | Pending |
 | SCL-007 | Share cards | P1 | 4h | Pending |
 | SCL-008 | Referral system | P0 | 4h | Pending |
-
-### Token Integration
-
-| ID | Task | Priority | Est. | Status |
-|----|------|----------|------|--------|
-| SCL-009 | Socios OAuth | P0 | 8h | Pending |
-| SCL-010 | Voucher claim | P0 | 8h | Pending |
-| SCL-011 | Token selection | P0 | 4h | Pending |
 
 ---
 

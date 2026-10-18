@@ -1,7 +1,7 @@
 # Scale Tasks (Phase 3)
 
 ---
-tags: #tasks #scale #phase-3 #monetization #launch #tracking
+tags: #tasks #scale #phase-3 #launch #tracking
 status: active
 priority: high
 phase: scale
@@ -10,14 +10,14 @@ last_updated: 2026-01-19
 
 ## Overview
 
-Detailed task breakdown for Phase 3 (Scale). Total: 62 tasks over 4 weeks (Weeks 9-12).
+Detailed task breakdown for Phase 3 (Scale). Total: 67 tasks over 4 weeks (Weeks 9-12).
 
 > [!note] Phase 3 Focus
-> Monetization, social features, token integration, and public launch.
+> Premium subscription, social features, and public launch. Fala Mestre! is a standalone game; it has no crypto or ad-platform integrations.
 
 ---
 
-## Week 9: Monetization (Day 57-63)
+## Week 9: Premium Subscription (Day 57-63)
 
 ### Premium Subscription System
 
@@ -51,25 +51,11 @@ Detailed task breakdown for Phase 3 (Scale). Total: 62 tasks over 4 weeks (Weeks
 | SCL-016 | Create feature flags system | P0 | 2h | SCL-001 | [ ] |
 | SCL-017 | Implement 2x points multiplier for premium | P0 | 2h | SCL-016 | [ ] |
 | SCL-018 | Add premium badge display | P1 | 1h | SCL-016 | [ ] |
-| SCL-019 | Implement ad-free experience flag | P0 | 1h | SCL-016 | [ ] |
 | SCL-020 | Create premium-only tournaments access | P1 | 2h | SCL-016 | [ ] |
 
 ---
 
-## Week 10: Advertising & Social (Day 64-70)
-
-### Ad Integration
-
-| ID | Task | Priority | Hours | Deps | Status |
-|----|------|----------|-------|------|--------|
-| SCL-021 | Set up AdMob/IronSource account | P1 | 1h | - | [ ] |
-| SCL-022 | Integrate rewarded video SDK | P1 | 4h | SCL-021 | [ ] |
-| SCL-023 | Create rewarded video trigger points | P1 | 2h | SCL-022 | [ ] |
-| SCL-024 | Implement reward delivery after video | P1 | 2h | SCL-023 | [ ] |
-| SCL-025 | Add daily ad limits (5/day) | P1 | 1h | SCL-024 | [ ] |
-| SCL-026 | Create interstitial ad placements | P2 | 2h | SCL-021 | [ ] |
-| SCL-027 | Implement ad frequency capping | P1 | 1h | SCL-026 | [ ] |
-| SCL-028 | Build ad analytics tracking | P1 | 2h | SCL-022 | [ ] |
+## Week 10: Social (Day 64-70)
 
 ### Friend System
 
@@ -98,7 +84,7 @@ Detailed task breakdown for Phase 3 (Scale). Total: 62 tasks over 4 weeks (Weeks
 
 ---
 
-## Week 11: Virality & Tokens (Day 71-77)
+## Week 11: Virality (Day 71-77)
 
 ### Sharing Features
 
@@ -123,19 +109,6 @@ Detailed task breakdown for Phase 3 (Scale). Total: 62 tasks over 4 weeks (Weeks
 | SCL-055 | Create referral reward system (500 pts) | P0 | 2h | SCL-054 | [ ] |
 | SCL-056 | Build referral dashboard UI | P1 | 2h | SCL-054 | [ ] |
 | SCL-057 | Add ongoing referral bonuses | P2 | 2h | SCL-055 | [ ] |
-
-### Token Integration
-
-| ID | Task | Priority | Hours | Deps | Status |
-|----|------|----------|-------|------|--------|
-| SCL-058 | Research Socios.com API documentation | P0 | 4h | - | [ ] |
-| SCL-059 | Implement Socios OAuth flow | P0 | 6h | SCL-058 | [ ] |
-| SCL-060 | Create token_claims database table | P0 | 2h | SCL-059 | [ ] |
-| SCL-061 | Build voucher redemption API | P0 | 4h | SCL-060 | [ ] |
-| SCL-062 | Create token selection UI | P0 | 3h | SCL-061 | [ ] |
-| SCL-063 | Implement redemption confirmation flow | P0 | 3h | SCL-062 | [ ] |
-| SCL-064 | Add redemption history view | P1 | 2h | SCL-063 | [ ] |
-| SCL-065 | Create balance sync with Socios | P1 | 3h | SCL-059 | [ ] |
 
 ---
 
@@ -180,27 +153,27 @@ Detailed task breakdown for Phase 3 (Scale). Total: 62 tasks over 4 weeks (Weeks
 ## Task Checklist Summary
 
 ```
-WEEK 9 TASKS (Monetization)
-===========================
-[ ] SCL-001 through SCL-020 (20 tasks)
-Estimated: 44 hours
+WEEK 9 TASKS (Premium)
+======================
+[ ] SCL-001 through SCL-020 (19 tasks)
+Estimated: 43 hours
 
-WEEK 10 TASKS (Ads & Social)
-============================
-[ ] SCL-021 through SCL-043 (23 tasks)
-Estimated: 52 hours
+WEEK 10 TASKS (Social)
+======================
+[ ] SCL-029 through SCL-043 (15 tasks)
+Estimated: 37 hours
 
-WEEK 11 TASKS (Virality & Tokens)
-=================================
-[ ] SCL-044 through SCL-065 (22 tasks)
-Estimated: 56 hours
+WEEK 11 TASKS (Virality)
+========================
+[ ] SCL-044 through SCL-057 (14 tasks)
+Estimated: 29 hours
 
 WEEK 12 TASKS (Launch)
 ======================
 [ ] SCL-066 through SCL-084 (19 tasks)
 Estimated: 70 hours
 
-TOTAL: 84 tasks, 222 hours
+TOTAL: 67 tasks, 179 hours
 ```
 
 ---
@@ -209,9 +182,9 @@ TOTAL: 84 tasks, 222 hours
 
 | Priority | Tasks | Hours | Focus |
 |----------|-------|-------|-------|
-| P0 | 52 | 158h | Payments, tokens, launch |
-| P1 | 24 | 50h | Ads, social, PvP |
-| P2 | 8 | 14h | Nice-to-haves |
+| P0 | 45 | 135h | Payments, launch |
+| P1 | 15 | 32h | Social, PvP |
+| P2 | 7 | 12h | Nice-to-haves |
 
 ---
 
@@ -239,16 +212,6 @@ Enhancement Phase
                                         +-- SCL-054 (Tracking)
                                         |
                                         +-- SCL-055 (Rewards)
-
-Token Integration
-    |
-    +-- SCL-058 (Research) --+-- SCL-059 (OAuth)
-                             |       |
-                             |       +-- SCL-061 (Redemption)
-                             |       |
-                             |       +-- SCL-065 (Sync)
-                             |
-                             +-- SCL-060 (Claims Table)
 ```
 
 ---
@@ -262,10 +225,7 @@ flowchart LR
     A[SCL-003 Stripe] --> B[SCL-004 SDK]
     B --> C[SCL-007 Webhooks]
     C --> D[SCL-016 Features]
-    D --> E[SCL-058 Socios]
-    E --> F[SCL-059 OAuth]
-    F --> G[SCL-061 Redemption]
-    G --> H[SCL-073 Bug Bash]
+    D --> H[SCL-073 Bug Bash]
     H --> I[SCL-083 Launch]
 ```
 
@@ -276,8 +236,6 @@ flowchart LR
 | Risk | Impact | Mitigation |
 |------|--------|------------|
 | Stripe Brazil approval delay | High | Start application early, have backup processor |
-| Socios API complexity | High | Start integration early, prepare mock fallback |
-| Ad revenue lower than expected | Medium | Focus on subscriptions as primary revenue |
 | Launch day server overload | High | Load test, prepare scaling plan |
 | Payment fraud | Medium | Implement fraud detection rules |
 
@@ -290,8 +248,6 @@ flowchart LR
 | Service | Purpose | Account Setup |
 |---------|---------|---------------|
 | Stripe | Payments (cards, PIX) | Week 9, Day 1 |
-| AdMob/IronSource | Advertising | Week 10, Day 1 |
-| Socios.com | Token redemption | Week 11, Day 1 |
 | Branch.io | Deep linking | Week 11, Day 2 |
 | Sentry | Error monitoring | Week 12, Day 1 |
 
@@ -306,7 +262,6 @@ flowchart LR
 | `/api/pvp/challenge` | POST | Challenge friend |
 | `/api/share/card` | GET | Generate share image |
 | `/api/referral/track` | POST | Track referral |
-| `/api/tokens/redeem` | POST | Redeem voucher |
 
 ---
 
@@ -332,7 +287,6 @@ Each task is "Done" when:
 - [ ] Security audit passed
 - [ ] Load testing passed
 - [ ] Payment flows tested end-to-end
-- [ ] Token redemption tested
 - [ ] Monitoring in place
 
 ### Launch Day (Day 78)
@@ -359,8 +313,6 @@ Each task is "Done" when:
 - [[02-Enhancement-Tasks]] - Previous phase tasks
 - [[04-Expansion-Tasks]] - Next phase tasks
 - [[03-Phase-3-Scale]] - Phase overview
-- [[00-Monetization]] - Revenue model
-- [[01-Fan-Token-Integration]] - Token system
 
 ---
 

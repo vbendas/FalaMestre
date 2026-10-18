@@ -1,4 +1,4 @@
-# Socios.com Manager - LLM Strategy & Architecture
+# Fala Mestre! - LLM Strategy & Architecture
 ## Model Selection, Reasoning Modes, Cost Optimization & Fallback System
 
 ---
@@ -28,13 +28,6 @@ Extended Thinking Mode (Sonnet 4.5 with reasoning):
 ```typescript
 // Truly complex problems where mistakes are costly
 const worthItUseCases = {
-  userClustering: {
-    reason: "One-time deep analysis, impacts all future targeting",
-    frequency: "Once per week per user (batched)",
-    costImpact: "0.5% of total LLM spend",
-    value: "HIGH - affects marketing ROI"
-  },
-  
   fraudDetection: {
     reason: "False positives/negatives are expensive",
     frequency: "Triggered on suspicious behavior",
@@ -152,7 +145,6 @@ const modelConfiguration = {
     fallbacks: ["gpt-o1-mini", "claude-3.5-sonnet-standard"],
     maxLatency: 10000,
     functions: [
-      "user_behavioral_clustering",
       "fraud_pattern_detection", 
       "personalized_onboarding_path",
       "season_strategic_analysis",
@@ -206,7 +198,6 @@ class ReasoningModeSelector {
   
   private isHighValueTask(context: TaskContext): boolean {
     const highValueTasks = [
-      'user_clustering',
       'fraud_detection',
       'personalized_onboarding',
       'game_balance_analysis'
@@ -221,42 +212,15 @@ class ReasoningModeSelector {
 
 ## 3. Specific Use Case Analysis
 
-### 3.1 User Clustering (REASONING MODE ✅)
+### 3.1 Game Balance Analysis (REASONING MODE ✅)
 
 ```yaml
-Task: Analyze user behavior to assign to marketing clusters
-
-Complexity:
-  - Multi-dimensional data analysis
-  - Pattern recognition across time
-  - Nuanced behavioral signals
-  - Predicting future actions
+Task: Review batches of simulated match results for balance issues
 
 Why Extended Thinking:
-  ✅ Happens once per week per user (can batch)
-  ✅ Impacts all marketing spend efficiency
-  ✅ Mistakes cascade (wrong cluster = wasted ads)
-  ✅ Complex multi-factor decision
+  ✅ Runs offline in batches
+  ✅ Multi-factor analysis (formations, tactics, team strength)
   ✅ No real-time requirement
-
-Cost Analysis:
-  Standard Sonnet: $0.08 per analysis
-  Reasoning Mode: $0.20 per analysis
-  Additional Cost: +$0.12 per user per week
-  
-  For 10,000 users: +$1,200/week = +$5,000/month
-  
-ROI Justification:
-  If reasoning improves clustering accuracy by 10%:
-  - Better ad targeting = 10% lower CAC
-  - 10,000 users * $1 CAC * 10% = $1,000/month saved
-  
-  But more importantly:
-  - Better LTV predictions → better bidding
-  - Better churn prediction → proactive retention
-  - Estimated value: $10,000-20,000/month
-  
-Verdict: STRONG YES - 2-4x ROI
 ```
 
 ### 3.2 Match Simulation (STANDARD MODE ✅)
@@ -450,7 +414,6 @@ const productionConfig = {
 
 ```yaml
 YES - Use Extended Thinking:
-  ✅ User behavioral clustering (weekly batch)
   ✅ Fraud/exploit detection (triggered)
   ✅ Personalized onboarding (once per user)
   ✅ Season strategic analysis (monthly)
@@ -617,27 +580,23 @@ class ReasoningBatchProcessor {
     });
   }
   
-  // Example: Batch user clustering
+  // Example: Batch game balance analysis
   private buildBatchPrompt(taskType: string, queue: any[]): string {
-    if (taskType === 'user_clustering') {
+    if (taskType === 'game_balance_analysis') {
       return `
-        Analyze the behavior of these ${queue.length} users and assign each to 
-        the most appropriate marketing cluster. Use extended reasoning to consider
-        patterns, anomalies, and predictive signals.
+        Analyze these ${queue.length} simulated match results and flag game
+        balance issues. Use extended reasoning to consider patterns and anomalies.
         
-        Users to analyze:
+        Matches to analyze:
         ${queue.map((item, i) => `
-          User ${i + 1}:
+          Match ${i + 1}:
           ${JSON.stringify(item.data)}
         `).join('\n')}
         
-        For each user, provide:
-        1. Primary cluster assignment
-        2. Cluster confidence score
-        3. Secondary cluster (if applicable)
-        4. Key behavioral signals
-        5. Churn risk assessment
-        6. LTV prediction
+        For each match, provide:
+        1. Whether the result is plausible for the team strengths
+        2. Any formation/tactic combination that looks overpowered
+        3. Suggested tuning (if applicable)
       `;
     }
     
@@ -688,7 +647,6 @@ interface ReasoningMetrics {
   userSatisfactionDiff: number;  // vs standard mode
   
   // ROI Signals
-  clusteringAccuracyImprovement: number;
   fraudDetectionTruePositives: number;
   onboardingRetentionLift: number;
 }
@@ -700,31 +658,25 @@ interface ReasoningMetrics {
 
 ### ✅ YES - Use Extended Thinking for:
 
-1. **User Clustering** (0.3% of requests)
-   - Weekly batch analysis
-   - High ROI from better targeting
-   - Cost: ~$1,500/month for 10K users
-
-2. **Fraud Detection** (0.1% of requests)  
+1. **Fraud Detection** (0.1% of requests)  
    - Triggered on suspicious behavior
    - Prevents economy exploitation
    - Cost: ~$150/month for 10K users
 
-3. **Personalized Onboarding** (0.1% of requests)
+2. **Personalized Onboarding** (0.1% of requests)
    - Once per new user
    - Critical for retention
    - Cost: ~$200/month for 1K new users
 
-**Total Reasoning Cost: ~$1,850/month**
-**Total Standard Cost: ~$8,050/month**
-**Combined Total: ~$9,900/month for 10K active users**
-**Per User Cost: ~$0.99/month**
+3. **Game Balance Analysis** (batch, when needed)
+   - Batch analysis of simulated match outcomes
+
+See section 4.1 for the overall cost model.
 
 ### The Answer to Your Question:
 
 **Yes, use Sonnet 4.5 with extended thinking for complex logic - but ONLY for the 0.5% of requests where it truly matters:**
 
-- User behavioral clustering ✅
 - Fraud/exploit detection ✅  
 - Personalized onboarding ✅
 
@@ -773,7 +725,7 @@ Day 1-2: Advanced Features
 
 Day 3-4: Reasoning Mode
   - [ ] Configure extended thinking for Tier 4
-  - [ ] Implement batch processor for clustering
+  - [ ] Implement batch processor for game balance analysis
   - [ ] Add reasoning mode selector logic
   - [ ] Test cost vs quality metrics
 

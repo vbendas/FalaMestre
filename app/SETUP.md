@@ -45,7 +45,7 @@ Open http://localhost:3000
 2. AI responds with welcome message
 3. Click "JOGAR AGORA" button
 4. See match result with narration
-5. Check your Socios Points increase
+5. Check your points increase
 6. Refresh page - your progress is saved!
 
 ## Troubleshooting

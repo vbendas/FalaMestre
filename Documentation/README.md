@@ -11,7 +11,9 @@ last_updated: 2026-02-07
 
 > **"The future of football gaming isn't on a screen - it's in a conversation."**
 
-Fala Mestre! is an **AI-powered conversational football management game** that combines classic Elifoot-style gameplay with modern fan token economics and sophisticated user analytics. Players manage their favorite Brazilian football club through natural language conversation, earning real fan token rewards while learning about Web3 in an engaging, accessible way.
+Fala Mestre! is an **AI-powered conversational football management game** that combines classic Elifoot-style gameplay with an AI assistant coach. Players manage a fictional Brazilian football club through natural language conversation and a mobile-first UI.
+
+Fala Mestre! is a standalone game; it has no crypto or ad-platform integrations.
 
 ---
 
@@ -21,7 +23,7 @@ Fala Mestre! is an **AI-powered conversational football management game** that c
 
 | Section | Description | Key Documents |
 |---------|-------------|---------------|
-| [[00-Executive-Summary]] | Project overview and business case | Vision, objectives, investment |
+| [[00-Executive-Summary]] | Project overview | Vision, design goals, approach |
 | [[01-Vision-and-Strategy]] | Strategic positioning and goals | Market position, success factors |
 | [[02-Market-Analysis]] | Target market and competition | Brazil focus, competitive landscape |
 
@@ -33,20 +35,22 @@ Fala Mestre! is an **AI-powered conversational football management game** that c
 | [[01-Gameplay-Loop]] | Core engagement mechanics | Play, earn, improve cycle |
 | [[02-Player-System]] | Player attributes and ratings | 6-attribute system, hidden stats |
 | [[03-Match-Simulation]] | Match engine and outcomes | Probability engine, narratives |
+| [[03-Match-Simulation-VR]] | VR match view concept | Immersive match viewing |
 | [[04-Transfer-Market]] | Trading and negotiations | AI negotiation, valuations |
 | [[05-Training-Development]] | Player growth systems | Training, youth academy |
 | [[06-Virtual-Fanbase]] | Fan faction mechanics | 4 factions, mood system |
 | [[07-Formations-Tactics]] | Tactical systems | Formations, matchups |
-| [[08-Points-Rewards]] | Economy and rewards | Earning, conversion, anti-abuse |
+| [[08-Points-Rewards]] | Economy and rewards | Earning, spending, anti-abuse |
 
 ### User Experience
 
 | Section | Description | Key Documents |
 |---------|-------------|---------------|
-| [[00-User-Personas]] | Target user profiles | 4 primary personas |
+| [[00-User-Personas]] | Target user profiles | 3 primary personas |
 | [[01-User-Journey]] | End-to-end user flow | First 30 days experience |
 | [[02-Onboarding-Flow]] | New user experience | Team selection, tutorial |
-| [[03-Conversational-Interface]] | Chat UI design | Message types, actions |
+| [[03-Conversational-Interface]] | Original chat UI (deprecated) | History of the chat-only design |
+| [[03-Interface-Architecture]] | Current interface architecture | Menu-based navigation, pages |
 | [[04-Visual-Design]] | Art direction and assets | Style guide, Rive animations |
 
 ### Layout Enhancement Suggestions
@@ -175,16 +179,12 @@ These visual improvements will transform the functional MVP into an engaging, em
 | [[03-API-Design]] | API endpoints and contracts | REST routes, WebSocket |
 | [[04-AI-LLM-Strategy]] | AI integration approach | Tiered models, prompts |
 | [[05-Caching-Performance]] | Performance optimization | Multi-layer cache, CDN |
+| [[10-Three-Tier-LLM-Strategy]] | LLM model tiers | Model selection and routing |
 
 ### Business
 
 | Section | Description | Key Documents |
 |---------|-------------|---------------|
-| [[00-Monetization]] | Revenue model | Free-to-play, premium, ads |
-| [[01-Fan-Token-Integration]] | Socios.com integration | Points, vouchers, redemption |
-| [[02-Analytics-Clustering]] | User intelligence | Behavioral tracking, segments |
-| [[03-Go-To-Market]] | Launch strategy | Brazil focus, viral mechanics |
-| [[04-Financial-Projections]] | Business model | Costs, revenue, ROI |
 | [[19-IP-Protection-Team-Naming-Strategy]] | IP-safe naming strategy | Fictional teams, generated players, legal protection |
 
 ### Development Roadmap
@@ -206,15 +206,23 @@ These visual improvements will transform the functional MVP into an engaging, em
 | [[02-Enhancement-Tasks]] | Phase 2 atomic tasks (40+ tasks) |
 | [[03-Scale-Tasks]] | Phase 3 atomic tasks (35+ tasks) |
 | [[04-Expansion-Tasks]] | Phase 4-5 atomic tasks (75+ tasks) |
+| [[02-VR-Tasks]] | VR match view tasks |
+| [[VR-Phase2-3D-Models]] | VR 3D model tasks |
 
-### Reference
+### Evaluations
 
 | Document | Description |
 |----------|-------------|
-| [[00-Glossary]] | Terms and definitions |
-| [[01-Success-Metrics]] | KPIs and targets |
-| [[02-Risk-Register]] | Risk analysis and mitigation |
-| [[03-Asset-Requirements]] | Visual and audio assets needed |
+| [[00-Evaluation-Criteria]] | Evaluation rubric |
+| [[01-Comprehensive-Evaluation-2026-02-06]] | Project evaluation (Feb 2026) |
+| [[02-Quick-Wins-Plan]] | Quick wins identified by the evaluation |
+
+### Templates
+
+| Document | Description |
+|----------|-------------|
+| [[DESIGN_SYSTEM]] | Design system reference |
+| [[SCREENS_PLAN]] | Screen-by-screen design plan |
 
 ---
 
@@ -237,20 +245,6 @@ pie title Development Progress
 | MVP Development Start | Pending | Feb 2026 |
 | MVP Launch | Pending | Mar 2026 |
 | Public Launch | Pending | Apr 2026 |
-
----
-
-## Key Metrics Summary
-
-| Metric | Target | Timeline |
-|--------|--------|----------|
-| Development Investment | $20,000 | 12 weeks |
-| User Acquisition (Year 1) | 100,000 | 12 months |
-| CAC (Customer Acquisition Cost) | <$1 | Month 6 |
-| Token Conversion Rate | 15-20% | Ongoing |
-| Monthly Active Users | 40,000 | Month 12 |
-| Revenue (Year 1) | $400-600K | 12 months |
-| ROI | 2000%+ | Year 1 |
 
 ---
 
@@ -280,10 +274,6 @@ pie title Development Progress
 - `#priority-high/medium/low` - Task priorities
 - `#frontend` `#backend` `#ai` `#game-logic` - Technical areas
 - `#business` `#design` `#technical` - Document types
-
-### Templates
-- [[Task-Template]] - For creating new tasks
-- [[Feature-Spec-Template]] - For feature specifications
 
 ---
 
