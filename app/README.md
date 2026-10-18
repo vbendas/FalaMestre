@@ -58,11 +58,12 @@ app/
 │       └── team-data.ts          # Team assets & colors
 ├── public/
 │   └── teams/                    # Team badge SVGs
-│       ├── flamengo.svg
-│       ├── palmeiras.svg
-│       ├── saopaulo.svg
-│       ├── gremio.svg
-│       └── internacional.svg
+│       ├── leoes.svg
+│       ├── falcoes.svg
+│       ├── trovao.svg
+│       ├── mare.svg
+│       ├── serra.svg
+│       └── estrela.svg
 ├── drizzle/                      # Database migrations
 └── .env.example                  # Environment variables
 ```

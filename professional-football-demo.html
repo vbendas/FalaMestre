@@ -923,14 +923,14 @@
                 <div class="team-info">
                     <div class="team-logo home">R</div>
                     <div class="team-details">
-                        <div class="team-name">Real Madrid</div>
+                        <div class="team-name">Leões do Norte</div>
                         <div class="team-score" id="homeScore">0</div>
                     </div>
                 </div>
                 <div class="score-divider">-</div>
                 <div class="team-info">
                     <div class="team-details">
-                        <div class="team-name">Barcelona</div>
+                        <div class="team-name">Falcões de Aço</div>
                         <div class="team-score" id="awayScore">0</div>
                     </div>
                     <div class="team-logo away">B</div>
@@ -999,30 +999,30 @@
         // Player database with names and stats
         const playerDatabase = {
             home: [
-                {number: 1, name: 'Courtois', position: 'GK', rating: 88},
-                {number: 2, name: 'Carvajal', position: 'RB', rating: 84},
-                {number: 3, name: 'Militao', position: 'CB', rating: 85},
-                {number: 4, name: 'Alaba', position: 'CB', rating: 86},
-                {number: 5, name: 'Mendy', position: 'LB', rating: 83},
-                {number: 6, name: 'Kroos', position: 'CM', rating: 89},
-                {number: 7, name: 'Modric', position: 'CM', rating: 88},
-                {number: 8, name: 'Valverde', position: 'CM', rating: 85},
-                {number: 9, name: 'Vinicius', position: 'LW', rating: 86},
-                {number: 10, name: 'Benzema', position: 'ST', rating: 91},
-                {number: 11, name: 'Rodrygo', position: 'RW', rating: 84}
+                {number: 1, name: 'Cardoso', position: 'GK', rating: 88},
+                {number: 2, name: 'Carvalho', position: 'RB', rating: 84},
+                {number: 3, name: 'Melo', position: 'CB', rating: 85},
+                {number: 4, name: 'Almeida', position: 'CB', rating: 86},
+                {number: 5, name: 'Mendes', position: 'LB', rating: 83},
+                {number: 6, name: 'Krause', position: 'CM', rating: 89},
+                {number: 7, name: 'Moreira', position: 'CM', rating: 88},
+                {number: 8, name: 'Valente', position: 'CM', rating: 85},
+                {number: 9, name: 'Viana', position: 'LW', rating: 86},
+                {number: 10, name: 'Barreto', position: 'ST', rating: 91},
+                {number: 11, name: 'Teixeira', position: 'RW', rating: 84}
             ],
             away: [
-                {number: 1, name: 'Ter Stegen', position: 'GK', rating: 87},
-                {number: 2, name: 'Kounde', position: 'RB', rating: 84},
-                {number: 3, name: 'Araujo', position: 'CB', rating: 85},
-                {number: 4, name: 'Christensen', position: 'CB', rating: 83},
-                {number: 5, name: 'Alba', position: 'LB', rating: 82},
-                {number: 6, name: 'Busquets', position: 'CM', rating: 86},
-                {number: 7, name: 'De Jong', position: 'CM', rating: 87},
-                {number: 8, name: 'Pedri', position: 'CM', rating: 86},
-                {number: 9, name: 'Dembele', position: 'LW', rating: 84},
-                {number: 10, name: 'Lewandowski', position: 'ST', rating: 91},
-                {number: 11, name: 'Raphinha', position: 'RW', rating: 83}
+                {number: 1, name: 'Tavares', position: 'GK', rating: 87},
+                {number: 2, name: 'Couto', position: 'RB', rating: 84},
+                {number: 3, name: 'Aguiar', position: 'CB', rating: 85},
+                {number: 4, name: 'Correia', position: 'CB', rating: 83},
+                {number: 5, name: 'Albuquerque', position: 'LB', rating: 82},
+                {number: 6, name: 'Bastos', position: 'CM', rating: 86},
+                {number: 7, name: 'Dorneles', position: 'CM', rating: 87},
+                {number: 8, name: 'Prado', position: 'CM', rating: 86},
+                {number: 9, name: 'Damasceno', position: 'LW', rating: 84},
+                {number: 10, name: 'Lacerda', position: 'ST', rating: 91},
+                {number: 11, name: 'Ribas', position: 'RW', rating: 83}
             ]
         };
 
@@ -1146,7 +1146,7 @@
                 <div class="stats-header">${playerData.name} - ${playerData.position}</div>
                 <div class="stat-row">
                     <span class="stat-label">Team:</span>
-                    <span class="stat-value">${team === 'home' ? 'Real Madrid' : 'Barcelona'}</span>
+                    <span class="stat-value">${team === 'home' ? 'Leões do Norte' : 'Falcões de Aço'}</span>
                 </div>
                 <div class="stat-row">
                     <span class="stat-label">Number:</span>
@@ -1263,7 +1263,7 @@
 
         function handlePass() {
             const passMessages = [
-                `Beautiful passing sequence from ${possession === 'home' ? 'Real Madrid' : 'Barcelona'} in midfield.`,
+                `Beautiful passing sequence from ${possession === 'home' ? 'Leões do Norte' : 'Falcões de Aço'} in midfield.`,
                 `Quick one-two passing on the wing. The crowd appreciates the technical skill!`,
                 `Patient build-up play from the back. The team is maintaining possession well.`,
                 `Crisp passing through the midfield thirds. They're looking for an opening.`
@@ -1282,10 +1282,10 @@
         }
 
         function handleShot() {
-            const team = possession === 'home' ? 'Real Madrid' : 'Barcelona';
+            const team = possession === 'home' ? 'Leões do Norte' : 'Falcões de Aço';
             const playerNames = possession === 'home' ? 
-                ['Vinicius', 'Benzema', 'Rodrygo', 'Modric'] : 
-                ['Lewandowski', 'Dembele', 'Raphinha', 'Pedri'];
+                ['Viana', 'Barreto', 'Teixeira', 'Moreira'] : 
+                ['Lacerda', 'Damasceno', 'Ribas', 'Prado'];
             const playerName = playerNames[Math.floor(Math.random() * playerNames.length)];
             
             const isGoal = Math.random() > 0.8; // 20% chance of goal
@@ -1314,10 +1314,10 @@
         }
 
         function handleGoal(scorerName = null) {
-            const team = possession === 'home' ? 'Real Madrid' : 'Barcelona';
+            const team = possession === 'home' ? 'Leões do Norte' : 'Falcões de Aço';
             const playerNames = possession === 'home' ? 
-                ['Vinicius Jr.', 'Benzema', 'Rodrygo', 'Modric', 'Kroos'] : 
-                ['Lewandowski', 'Dembele', 'Raphinha', 'Pedri', 'De Jong'];
+                ['Rocha', 'Arantes', 'Teixeira', 'Moreira', 'Krause'] : 
+                ['Lacerda', 'Damasceno', 'Ribas', 'Prado', 'Dorneles'];
             
             if (!scorerName) {
                 scorerName = playerNames[Math.floor(Math.random() * playerNames.length)];
@@ -1346,7 +1346,7 @@
             addMessage(`🚽 GOAL! ${scorerName} scores for ${team} in minute ${matchTime}! What a magnificent strike!`, 'system');
             
             setTimeout(() => {
-                addMessage(`🎉 The score is now Real Madrid ${homeScore} - ${awayScore} Barcelona. The momentum has shifted!`);
+                addMessage(`🎉 The score is now Leões do Norte ${homeScore} - ${awayScore} Falcões de Aço. The momentum has shifted!`);
             }, 2000);
 
             // Reset ball position after celebration
@@ -1357,7 +1357,7 @@
         }
 
         function handleCorner() {
-            const team = possession === 'home' ? 'Real Madrid' : 'Barcelona';
+            const team = possession === 'home' ? 'Leões do Norte' : 'Falcões de Aço';
             const side = Math.random() > 0.5 ? 'left' : 'right';
             
             addMessage(`🚩 Corner kick to ${team} on the ${side} side. Great opportunity to create danger!`);
@@ -1385,13 +1385,13 @@
         }
 
         function handleFoul() {
-            const team = possession === 'home' ? 'Barcelona' : 'Real Madrid';
+            const team = possession === 'home' ? 'Falcões de Aço' : 'Leões do Norte';
             const playerNames = possession === 'home' ? 
-                ['Araujo', 'Busquets', 'Alba'] : 
-                ['Militao', 'Kroos', 'Mendy'];
+                ['Aguiar', 'Bastos', 'Albuquerque'] : 
+                ['Melo', 'Krause', 'Mendes'];
             const playerName = playerNames[Math.floor(Math.random() * playerNames.length)];
             
-            addMessage(`⚠️ Foul committed by ${playerName}. The free kick goes to ${possession === 'home' ? 'Real Madrid' : 'Barcelona'}.`);
+            addMessage(`⚠️ Foul committed by ${playerName}. The free kick goes to ${possession === 'home' ? 'Leões do Norte' : 'Falcões de Aço'}.`);
             
             // Small chance of card
             if (Math.random() > 0.7) {
@@ -1400,7 +1400,7 @@
         }
 
         function handleOffside() {
-            const attackingTeam = possession === 'home' ? 'Real Madrid' : 'Barcelona';
+            const attackingTeam = possession === 'home' ? 'Leões do Norte' : 'Falcões de Aço';
             addMessage(`🚩 Offside called against ${attackingTeam}. The flag is up!`);
             
             // Move ball to midfield
@@ -1409,11 +1409,11 @@
         }
 
         function handleYellowCard() {
-            const team = Math.random() > 0.5 ? 'Real Madrid' : 'Barcelona';
-            const isHomeTeam = team === 'Real Madrid';
+            const team = Math.random() > 0.5 ? 'Leões do Norte' : 'Falcões de Aço';
+            const isHomeTeam = team === 'Leões do Norte';
             const playerNames = isHomeTeam ? 
-                ['Militao', 'Valverde', 'Carvajal'] : 
-                ['Araujo', 'De Jong', 'Kounde'];
+                ['Melo', 'Valente', 'Carvalho'] : 
+                ['Aguiar', 'Dorneles', 'Couto'];
             const playerName = playerNames[Math.floor(Math.random() * playerNames.length)];
             
             const field = document.getElementById('footballField');
@@ -1429,11 +1429,11 @@
         }
 
         function handleRedCard() {
-            const team = Math.random() > 0.5 ? 'Real Madrid' : 'Barcelona';
-            const isHomeTeam = team === 'Real Madrid';
+            const team = Math.random() > 0.5 ? 'Leões do Norte' : 'Falcões de Aço';
+            const isHomeTeam = team === 'Leões do Norte';
             const playerNames = isHomeTeam ? 
-                ['Militao', 'Valverde'] : 
-                ['Araujo', 'De Jong'];
+                ['Melo', 'Valente'] : 
+                ['Aguiar', 'Dorneles'];
             const playerName = playerNames[Math.floor(Math.random() * playerNames.length)];
             
             const field = document.getElementById('footballField');
@@ -1449,12 +1449,12 @@
         }
 
         function handleSubstitution() {
-            const team = Math.random() > 0.5 ? 'Real Madrid' : 'Barcelona';
-            const isHomeTeam = team === 'Real Madrid';
+            const team = Math.random() > 0.5 ? 'Leões do Norte' : 'Falcões de Aço';
+            const isHomeTeam = team === 'Leões do Norte';
             
             const substitutes = isHomeTeam ? 
-                {out: ['Carvajal', 'Kroos'], in: ['Lucas Vazquez', 'Camavinga']} :
-                {out: ['Alba', 'Busquets'], in: ['Balde', 'Gavi']};
+                {out: ['Carvalho', 'Krause'], in: ['Lucas Vieira', 'Camargo']} :
+                {out: ['Albuquerque', 'Bastos'], in: ['Baldez', 'Gaspar']};
             
             const playerOut = substitutes.out[Math.floor(Math.random() * substitutes.out.length)];
             const playerIn = substitutes.in[Math.floor(Math.random() * substitutes.in.length)];
@@ -1486,16 +1486,16 @@
             document.getElementById('homeFormation').textContent = homeFormation;
             document.getElementById('awayFormation').textContent = awayFormation;
             
-            addMessage(`📋 Formation change: Real Madrid switching to ${homeFormation}, Barcelona to ${awayFormation}`);
+            addMessage(`📋 Formation change: Leões do Norte switching to ${homeFormation}, Falcões de Aço to ${awayFormation}`);
         }
 
         function endMatch() {
             isAutoPlay = false;
             document.getElementById('matchStatus').textContent = 'Full Time';
-            addMessage(`🏁 FULL TIME! The match has ended Real Madrid ${homeScore} - ${awayScore} Barcelona. What an incredible game!`, 'system');
+            addMessage(`🏁 FULL TIME! The match has ended Leões do Norte ${homeScore} - ${awayScore} Falcões de Aço. What an incredible game!`, 'system');
             
             setTimeout(() => {
-                const winner = homeScore > awayScore ? 'Real Madrid' : awayScore > homeScore ? 'Barcelona' : 'Neither team';
+                const winner = homeScore > awayScore ? 'Leões do Norte' : awayScore > homeScore ? 'Falcões de Aço' : 'Neither team';
                 const result = homeScore === awayScore ? 'draw' : 'victory';
                 addMessage(`🏆 It's a ${result} for ${winner}! Thanks for joining us for this exciting match!`, 'system');
             }, 2000);
@@ -1520,7 +1520,7 @@
 
         function triggerKickoff() {
             animateBall(50, 50);
-            addMessage(`📢 Kickoff! The match resumes with ${possession === 'home' ? 'Real Madrid' : 'Barcelona'} in possession.`);
+            addMessage(`📢 Kickoff! The match resumes with ${possession === 'home' ? 'Leões do Norte' : 'Falcões de Aço'} in possession.`);
         }
 
         function toggleAutoPlay() {
@@ -1560,11 +1560,11 @@
 
         // Welcome message
         setTimeout(() => {
-            addMessage("🏟️ Welcome to this El Clasico encounter! The atmosphere is electric as Real Madrid host Barcelona at the Santiago Bernabeu!");
+            addMessage("🏟️ Welcome to this classic encounter! The atmosphere is electric as Leões do Norte host Falcões de Aço at the Estádio do Norte!");
         }, 3000);
 
         setTimeout(() => {
-            addMessage("⚽ The teams are lined up. Real Madrid in their iconic white, Barcelona in their famous blue and garnet. We're ready for kickoff!");
+            addMessage("⚽ The teams are lined up. Leões do Norte in gold and green, Falcões de Aço in silver and black. We're ready for kickoff!");
         }, 6000);
 
         setTimeout(() => {

@@ -175,13 +175,13 @@ Fala Mestre! is a genuinely compelling concept -- "ChatGPT meets Football Manage
 
 - **Transfer market is a dead feature.** Clicking "transfer market" produces a mock response mentioning points, but there is no transfer system, no player market, no buying/selling mechanism.
 
-- **Team selection is hardcoded.** All new users are assigned to Flamengo (`api/conversation/route.ts:30`). The 5-team system exists in `game-engine.ts` and `team-data.ts` but is never exposed to users.
+- **Team selection is hardcoded.** All new users are assigned to a single hardcoded team (`api/conversation/route.ts:30`). The 5-team system exists in `game-engine.ts` and `team-data.ts` but is never exposed to users.
 
 - **No real player progression.** Player attributes never change. No training system, no injuries, no form changes. The `potential`, `consistency`, `bigMatchPlayer`, `leadership`, and `injuryProneness` hidden attributes in the Player type are generated but never used in any game mechanic.
 
 - **Season system is incomplete.** The season position decreases by 1 on any win (`match/route.ts:58`) regardless of other teams' results. There is no league table, no fixture list, no season end.
 
-- **Match opponent generation has a self-play bug.** The next opponent is randomly selected from all 5 teams (`match/route.ts:63`) including the user's own team (Flamengo).
+- **Match opponent generation has a self-play bug.** The next opponent is randomly selected from all 5 teams (`match/route.ts:63`) including the user's own team (Leões do Norte).
 
 - **Opponent squad is a copy of user squad.** In `match/route.ts:37-41`, the opponent squad is created by cloning the user's squad and just renaming players. This makes every opponent equally strong.
 
@@ -213,7 +213,7 @@ Fala Mestre! is a genuinely compelling concept -- "ChatGPT meets Football Manage
 
 ### Weaknesses
 
-- **No team selection UX.** Users are silently assigned to Flamengo. A real-team fans (Palmeiras, Gremio, etc.) would feel alienated.
+- **No team selection UX.** Users are silently assigned to one hardcoded team, which fans of other clubs would find alienating.
 - **Chat suggestions are static.** The EmptyState always shows the same 3 options. After initial interactions, the same suggestions appear without context-awareness.
 - **No keyboard shortcut support.** Enter to send works, but no other keyboard shortcuts (Escape to close modal, Tab navigation, etc.).
 - **Accessibility gaps.** No ARIA labels on interactive elements. Team badge images have alt text but action buttons don't have aria-labels. Color contrast of white text on green gradient may not meet WCAG AA.

@@ -561,7 +561,7 @@ interface VRHudProps {
 │  ┌──────────────────────────────────────┐               │
 │  │  HOME TEAM  3 – 1  AWAY TEAM  56'   │  (score bar)  │
 │  └──────────────────────────────────────┘               │
-│  [Gyro Active 📱]   "Gol do Flamengo!"  (commentary)   │
+│  [Gyro Active 📱]   "Gol dos Leões!"    (commentary)   │
 └─────────────────────────────────────────────────────────┘
 ```
 

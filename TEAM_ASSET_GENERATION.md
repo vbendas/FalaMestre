@@ -35,16 +35,16 @@ This document provides a template for generating pixel art football assets that 
 
 ### Team Color Examples
 
-The game ships with 6 fictional PvE teams and supports infinite user-created teams:
+The game ships with 6 fictional PvE teams (defined in `app/src/lib/team-data.ts`, badges in `app/public/teams/*.svg`) and supports user-created teams. No real club names, crests or colour schemes are used:
 
-| Team Name | Primary | Secondary | Jersey Pattern |
-|-----------|---------|-----------|----------------|
-| Leões do Norte | Gold | Green | Vertical stripes |
-| Falcões de Aço | Silver | Black | Horizontal stripes |
-| Trovão FC | Purple | White | Solid + accents |
-| Maré Alta | Blue | Cyan | Waves pattern |
-| Serra Brava | Red | Orange | Vertical stripes |
-| Estrela do Sul | White | Gold | Solid + accents |
+| Team Name | Badge | Primary | Secondary | Jersey Pattern |
+|-----------|-------|---------|-----------|----------------|
+| Leões do Norte | `leoes.svg` (LEO) | Gold | Green | Vertical stripes |
+| Falcões de Aço | `falcoes.svg` (FAL) | Silver | Black | Horizontal stripes |
+| Trovão FC | `trovao.svg` (TRO) | Purple | White | Solid + accents |
+| Maré Alta | `mare.svg` (MAR) | Blue | Cyan | Waves pattern |
+| Serra Brava | `serra.svg` (SER) | Red | Orange | Vertical stripes |
+| Estrela do Sul | `estrela.svg` (EST) | White | Gold | Solid + accents |
 
 ---
 

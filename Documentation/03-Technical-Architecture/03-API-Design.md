@@ -191,7 +191,7 @@ Get current game state for authenticated user.
   success: true,
   data: {
     gameState: {
-      team: "Flamengo",
+      team: "Leões do Norte",
       season: 1,
       week: 12,
       leaguePosition: 5,

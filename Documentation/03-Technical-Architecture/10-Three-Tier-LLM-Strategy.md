@@ -75,7 +75,7 @@ EXEMPLOS DE NARRAÇÃO:
 - "O time adversário está sofrendo lá atrás, cara! Sem controle do meio-campo."
 - "Cartão amarelo para o meia. Falta desnecessária, gente."
 - "Segundo tempo começa! O time precisa reagir se quiser pontuar."
-- "Gol do Palmeiras! Contra-ataque letal! Maracaná vai voar!"
+- "Gol dos Falcões de Aço! Contra-ataque letal! O estádio vai voar!"
   `
 };
 ```
@@ -219,9 +219,9 @@ await cacheStore(cacheKey, {
 
 | User Intent | Response Pattern | Example |
 |-------------|-----------------|----------|
-| Squad view | Formation display + suggestions | "Aqui está seu 4-3-3. Gabigol e Pedro atacando, Vinícius criando jogadas no meio." |
-| Match play | Pre-match analysis | "Flamengo vs Palmeiras hoje. Palmeiras tem defesa sólida, mas seu ataque é superior. Recomendo 4-2-3-1 ou manter 4-3-3 e pressionar mais." |
-| Transfer | Player valuation + advice | "Querendo vender o Arrascaeta? Valor de mercado: R$8M. Boa oferta seria R$6-8M. Vamos tentar?" |
+| Squad view | Formation display + suggestions | "Aqui está seu 4-3-3. Rocha e Pedro atacando, Lucas criando jogadas no meio." |
+| Match play | Pre-match analysis | "Leões do Norte vs Falcões de Aço hoje. Falcões de Aço tem defesa sólida, mas seu ataque é superior. Recomendo 4-2-3-1 ou manter 4-3-3 e pressionar mais." |
+| Transfer | Player valuation + advice | "Querendo vender o Arantes? Valor de mercado: R$8M. Boa oferta seria R$6-8M. Vamos tentar?" |
 | Training | Scheduling + expectations | "Treino físico para a equipe inteira. Aumenta fitness mas arrisca levemente (5% chance de lesão). Prosseguir?" |
 | Help | General assistance | "Pode te ajudar com algo mais específico? Pergunta sobre táticas, jogadores ou mercado de transferências." |
 

@@ -110,7 +110,7 @@ describe('AI Service', () => {
       const response = await callAIMock('quero jogar', mockGameState, []);
       expect(response.intent).toBe('play_match');
       // The response mentions the opponent, not the user's team
-      expect(response.content).toContain('Palmeiras');
+      expect(response.content).toContain('Falcões de Aço');
     });
 
     it('should respond to view_squad intent', async () => {

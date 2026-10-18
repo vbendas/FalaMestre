@@ -352,7 +352,7 @@ function calculateInjuryRisk(player: Player): number {
 ```
 AI: "🏥 INJURY UPDATE
 
-Bruno Henrique suffered a hamstring strain in training.
+Bruno Teixeira suffered a hamstring strain in training.
 
 Diagnosis: Moderate injury
 Expected Return: 3-4 weeks

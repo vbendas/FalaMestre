@@ -201,9 +201,9 @@ const NEGOTIATOR_PERSONALITIES = {
 ### Initiating a Transfer
 
 ```
-User: "I want to buy Neymar"
+User: "I want to buy Nogueira"
 
-AI: "Neymar is a world-class player! 🌟
+AI: "Nogueira is a world-class player! 🌟
 
 📊 Player Profile:
 • Overall: 91 | Position: LW
@@ -212,12 +212,12 @@ AI: "Neymar is a world-class player! 🌟
 
 Your Budget: R$ 15M
 
-Unfortunately, Neymar is way beyond your current budget. 
+Unfortunately, Nogueira is way beyond your current budget. 
 But don't worry! Here are some great alternatives in your range:
 
-1. 👤 Bruno Henrique (84 WG) - R$ 12M
+1. 👤 Bruno Teixeira (84 WG) - R$ 12M
 2. 👤 Raphael Veiga (83 AM) - R$ 10M  
-3. 👤 Dudu (82 WG) - R$ 8M
+3. 👤 Duda (82 WG) - R$ 8M
 
 Would you like to pursue any of these players?"
 ```
@@ -225,15 +225,15 @@ Would you like to pursue any of these players?"
 ### Making an Offer
 
 ```
-User: "Offer 10 million for Bruno Henrique"
+User: "Offer 10 million for Bruno Teixeira"
 
-AI: "Submitting your offer to Flamengo... 📨
+AI: "Submitting your offer to Leões do Norte... 📨
 
-🤝 NEGOTIATION WITH FLAMENGO
+🤝 NEGOTIATION WITH LEÕES DO NORTE
 
-Flamengo's response:
+Leões do Norte's response:
 
-'R$ 10M for Bruno Henrique? He's one of our key players 
+'R$ 10M for Bruno Teixeira? He's one of our key players 
 and just scored in the derby. We'd need at least R$ 14M 
 to consider this.'
 
@@ -255,14 +255,14 @@ AI: "Sending revised offer... 💼
 
 🎉 TRANSFER AGREED!
 
-Flamengo has accepted your offer of R$ 12M for Bruno Henrique!
+Leões do Norte has accepted your offer of R$ 12M for Bruno Teixeira!
 
 📋 Transfer Details:
 • Fee: R$ 12,000,000
 • Contract: 3 years
 • Wage: R$ 150K/week
 
-Bruno Henrique is excited about the move:
+Bruno Teixeira is excited about the move:
 'This is a great opportunity. I can't wait to get started!'
 
 ✅ Transfer complete! Bruno joins your squad.
@@ -346,8 +346,8 @@ AI: "📈 TRANSFER MARKET UPDATE
 
 🔥 Hot Deals This Week:
 • Santos is desperate for cash - all players 20% off
-• Palmeiras looking to offload aging striker
-• Young talent from Fluminense wants move
+• Falcões de Aço looking to offload aging striker
+• Young talent from Tucanos da Mata wants move
 
 💡 Recommendations for your squad:
 • You need a backup goalkeeper

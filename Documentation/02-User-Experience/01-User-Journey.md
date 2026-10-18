@@ -144,7 +144,7 @@ flowchart TD
 ### Tutorial Flow
 
 ```
-AI: "🎉 Você é o novo técnico do Flamengo!
+AI: "🎉 Você é o novo técnico dos Leões do Norte!
 
 Seu elenco está pronto. Aqui estão seus titulares:
 
@@ -157,11 +157,11 @@ Pronto para seu primeiro jogo?"
 
 User: "Sim" / [Jogar Agora]
 
-AI: "⚽ FLAMENGO 3-1 BOTAFOGO
+AI: "⚽ LEÕES DO NORTE 3-1 UNIDOS DO VALE
 
 Que estreia! Seus jogadores mostraram qualidade.
 
-⭐ Destaque: Gabigol (2 gols)
+⭐ Destaque: Rocha (2 gols)
 📊 Posse: 58% | Finalizações: 12
 
 Você ganhou: 100 pontos! 🎯

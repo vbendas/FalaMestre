@@ -106,7 +106,7 @@ export function StandingsView({ gameState }: StandingsViewProps) {
   };
 
   const getZoneLabel = (position: number): string => {
-    if (position <= 4) return 'Libertadores';
+    if (position <= 4) return 'Copa Continental';
     if (position <= 6) return 'Sul-Americana';
     if (position >= 17) return 'Zona de Rebaixamento';
     return '';
@@ -137,7 +137,7 @@ export function StandingsView({ gameState }: StandingsViewProps) {
       <div className="flex flex-wrap gap-3 text-[10px] text-white/50 px-1">
         <div className="flex items-center gap-1">
           <div className="w-3 h-3 rounded-sm bg-[#00A859]/20 border-l-2 border-[#00A859]" />
-          <span>Libertadores</span>
+          <span>Copa Continental</span>
         </div>
         <div className="flex items-center gap-1">
           <div className="w-3 h-3 rounded-sm bg-[#3EA0D4]/20 border-l-2 border-[#3EA0D4]" />

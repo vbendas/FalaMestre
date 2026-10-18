@@ -64,8 +64,8 @@ Deliverable: Regional content live
 
 ```
 Tasks:
-[ ] Premier League teams
-[ ] La Liga teams
+[ ] English-style league (fictional teams)
+[ ] Spanish-style league (fictional teams)
 [ ] Serie A teams
 [ ] Bundesliga teams
 [ ] Ligue 1 teams
@@ -150,7 +150,7 @@ Deliverable: First major tournament
 | Mexico | 130M | 70M | Spanish + Liga MX |
 | Argentina | 45M | 35M | Spanish + Primera |
 | Colombia | 52M | 25M | Spanish + Liga |
-| Spain | 47M | 30M | Spanish + La Liga |
+| Spain | 47M | 30M | Spanish + Spanish-style league |
 
 ### Phase 5c: English Markets (Month 9-10)
 

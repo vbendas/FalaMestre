@@ -111,7 +111,7 @@ interface PlayerAttributes {
 | 80-84 | Very Good | Top Brasileirão player |
 | 85-89 | Excellent | Elite Brazilian player |
 | 90-94 | World Class | International star |
-| 95-99 | Legendary | Pelé, Neymar, Ronaldo level |
+| 95-99 | Legendary | All-time great level |
 
 ### 2.2 Overall Rating Calculation
 
@@ -152,7 +152,7 @@ const POSITION_WEIGHTS = {
 **Example Calculation (Forward):**
 
 ```
-Player: Gabigol (Flamengo)
+Player: Rocha (Leões do Norte)
 - PAC: 88 → 88 × 0.25 = 22.0
 - SHO: 91 → 91 × 0.35 = 31.85
 - PAS: 78 → 78 × 0.10 = 7.8
@@ -1976,7 +1976,7 @@ function calculateSeasonEndRewards(
 | 80-84 | Very Good | Top Brasileirão player | 8M - 20M |
 | 85-89 | Excellent | Brazilian NT candidate | 20M - 50M |
 | 90-94 | World Class | International star | 50M - 100M |
-| 95-99 | Legendary | Neymar, Vinicius Jr. | 100M+ |
+| 95-99 | Legendary | Global superstars | 100M+ |
 
 ### B. Formation Cheat Sheet
 

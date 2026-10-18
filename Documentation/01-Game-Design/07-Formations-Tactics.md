@@ -257,8 +257,8 @@ User: "Change to 5-3-2"
 AI: "📋 FORMATION CHANGE: 5-3-2
 
 New lineup:
-        Gabigol  Pedro
-      Everton  Gerson  Arrascaeta
+        Rocha  Pedro
+      Evandro  Gilson  Arantes
     Filipe  Léo  Fabrício  Gustavo  Rodinei
               Hugo
 
@@ -277,10 +277,10 @@ Confirm formation?"
 ```
 AI: "⚽ PRE-MATCH TACTICAL BRIEFING
 
-Tomorrow: Flamengo vs Palmeiras (Away)
+Tomorrow: Leões do Norte vs Falcões de Aço (Away)
 
 Opponent Analysis:
-• Palmeiras plays 4-2-3-1
+• Falcões de Aço plays 4-2-3-1
 • Strong midfield presence
 • Vulnerable to width
 

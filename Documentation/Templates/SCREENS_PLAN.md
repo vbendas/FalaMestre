@@ -172,11 +172,11 @@ SEGMENT SUMMARY (frosted strip, padding 12px, margin 12px):
   Auto-generated contextual text based on match events
 
 SCORE ROW (centered, padding 12px):
-  "FLAMENGO" 6px gold | "0 – 0" 14px gold glow | "PALMEIRAS" 6px muted gold
+  "LEÕES DO NORTE" 6px gold | "0 – 0" 14px gold glow | "FALCÕES DE AÇO" 6px muted gold
 
 CONTEXT ALERTS (if applicable):
   Red card warning: "🟥 CARTÃO VERMELHO — PREENCHA A VAGA" in 5px red
-  Tired player: "😓 R. NEYMAR CANSADO — CONSIDERE TROCA" in 5px orange
+  Tired player: "😓 R. NOGUEIRA CANSADO — CONSIDERE TROCA" in 5px orange
 
 TACTICAL OPTIONS GRID (2×3 grid, 10px gap, padding 12px):
   Each option card (frosted glass, border-radius 8px, padding 10px, border 1px rgba(255,223,0,0.30)):
@@ -348,7 +348,7 @@ LAYOUT: Landscape two-column split inside the CRT screen.
   RIGHT AREA (remaining width, ~540px): main content, scrollable vertically
 
 LEFT SIDEBAR (background rgba(0,8,3,0.80), border-right 1px rgba(255,223,0,0.20)):
-  TOP: team badge (40×40px pixel art) + "FLAMENGO FC" 6px gold + "SÉRIE D · RD.12/38" 4px cyan
+  TOP: team badge (40×40px pixel art) + "LEÕES DO NORTE" 6px gold + "SÉRIE D · RD.12/38" 4px cyan
   MIDDLE: vertical nav menu (5 items, full sidebar width each, 48px height):
     ⚽ JOGO (active: gold fill left bar 3px + gold text) | 👥 ELENCO | 🏪 MERCADO | 🏆 LIGA | ⚙️ MAIS
     Each item: pixel icon 18px + label in Press Start 2P 5px, spaced 12px from icon, left-padding 16px
@@ -415,7 +415,7 @@ LEFT SIDEBAR (width 200px, full height, background rgba(0,8,3,0.92), backdrop-fi
 
   TOP SECTION (padding 14px 12px, border-bottom 1px rgba(255,223,0,0.15)):
     Team badge: 40×40px pixel-art shield, green/yellow, centered horizontally
-    "FLAMENGO FC" in Press Start 2P 6px #FFDF00 gold, centered below badge
+    "LEÕES DO NORTE" in Press Start 2P 6px #FFDF00 gold, centered below badge
     "SÉRIE D · RD.14" in 4px #55e0a0 cyan, centered
 
   NAVIGATION ITEMS (flex column, full width, each 46px tall, left-padding 14px):
@@ -482,7 +482,7 @@ RIGHT PANEL — PLAYER LIST (scrollable, border-left 1px rgba(255,223,0,0.20)):
   Each row (height 40px, border-bottom 1px rgba(255,223,0,0.12), padding 0 8px):
     Jersey # "10" — 7px gold — 24px wide
     Position badge "MEI"/"ATA"/"ZAG"/"GOL" — colored 18×12px — 4px white text
-    Player name "R. NEYMAR" — 5px white — flex-1
+    Player name "R. NOGUEIRA" — 5px white — flex-1
     Overall "87⭐" — 6px gold — right
     Morale dot 8px (green/orange/red)
     Fitness bar 28px wide, 4px tall — bottom edge of row
@@ -520,7 +520,7 @@ DRAG HANDLE: centered 32×4px rounded bar, rgba(255,223,0,0.40), 12px from top
 PLAYER HEADER (height ~100px, padding 20px):
   Left: large pixel-art avatar block (56×56px) — colored square representing jersey (example: green jersey with "#10"), position-colored border (MID=cyan, FWD=red, DEF=blue, GK=yellow)
   Right of avatar:
-    Full name "ROBERTO NEYMAR" in Press Start 2P 7px #FFDF00, glow
+    Full name "ROBERTO NOGUEIRA" in Press Start 2P 7px #FFDF00, glow
     Position row: pill "MEIA" in 5px white on cyan background + nationality flag emoji 🇧🇷
     Overall badge: gold diamond shape containing "87" in 8px Press Start 2P gold, bordered
     Age: "24 ANOS" in 4px cyan
@@ -578,15 +578,15 @@ COLORS: navy #00381a, gold #FFDF00, cyan #55e0a0.
 
 TOP SECTION (height ~80px):
   Venue banner: full-width frosted glass strip (rgba(0,18,8,0.72), blur 10px)
-  "ESTÁDIO MARACANÃ" in 6px gold centered
+  "ESTÁDIO DO NORTE" in 6px gold centered
   Below: "RODADA 14 · MANDANTE" in 5px cyan
   Round pill on right: "RD. 14/38" gold pill
 
 TEAM MATCHUP (height ~160px, centered, dramatic):
   Three-column layout:
-    Left column: large team badge (64×64px pixel art, home team colors green/yellow shield), team name "FLAMENGO FC" in 7px gold below badge
+    Left column: large team badge (64×64px pixel art, home team colors green/yellow shield), team name "LEÕES DO NORTE" in 7px gold below badge
     Center column: "VS" in 20px Press Start 2P gold with strong glow (text-shadow: 0 0 15px #FFDF00, 0 0 35px rgba(255,215,0,0.7)), a subtle gold star divider above and below
-    Right column: opponent badge (64×64px, blue/white), "PALMEIRAS" in 7px gold below
+    Right column: opponent badge (64×64px, blue/white), "FALCÕES DE AÇO" in 7px gold below
 
 STATS COMPARISON (frosted card, 4 rows):
   Title "COMPARAÇÃO" in 5px cyan, centered, border-bottom 1px gold separator
@@ -651,8 +651,8 @@ SCORE DISPLAY (centered, height ~80px):
   "3" in 36px Press Start 2P gold | "–" in 24px muted gold | "1" in 36px Press Start 2P rgba(255,255,255,0.60)
 
 TEAM NAMES (below score):
-  Left: badge circle 24px + "FLAMENGO" in 5px gold
-  Right: badge circle 24px + "PALMEIRAS" in 5px muted
+  Left: badge circle 24px + "LEÕES DO NORTE" in 5px gold
+  Right: badge circle 24px + "FALCÕES DE AÇO" in 5px muted
 
 SEPARATOR (1px gold line)
 
@@ -663,7 +663,7 @@ MATCH STATS (2-column table, 4 rows):
 
 PLAYER OF MATCH card (frosted mini-card, full-width):
   Left: jersey pixel art 36×36px, gold border
-  Right: "CRAQUE DA PARTIDA" in 4px cyan | name "R. NEYMAR" in 7px gold | "2 GOLS · 1 ASSIST" in 5px white
+  Right: "CRAQUE DA PARTIDA" in 4px cyan | name "R. NOGUEIRA" in 7px gold | "2 GOLS · 1 ASSIST" in 5px white
   Gold star ★ rating "9.2" in 8px gold, right-aligned
 
 REWARDS ROW:
@@ -784,7 +784,7 @@ ZONE LEGEND (below table, frosted glass, height ~40px, horizontal):
   🟢 "PROMOÇÃO (1-4)" | 🔵 "PLAYOFF (5-6)" | 🔴 "REBAIXAMENTO (7-10)" in 4px Press Start 2P
 
 YOUR TEAM CARD (frosted glass, full-width, below legend, ~80px):
-  Team badge 32px + "FLAMENGO FC · 3° LUGAR" in 6px gold
+  Team badge 32px + "LEÕES DO NORTE · 3° LUGAR" in 6px gold
   Stats row: "33 PTS" | "8V-9E-3D" | "+12 SG" in equal boxes, gold numbers
 
 All CRT effects. pt-BR.
@@ -955,7 +955,7 @@ YOUTH PLAYERS LIST (scrollable):
   Each youth player card (frosted glass, full-width, height 80px, border 1px rgba(255,223,0,0.30), border-radius 8px, padding 10px 12px, margin-bottom 8px):
     LEFT: pixel avatar (jersey, 40×40px, colored by potential — gold for high, cyan for medium, muted for low)
     CENTER:
-      Name "M. ENDRICK" in 6px gold
+      Name "M. ELIAS" in 6px gold
       Age + position: "17 ANOS · ATACANTE" in 4px cyan
       Potential: gold stars "★★★★☆" (4/5 — pixel gold stars, 10px each) + label "POTENCIAL" in 3px muted
       Current rating bar: "OVR 62 ————————— 62/100" (thin bar, 4px, green fill proportional)
@@ -1061,9 +1061,9 @@ PREDICTION CARDS LIST (scrollable):
   Each prediction card (frosted glass, full-width, border-radius 8px, border 1px rgba(255,223,0,0.30), padding 12px, margin-bottom 10px):
 
     MATCH HEADER (row):
-      Left badge (20×20px home team dot) + "FLAMENGO" in 5px white
+      Left badge (20×20px home team dot) + "LEÕES DO NORTE" in 5px white
       "VS" in 5px muted gold, centered
-      Right badge (20×20px away team dot) + "PALMEIRAS" in 5px white
+      Right badge (20×20px away team dot) + "FALCÕES DE AÇO" in 5px white
       Round label: "RD. 15 · DOM 15H" in 3px cyan, right-aligned or below
 
     ODDS ROW (3 equal buttons, full-width, 8px gap):
@@ -1257,7 +1257,7 @@ TOAST 3 — WARNING/ERROR:
   Background: rgba(40,0,0,0.95), border 1px solid #FF3333, border-radius 8px, padding 10px 14px
   Left: pixel ⚠️ warning icon, red (#FF3333)
   "JOGADOR LESIONADO!" in 5px #FF3333
-  "ROBERTO NEYMAR — 2 RODADAS" in 6px white
+  "ROBERTO NOGUEIRA — 2 RODADAS" in 6px white
 
 All toasts have: Press Start 2P font, pixel-art icons (no flat icons), CRT scanline texture visible through the semi-transparent backgrounds. Shown entering from the top with a slide-down animation (translateY: -100% → 0).
 ```
@@ -1288,7 +1288,7 @@ DRAG HANDLE: small 4×32px rounded bar, rgba(255,223,0,0.40), centered verticall
 PROFILE HEADER (padding 24px, border-bottom 1px rgba(255,223,0,0.20)):
   Pixel avatar: 48×48px green circle with jersey number "10" or user initials, gold border 2px
   "VICTOR BENDAS" in 7px gold, glow
-  "FLAMENGO FC" in 5px cyan below name
+  "LEÕES DO NORTE" in 5px cyan below name
   "victor@email.com" in 4px muted gold
 
 SETTINGS SECTIONS:
@@ -1357,7 +1357,7 @@ CENTER CONTENT (full-height flex, centered):
     Season record: "TEMPORADA 2024 · W22 E8 P8" in 5px cyan
 
   STATS CARDS ROW (3 mini cards, frosted glass):
-    "1° ARTILHEIRO: R. NEYMAR 18 GOLS" | "MELHOR VITÓRIA: 5-0" | "INVICTO: 8 PARTIDAS"
+    "1° ARTILHEIRO: R. NOGUEIRA 18 GOLS" | "MELHOR VITÓRIA: 5-0" | "INVICTO: 8 PARTIDAS"
     Each in 4px gold/cyan
 
   REWARDS SECTION:

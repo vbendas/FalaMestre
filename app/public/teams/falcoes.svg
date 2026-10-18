@@ -1,0 +1,9 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>Falcões de Aço</title>
+  <!-- Shield background (fictional club badge) -->
+  <path d="M12 8C12 8 12 32 32 56C32 56 52 32 52 8H12Z" fill="#C0C0C0"/>
+  <path d="M16 12C16 12 16 30 32 50C32 50 48 30 48 12H16Z" fill="#000000"/>
+  <path d="M20 16C20 16 20 28 32 44C32 44 44 28 44 16H20Z" fill="#C0C0C0"/>
+  <!-- FAL Text -->
+  <text x="32" y="30" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#FFFFFF">FAL</text>
+</svg>

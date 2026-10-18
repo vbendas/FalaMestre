@@ -1009,7 +1009,7 @@ export function createInitialGameState(userId: string, teamName: string): GameSt
       losses: 0,
       nextMatch: {
         id: generateMatchId(),
-        opponent: 'Palmeiras',
+        opponent: 'Falcões de Aço',
         isHome: true,
         date: new Date().toISOString(),
         competition: 'Brasileirão',

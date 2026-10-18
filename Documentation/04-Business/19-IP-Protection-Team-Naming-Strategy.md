@@ -30,7 +30,7 @@ Indie games like Brasfoot and Elifoot have used real team names for decades with
 
 **The test courts apply:** *Would a reasonable person identify which club/player is being referenced?*
 
-Using "Mengão" + red/black stripes clearly = Flamengo. Using "Vinicius Jr" in a football context = the Real Madrid player. Both infringe.
+Using a real club's nickname together with its colours clearly identifies that club. Using a star player's name in a football context identifies that person. Both infringe.
 
 ---
 
@@ -189,9 +189,9 @@ Konami's Pro Evolution Soccer shipped for years with:
 
 | Category | Examples | Risk Level |
 |----------|----------|------------|
-| **Club logos** | Flamengo crest, Palmeiras badge, etc. | High — heavily trademarked |
-| **Club names** | "Flamengo", "Corinthians", "São Paulo FC" | High — wordmarks protected |
-| **Club slangs** | "Mengão", "Porco", "Timão", "Tricolor" | Medium-High — dilution claims |
+| **Club logos** | Any real club's crest or badge | High — heavily trademarked |
+| **Club names** | Any real club's name or wordmark | High — wordmarks protected |
+| **Club slangs** | Supporters' nicknames for real clubs | Medium-High — dilution claims |
 | **Color + context** | Red/black stripes + football team | Medium — can imply association |
 | **League names** | "Brasileirão", "Série A" | Medium — check specific jurisdictions |
 
@@ -199,10 +199,10 @@ Konami's Pro Evolution Soccer shipped for years with:
 
 | Category | Examples | Risk Level |
 |----------|----------|------------|
-| **Player names** | "Neymar", "Gabriel Barbosa", "Vinicius Jr." | High — image rights are strict |
-| **Player nicknames** | "Gabigol", "O Fenômeno" | High — identify specific individuals |
+| **Player names** | Names of real professional players | High — image rights are strict |
+| **Player nicknames** | Well-known nicknames of real players | High — identify specific individuals |
 | **Player likenesses** | Pixel art that looks like a real player | High — image right violations |
-| **Stats + name combo** | "87 ST named Gabigol" | High — clear reference |
+| **Stats + name combo** | A rated card carrying a real player's name or nickname | High — clear reference |
 
 ### What IS Safe
 

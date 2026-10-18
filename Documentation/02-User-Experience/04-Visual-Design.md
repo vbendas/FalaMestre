@@ -45,7 +45,7 @@ Our visual style draws inspiration from:
 
 | Color | Hex | Usage |
 |-------|-----|-------|
-| **Mengao Red** | `#E31937` | Primary actions, highlights |
+| **Mestre Red** | `#E31937` | Primary actions, highlights |
 | **Pitch Green** | `#2ECC71` | Success states, positive feedback |
 | **Deep Black** | `#1A1A2E` | Text, dark backgrounds |
 | **Clean White** | `#FFFFFF` | Cards, light backgrounds |
@@ -67,12 +67,12 @@ Dynamic theming based on user's selected team:
 
 ```typescript
 const teamColors = {
-  flamengo: { primary: '#E31937', secondary: '#000000' },
-  corinthians: { primary: '#000000', secondary: '#FFFFFF' },
-  palmeiras: { primary: '#006437', secondary: '#FFFFFF' },
-  saopaulo: { primary: '#FF0000', secondary: '#FFFFFF' },
+  leoesDoNorte: { primary: '#FFD700', secondary: '#008000' },
+  falcoesDeAco: { primary: '#C0C0C0', secondary: '#000000' },
+  trovaoFc: { primary: '#800080', secondary: '#FFFFFF' },
+  mareAlta: { primary: '#0000FF', secondary: '#00FFFF' },
   santos: { primary: '#000000', secondary: '#FFFFFF' },
-  cruzeiro: { primary: '#003DA5', secondary: '#FFFFFF' },
+  serraBrava: { primary: '#FF0000', secondary: '#FFA500' },
   // ... more teams
 };
 ```
@@ -120,9 +120,9 @@ const teamColors = {
 ### Type Examples
 
 ```
-VITORIA! FLAMENGO 3-1          <- Display (32px, Bold)
+VITORIA! LEÕES DO NORTE 3-1    <- Display (32px, Bold)
 Resultado da Partida           <- Title (24px, SemiBold)
-Gabigol - Atacante             <- Subtitle (18px, SemiBold)
+Rocha - Atacante               <- Subtitle (18px, SemiBold)
 O artilheiro marcou duas vezes <- Body (16px, Regular)
 14:32 - Hoje                   <- Caption (14px, Regular)
 +100 pts                       <- Small (12px, Regular)
@@ -347,7 +347,7 @@ During matches, Rive-powered decision moments:
 |                                          |
 |     [SHOOT TARGET]     [PASS ARROW]      |
 |                                          |
-|  Gabigol tem 3 segundos para decidir...  |
+|  Rocha tem 3 segundos para decidir...    |
 |                                          |
 +------------------------------------------+
 ```
@@ -508,7 +508,7 @@ The user's representation:
 
 Size: 1024x1024px (iOS) / 512x512px (Android)
 Corners: Rounded by OS
-Colors: Team primary or Mengao Red default
+Colors: Team primary or Mestre Red default
 ```
 
 ### Social Share Cards
@@ -517,10 +517,10 @@ Colors: Team primary or Mengao Red default
 +------------------------------------------+
 |  FALA MESTRE!                            |
 |                                          |
-|  FLAMENGO 3-1 PALMEIRAS                  |
+|  LEÕES DO NORTE 3-1 FALCÕES DE AÇO       |
 |                                          |
-|  Gabigol (2)      Endrick               |
-|  Arrascaeta                              |
+|  Rocha (2)      Elias                    |
+|  Arantes                                 |
 |                                          |
 |  [Manager Avatar] @username              |
 |  falamestre.ai                           |

@@ -500,10 +500,10 @@
           <div class="team-badge home">
             <canvas id="badge-home" width="16" height="16" style="image-rendering:pixelated;width:16px;height:16px;"></canvas>
           </div>
-          <span class="team-name home">FLAMENGO</span>
+          <span class="team-name home">LEÕES DO NORTE</span>
         </div>
         <div class="team">
-          <span class="team-name away">PALMEIRAS</span>
+          <span class="team-name away">FALCÕES DE AÇO</span>
           <div class="team-badge away">
             <canvas id="badge-away" width="16" height="16" style="image-rendering:pixelated;width:16px;height:16px;"></canvas>
           </div>
@@ -545,7 +545,7 @@
         </div>
         <div class="potm-info">
           <div class="potm-label">CRAQUE DA PARTIDA</div>
-          <div class="potm-name">R. NEYMAR</div>
+          <div class="potm-name">R. NOGUEIRA</div>
           <div class="potm-stats">2 GOLS · 1 ASSIST</div>
         </div>
         <div class="potm-rating">
@@ -648,7 +648,7 @@
       ctx.imageSmoothingEnabled = false;
       const w = 28, h = 28;
 
-      // Jersey shape in red/black stripes (Flamengo style)
+      // Jersey shape in two-colour stripes
       for (let y = 0; y < h; y++) {
         for (let x = 0; x < w; x++) {
           // Shoulders / sleeves
@@ -665,9 +665,9 @@
             ctx.fillStyle = '#222';
             ctx.fillRect(x, y, 1, 1);
           } else if (isTorso || isSleeve) {
-            // Flamengo red/black hoops
+            // Two-colour hoops
             const stripe = Math.floor((y - 4) / 3) % 2;
-            ctx.fillStyle = stripe === 0 ? '#C62828' : '#111';
+            ctx.fillStyle = stripe === 0 ? '#D4A017' : '#006400';
             ctx.fillRect(x, y, 1, 1);
           }
         }

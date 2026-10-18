@@ -541,7 +541,7 @@
 
       <!-- VENUE BANNER -->
       <div class="venue-banner">
-        <div class="venue-name">⚽ ESTÁDIO MARACANÃ</div>
+        <div class="venue-name">⚽ ESTÁDIO DO NORTE</div>
         <div class="venue-sub">RODADA 14 · MANDANTE</div>
         <div class="round-pill">RD. 14/38</div>
       </div>
@@ -552,7 +552,7 @@
           <div class="team-badge">
             <canvas id="homeBadge" width="64" height="64"></canvas>
           </div>
-          <div class="team-name">FLAMENGO FC</div>
+          <div class="team-name">LEÕES DO NORTE</div>
         </div>
         <div class="vs-col">
           <div class="star-divider">✦ ✦ ✦</div>
@@ -563,7 +563,7 @@
           <div class="team-badge">
             <canvas id="awayBadge" width="64" height="64"></canvas>
           </div>
-          <div class="team-name">PALMEIRAS</div>
+          <div class="team-name">FALCÕES DE AÇO</div>
         </div>
       </div>
 
@@ -692,12 +692,12 @@ function drawPixelBadge(canvasId, type) {
   ctx.imageSmoothingEnabled = false;
 
   if (type === 'home') {
-    // Flamengo-style shield: red/black stripes in a shield shape
+    // Home shield: two-colour stripes in a shield shape
     const colors = {
       bg: '#00381a',
       outline: '#FFDF00',
-      red: '#CC0000',
-      black: '#1a1a1a',
+      red: '#D4A017',   // primary (gold)
+      black: '#006400', // secondary (green)
       white: '#ffffff',
       gold: '#FFDF00'
     };
@@ -737,7 +737,7 @@ function drawPixelBadge(canvasId, type) {
         const dy = y - 2;
         if (dy >= 0 && dy < 12 && dx < (7 - dy * 0.45)) {
           shieldPixels.push([x, y]);
-          // Stripes: alternating red and black horizontal
+          // Stripes: alternating primary and secondary horizontal
           if (y % 3 < 2) {
             ctx.fillStyle = colors.red;
           } else {
@@ -772,12 +772,12 @@ function drawPixelBadge(canvasId, type) {
     ctx.fillRect((fx + 2) * s, (fy + 2) * s, s, s);
 
   } else {
-    // Palmeiras-style: green shield with white stripes
+    // Away shield: solid colour with white stripes
     const colors = {
       bg: '#00381a',
       outline: '#FFDF00',
-      green: '#006B3F',
-      darkGreen: '#004D2C',
+      green: '#9E9E9E',     // primary (silver)
+      darkGreen: '#1a1a1a', // secondary (black)
       white: '#ffffff',
       gold: '#FFDF00'
     };

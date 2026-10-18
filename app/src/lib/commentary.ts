@@ -291,7 +291,7 @@ const COMMENTARY_TEMPLATES: Record<EventType, TemplateRecord> = {
       "🚩 ESCANTEIO DO {team}! VAI TER CHANCE DE GOL!",
       "🚩 COISA RARA! ESCANTEIO PARA O {team}!",
       "🚩 FALTA! OU SERÁ ESCANTEIO? O JUIZ MARCA!",
-      "🚩 CRUZEIRO! {player} VAI COBRAR! TODO MUNDO AGUARDA!",
+      "🚩 OLHA O CRUZAMENTO! {player} VAI COBRAR! TODO MUNDO AGUARDA!",
       "🚩 ESCANTEIO CURTO! {player} Tenta jogada ensaiada!",
       "🚩 Aí VEM A BOLA! {player} BATE NO PRIMEIRO POSTE!",
     ],

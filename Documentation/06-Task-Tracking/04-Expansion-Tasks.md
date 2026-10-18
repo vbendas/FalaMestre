@@ -185,10 +185,10 @@ Detailed task breakdown for Phase 4 (Expansion) and Phase 5 (Global). Total: 121
 
 | ID | Task | Priority | Hours | Deps | Status |
 |----|------|----------|-------|------|--------|
-| GLB-021 | Add Premier League teams | P0 | 6h | - | [ ] |
-| GLB-022 | Seed Premier League players | P0 | 8h | GLB-021 | [ ] |
-| GLB-023 | Add La Liga teams | P0 | 6h | - | [ ] |
-| GLB-024 | Seed La Liga players | P0 | 8h | GLB-023 | [ ] |
+| GLB-021 | Add fictional English-style league teams | P0 | 6h | - | [ ] |
+| GLB-022 | Seed fictional English-style league players | P0 | 8h | GLB-021 | [ ] |
+| GLB-023 | Add fictional Spanish-style league teams | P0 | 6h | - | [ ] |
+| GLB-024 | Seed fictional Spanish-style league players | P0 | 8h | GLB-023 | [ ] |
 | GLB-025 | Add Serie A teams | P1 | 6h | - | [ ] |
 | GLB-026 | Seed Serie A players | P1 | 8h | GLB-025 | [ ] |
 | GLB-027 | Add Bundesliga teams | P1 | 6h | - | [ ] |

@@ -236,8 +236,8 @@ em um jogo muito equilibrado."
 ## 8. IP Safety Validation
 
 ### Real Club/Player References
-- ❌ Zero references to: Flamengo, Palmeiras, São Paulo, Grêmio, Internacional, Corinthians
-- ❌ Zero player names: Neymar, Gabigol, Arrascaeta, etc.
+- ❌ Zero references to real club names
+- ❌ Zero real player names
 - ✅ All fictional team names unique and created for this game
 
 ### FIFPro Licensing

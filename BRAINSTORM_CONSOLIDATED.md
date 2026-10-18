@@ -74,7 +74,7 @@ AI Response:
 - Brasileirão Serie A & B (full squads, 20 teams each)
 - Copa do Brasil (knockout format)
 - State Championships (Paulistão, Carioca, etc.)
-- Copa Libertadores
+- Copa Continental (fictional continental cup)
 - Club World Cup
 
 **Global Tournaments (Phase 2 - PvP):**
@@ -114,12 +114,12 @@ AI Response:
 │ 🔴 Fala Mestre!                                          ⚽ │
 ├──────────────────────────────────────────────────────────────┤
 │                                                              │
-│ 🤖 Olá! Sou seu assistente do Flamengo. Você assumiu o     │
-│    comando do Mengão na 1ª rodada do Brasileirão.           │
+│ 🤖 Olá! Sou seu assistente dos Leões do Norte. Você assumiu  │
+│    o comando do time na 1ª rodada do Brasileirão.            │
 │                                                              │
 │    📊 Status Atual:                                         │
 │    • Posição: 5º lugar                                      │
-│    • Próximo jogo: Flamengo x Palmeiras (Casa)             │
+│    • Próximo jogo: Leões do Norte x Falcões de Aço (Casa)    │
 │    • Moral do time: 78%                                     │
 │    • Orçamento: R$ 15 milhões                              │
 │                                                              │

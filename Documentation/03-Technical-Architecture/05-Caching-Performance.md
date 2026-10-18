@@ -235,7 +235,7 @@ async function warmupCaches(): Promise<void> {
   }
   
   // Warm popular team squads
-  const popularTeams = ['Flamengo', 'Corinthians', 'Palmeiras', 'São Paulo'];
+  const popularTeams = ['Leões do Norte', 'Falcões de Aço', 'Trovão FC', 'Maré Alta'];
   for (const team of popularTeams) {
     await getTeamSquad(team);
   }
