@@ -75,7 +75,7 @@ Once it's working:
 
 The full technical documentation is in the parent directory:
 - `Documentation/` - Complete specs
-- `BRAINSTORM_CONSOLIDATED.md` - Business strategy
+- `docs/BRAINSTORM_CONSOLIDATED.md` - Product brainstorm
 - `PRD.md` - Product requirements
 
 ---

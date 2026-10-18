@@ -131,7 +131,7 @@ Requires 3D character models (not 2D sprites):
 ## Related Documents
 
 - [[03-Match-Simulation]] - Core match engine
-- [[TEAM_ASSET_GENERATION]] - PixelLab character assets
+- [TEAM_ASSET_GENERATION](../../docs/TEAM_ASSET_GENERATION.md) - PixelLab character assets
 
 ---
 

@@ -38,7 +38,7 @@ Fala Mestre! is a genuinely compelling concept -- "ChatGPT meets Football Manage
 
 - **Exceptional market insight.** The Brazilian football market (70M+ fans, $2.3B gaming market) is massive, passionate, and underserved by conversational game experiences. The documentation in `Documentation/00-Overview/02-Market-Analysis.md` is thorough.
 - **Strong differentiation.** The "ChatGPT meets Football Manager" positioning is unique. No competitor is doing conversational football management in Portuguese.
-- **Realistic cost modeling.** The `LLM_STRATEGY.md` shows awareness of AI costs, with a 3-tier approach reducing costs by 96.7% compared to premium models.
+- **Realistic cost modeling.** The `docs/LLM_STRATEGY.md` shows awareness of AI costs, with a 3-tier approach reducing costs by 96.7% compared to premium models.
 
 ### Weaknesses
 

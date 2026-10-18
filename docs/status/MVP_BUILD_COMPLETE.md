@@ -215,7 +215,7 @@ git push origin main
 - **Build Summary:** `app/COMPLETION_SUMMARY.md`
 
 ### Parent Directory Docs
-- `BRAINSTORM_CONSOLIDATED.md` - Business strategy
+- `docs/BRAINSTORM_CONSOLIDATED.md` - Product brainstorm
 - `PRD.md` - Product requirements
 - `Documentation/` - Full specs
 
@@ -368,7 +368,7 @@ git push origin main
 
 **Questions?**
 - Technical: Check `app/README.md`
-- Business: Check `BRAINSTORM_CONSOLIDATED.md`
+- Business: Check `docs/BRAINSTORM_CONSOLIDATED.md`
 - Next steps: Check `app/NEXT_STEPS.md`
 
 ---

@@ -46,3 +46,8 @@ Documentation/.obsidian/workspace.json
 .mimocode/
 .opencode/
 SWARM_PLAN.*
+
+# Generated test and capture output
+test-results/
+playwright-report/
+screenshots/

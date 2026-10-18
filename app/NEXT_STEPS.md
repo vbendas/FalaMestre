@@ -261,7 +261,7 @@ Fala Mestre! is a standalone game; it has no crypto or ad-platform integrations.
 
 ### Business Questions
 - Read `PRD.md` (parent directory)
-- Read `BRAINSTORM_CONSOLIDATED.md`
+- Read `docs/BRAINSTORM_CONSOLIDATED.md`
 - Check `Documentation/04-Business/`
 
 ### Design Questions

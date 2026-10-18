@@ -135,7 +135,7 @@ Use the existing South-facing animations as reference:
 ## Related Documents
 
 - [[03-Match-Simulation-VR]] - VR design document
-- [[TEAM_ASSET_GENERATION]] - Current PixelLab assets
+- [TEAM_ASSET_GENERATION](../../docs/TEAM_ASSET_GENERATION.md) - Current PixelLab assets
 
 ---
 

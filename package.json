@@ -6,7 +6,9 @@
     "dev": "cd app && bun dev",
     "build": "cd app && bun run build",
     "start": "cd app && bun run start",
-    "lint": "cd app && bun run lint"
+    "lint": "cd app && bun run lint",
+    "screenshots": "node scripts/capture-screenshots.mjs",
+    "screenshots:views": "node scripts/capture-all-views.mjs"
   },
   "dependencies": {
     "playwright": "^1.58.2"
