@@ -1,6 +1,6 @@
 /**
  * Phase System
- * Tracks user progress through soft-training phases
+ * Tracks user progress through gameplay unlock phases
  */
 
 import { db } from '@/db';

@@ -13,9 +13,9 @@ const fontPixel = Press_Start_2P({
 });
 
 export const metadata: Metadata = {
-  title: "Fala Mestre! - Demo for Socios",
-  description: "Conversational football management game powered by AI. Manage your team, play matches, and earn Socios Points!",
-  keywords: ["football", "soccer", "game", "AI", "management", "Socios", "Brazil"],
+  title: "Fala Mestre!",
+  description: "Conversational football management game powered by AI. Manage your team, play matches, and climb the league table!",
+  keywords: ["football", "soccer", "game", "AI", "management", "Brazil"],
   authors: [{ name: "Fala Mestre Team" }],
   openGraph: {
     title: "Fala Mestre!",

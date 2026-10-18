@@ -104,7 +104,7 @@ export function DailyRewardModal({
               
               <h2 className="mt-4 text-2xl font-bold text-white pixel-text">Recompensa Diária!</h2>
               <p className="text-white/60 text-sm mt-1">
-                Conecte-se todos os dias para ganhar Socios Points!
+                Conecte-se todos os dias para ganhar pontos!
               </p>
             </div>
 
@@ -166,7 +166,7 @@ export function DailyRewardModal({
                 <div className="flex items-center gap-2">
                   <Star className="w-5 h-5 text-[#FFD700]" />
                   <span className="text-white font-medium">
-                    {DAILY_REWARDS[selectedDay - 1]?.points} Socios Points
+                    {DAILY_REWARDS[selectedDay - 1]?.points} pontos
                   </span>
                 </div>
                 {claimedToday ? (

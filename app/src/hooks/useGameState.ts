@@ -169,12 +169,6 @@ export function useGameState(): UseGameStateReturn {
           // Migrate old gameState structure to new one
           const gs = data.gameState as any;
           
-          // Migrate sociosPoints to money
-          if (gs.user?.sociosPoints !== undefined && gs.user?.money === undefined) {
-            gs.user.money = gs.user.sociosPoints || 100000;
-            delete gs.user.sociosPoints;
-          }
-          
           // Ensure money exists
           if (gs.user?.money === undefined) {
             gs.user.money = 100000;

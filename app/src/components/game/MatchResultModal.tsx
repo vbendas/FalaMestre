@@ -400,7 +400,7 @@ export function MatchResultModal({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Sparkles className="w-5 h-5 text-[#FFDF00]" />
-                      <span className="text-white/80 font-[family-name:var(--font-pixel)] text-xs">Socios Points</span>
+                      <span className="text-white/80 font-[family-name:var(--font-pixel)] text-xs">Pontos</span>
                     </div>
                     <div className="text-2xl font-bold gold-glow-text font-[family-name:var(--font-pixel)]">
                       +{pointsChange}

@@ -470,7 +470,7 @@ interface TournamentConfig {
   id: string;
   name: string;
   description: string;
-  prizeType: 'jersey' | 'fan_tokens' | 'game_currency';
+  prizeType: 'jersey' | 'game_currency';
   prizeValue: number;
   entryTicketCost: number;
   scheduledDate: string;
@@ -490,23 +490,23 @@ export const SPECIAL_TOURNAMENTS: Record<string, TournamentConfig> = {
     maxParticipants: 1000,
     participants: 0,
   },
-  COPA_SOCIOS_SEMIFINAL: {
-    id: 'copa_socios_semifinal',
-    name: 'Copa Socios - Semifinal',
-    description: 'Semifinal do torneo oficial',
-    prizeType: 'fan_tokens',
-    prizeValue: 500,
+  COPA_MESTRE_SEMIFINAL: {
+    id: 'copa_mestre_semifinal',
+    name: 'Copa Mestre - Semifinal',
+    description: 'Semifinal do torneio especial',
+    prizeType: 'game_currency',
+    prizeValue: 500000,
     entryTicketCost: 1,
     scheduledDate: '2026-03-01',
     maxParticipants: 500,
     participants: 0,
   },
-  COPA_SOCIOS_FINAL: {
-    id: 'copa_socios_final',
-    name: 'Copa Socios - Final',
-    description: 'Final do torneo-promocional com premiacoes exclusivas',
-    prizeType: 'fan_tokens',
-    prizeValue: 1000,
+  COPA_MESTRE_FINAL: {
+    id: 'copa_mestre_final',
+    name: 'Copa Mestre - Final',
+    description: 'Final do torneio especial com premiacoes exclusivas',
+    prizeType: 'game_currency',
+    prizeValue: 1000000,
     entryTicketCost: 1,
     scheduledDate: '2026-03-15',
     maxParticipants: 100,

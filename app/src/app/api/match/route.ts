@@ -207,7 +207,7 @@ export async function POST(request: NextRequest) {
     gameState.season.week++;
     gameState.season.points += pointsEarned;
     
-    // Update money instead of sociosPoints
+    // Update club money with match earnings
     gameState.user.money = (gameState.user.money || 0) + matchEarnings;
     
     // Ensure staff exists for old game states

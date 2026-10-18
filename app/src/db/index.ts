@@ -22,12 +22,6 @@ function createMockDatabase() {
       gameStates: { findFirst: async () => null },
       conversations: { findFirst: async () => null },
       analyticsEvents: { findFirst: async () => null },
-      userClusters: { findFirst: async () => null },
-      userProfiles: { findFirst: async () => null },
-      audienceSyncLog: { findFirst: async () => null },
-      userProfileSnapshots: { findFirst: async () => null },
-      messageEmbeddings: { findFirst: async () => null },
-      intentClusters: { findFirst: async () => null },
     },
     insert: () => ({
       values: async () => ({ rows: [] }),

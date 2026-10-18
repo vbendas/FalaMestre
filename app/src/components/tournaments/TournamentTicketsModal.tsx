@@ -53,9 +53,7 @@ export function TournamentTicketsModal({ tickets, onClose }: TournamentTicketsMo
                     <p className="text-green-400 font-bold">
                       {tournament.prizeType === 'jersey' 
                         ? 'Camiseta Exclusiva'
-                        : tournament.prizeType === 'fan_tokens'
-                          ? `${tournament.prizeValue} Socios Points`
-                          : formatMoney(tournament.prizeValue)}
+                        : formatMoney(tournament.prizeValue)}
                     </p>
                   </div>
                   <div className="text-right">

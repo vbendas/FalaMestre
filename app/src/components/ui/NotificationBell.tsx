@@ -44,7 +44,7 @@ const mockNotifications: Notification[] = [
     id: '3',
     type: 'system',
     title: 'Bônus Diário',
-    message: 'Você ganhou +50 Socios Points por login diário!',
+    message: 'Você ganhou +50 pontos por login diário!',
     timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24),
     read: true,
   },

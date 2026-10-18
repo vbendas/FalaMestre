@@ -423,7 +423,7 @@ export interface InvestmentTier {
 // TOURNAMENT TICKET TYPES
 // =====================================================
 
-export type PrizeType = 'jersey' | 'fan_tokens' | 'game_currency';
+export type PrizeType = 'jersey' | 'game_currency';
 
 export interface SpecialTournament {
   id: string;

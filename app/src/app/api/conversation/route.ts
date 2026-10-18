@@ -8,9 +8,6 @@ import { GameState, Message } from '@/lib/types';
 import { conversationRequestSchema } from '@/lib/validations';
 import { generateMessageId } from '@/lib/utils';
 import { ZodError } from 'zod';
-import { wordCount, hasQuestion, countEmotionalWords, detectAssertiveness } from '@/lib/clustering/linguistic-utils';
-import { embedMessage } from '@/lib/clustering/embedding-service';
-import { messageEmbeddings } from '@/db/schema';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { getAuthenticatedUser, requireAuth } from '@/lib/auth-helpers';
 
@@ -42,37 +39,6 @@ async function withTimeout<T>(
         reject(error);
       });
   });
-}
-
-/**
- * Process embedding asynchronously with proper error handling
- * This runs after the response is sent, so it shouldn't block
- */
-async function processEmbedding(userId: string, message: string): Promise<void> {
-  const embeddingTimeout = 10000; // 10 second timeout for embeddings
-  
-  try {
-    const embedding = await withTimeout(
-      embedMessage(message),
-      embeddingTimeout,
-      'Embedding generation'
-    );
-    
-    if (embedding) {
-      await withTimeout(
-        db.insert(messageEmbeddings).values({
-          userId,
-          content: message,
-          embedding,
-        }),
-        embeddingTimeout,
-        'Embedding insert'
-      );
-    }
-  } catch (error) {
-    // Log but don't throw - this is background processing
-    console.error('[Conversation] Embedding processing failed:', error);
-  }
 }
 
 export async function POST(request: NextRequest) {
@@ -312,8 +278,7 @@ export async function POST(request: NextRequest) {
       // Continue even if logging fails
     }
 
-    // Log analytics event with enriched signals
-    const emotionalWords = countEmotionalWords(message);
+    // Log a first-party analytics event (gameplay telemetry only)
     try {
       await withTimeout(
         db.insert(analyticsEvents).values({
@@ -325,10 +290,6 @@ export async function POST(request: NextRequest) {
             latency: aiResponse.latency,
             useMock,
             messageLength: message.length,
-            wordCount: wordCount(message),
-            hasQuestion: hasQuestion(message),
-            emotionalWords: emotionalWords,
-            assertiveness: detectAssertiveness(message),
             gameContext: {
               points: gameState.user.money,
               matchesPlayed: gameState.season.week,
@@ -346,14 +307,6 @@ export async function POST(request: NextRequest) {
       console.error('[Conversation] Failed to log analytics:', error);
       // Continue even if analytics fails
     }
-
-    // Schedule embedding processing after response (non-blocking)
-    // Use setImmediate equivalent for Node.js
-    setImmediate(() => {
-      processEmbedding(userId, message).catch(error => {
-        console.error('[Conversation] Background embedding failed:', error);
-      });
-    });
 
     const duration = Date.now() - startTime;
     console.log(`[Conversation] Request processed in ${duration}ms`);
