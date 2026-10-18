@@ -313,7 +313,7 @@ describe('Game Engine', () => {
 
     it('should have correct league', () => {
       const gameState = createInitialGameState('user_123456789', 'Leões do Norte');
-      expect(gameState.season.league).toBe('Brasileirão Serie A');
+      expect(gameState.season.league).toBe('Liga Mestre A');
     });
   });
 

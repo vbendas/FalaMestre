@@ -211,7 +211,7 @@ Get current game state for authenticated user.
       nextMatch: {
         opponent: "Leões do Norte",
         isHome: true,
-        competition: "Brasileirão",
+        competition: "Liga Mestre",
         week: 13
       },
       
@@ -313,7 +313,7 @@ Get league standings.
 {
   success: true,
   data: {
-    league: "Brasileirão Série A",
+    league: "Liga Mestre A",
     season: 1,
     standings: [
       {

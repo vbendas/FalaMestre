@@ -32,8 +32,8 @@ Six primary attributes rated from **60-99**:
 | Range | Description | Example Players |
 |-------|-------------|-----------------|
 | 60-69 | Below Average | Série B bench players |
-| 70-74 | Average | Regular Brasileirão starters |
-| 75-79 | Good | Top Brasileirão players |
+| 70-74 | Average | Regular Liga Mestre starters |
+| 75-79 | Good | Top Liga Mestre players |
 | 80-84 | Very Good | Elite Brazilian league players |
 | 85-89 | Excellent | National team level |
 | 90-94 | World Class | International stars |
@@ -294,8 +294,8 @@ function calculateValue(player: Player): number {
 
 | League | Teams | Players/Team | Total |
 |--------|-------|--------------|-------|
-| Brasileirão Série A | 20 | 25-30 | ~550 |
-| Brasileirão Série B | 20 | 22-25 | ~470 |
+| Liga Mestre A | 20 | 25-30 | ~550 |
+| Liga Mestre B | 20 | 22-25 | ~470 |
 | Youth Pool | - | - | ~200 |
 | **Total** | | | **~1,220** |
 

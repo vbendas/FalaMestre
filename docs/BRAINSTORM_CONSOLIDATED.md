@@ -71,7 +71,7 @@ AI Response:
 
 #### Competition Structure
 **Brazilian Focus (Phase 1 - PvE):**
-- Brasileirão Serie A & B (full squads, 20 teams each)
+- Liga Mestre A & B (full squads, 20 teams each)
 - Copa do Brasil (knockout format)
 - State Championships (Paulistão, Carioca, etc.)
 - Copa Continental (fictional continental cup)
@@ -115,7 +115,7 @@ AI Response:
 ├──────────────────────────────────────────────────────────────┤
 │                                                              │
 │ 🤖 Olá! Sou seu assistente dos Leões do Norte. Você assumiu  │
-│    o comando do time na 1ª rodada do Brasileirão.            │
+│    o comando do time na 1ª rodada do Liga Mestre.            │
 │                                                              │
 │    📊 Status Atual:                                         │
 │    • Posição: 5º lugar                                      │

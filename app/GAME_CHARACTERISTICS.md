@@ -1,7 +1,7 @@
 # Fala Mestre! - Game Characteristics Prompt
 
 ## Core Concept
-**Fala Mestre!** is a conversational AI-driven football management game where players manage a Brazilian football team through a season in the Brasileirão Serie A. The game combines natural language interaction with deep simulation mechanics, allowing players to chat with an AI coach, make strategic decisions, and watch their team compete in matches.
+**Fala Mestre!** is a conversational AI-driven football management game where players manage a Brazilian football team through a season in the Liga Mestre A. The game combines natural language interaction with deep simulation mechanics, allowing players to chat with an AI coach, make strategic decisions, and watch their team compete in matches.
 
 ---
 
@@ -77,7 +77,7 @@ Each player has FIFA-style attributes (50-99 range):
 ## Progression & Rewards
 
 ### Season Structure
-- **League:** Brasileirão Serie A
+- **League:** Liga Mestre A
 - **Timeline:** Week-by-week progression
 - **Starting Point:** Week 1, Position 10th, 0 points
 - **Opponents:** 6 fictional teams (Leões do Norte, Falcões de Aço, Trovão FC, Maré Alta, Serra Brava, Estrela do Sul)

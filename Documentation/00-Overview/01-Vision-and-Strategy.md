@@ -197,7 +197,7 @@ Don't:
 
 | Action | Target |
 |--------|--------|
-| Expand team selection | All Brasileirão teams |
+| Expand team selection | All Liga Mestre teams |
 | Launch tournaments | 10,000 participants |
 | Influencer campaigns | 50,000 users |
 | Premium conversion | 10% of actives |

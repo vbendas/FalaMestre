@@ -206,7 +206,7 @@ function generateAICacheKey(
 
 // Example usage
 const cacheKey = generateAICacheKey('show_standings', {
-  league: 'Brasileirão',
+  league: 'Liga Mestre',
   week: 12
 });
 // Result: ai:show_standings:a1b2c3d4e5f6g7h8
@@ -229,7 +229,7 @@ const cacheKey = generateAICacheKey('show_standings', {
 // Pre-warm common caches on deploy
 async function warmupCaches(): Promise<void> {
   // Warm standings for all leagues
-  const leagues = ['Brasileirão Série A', 'Brasileirão Série B'];
+  const leagues = ['Liga Mestre A', 'Liga Mestre B'];
   for (const league of leagues) {
     await generateStandings(league);
   }

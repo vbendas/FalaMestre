@@ -107,8 +107,8 @@ interface PlayerAttributes {
 |-------|-------------|---------|
 | 60-69 | Poor / Below Average | Bench player in Serie B |
 | 70-74 | Average | Regular starter in Serie B |
-| 75-79 | Good | Average Brasileirão starter |
-| 80-84 | Very Good | Top Brasileirão player |
+| 75-79 | Good | Average Liga Mestre starter |
+| 80-84 | Very Good | Top Liga Mestre player |
 | 85-89 | Excellent | Elite Brazilian player |
 | 90-94 | World Class | International star |
 | 95-99 | Legendary | All-time great level |
@@ -1971,9 +1971,9 @@ function calculateSeasonEndRewards(
 |---------|---------|----------------|---------------------|
 | 60-64 | Poor | Youth prospect | 100K - 500K |
 | 65-69 | Below Average | Serie B starter | 500K - 1M |
-| 70-74 | Average | Brasileirão squad player | 1M - 3M |
-| 75-79 | Good | Brasileirão starter | 3M - 8M |
-| 80-84 | Very Good | Top Brasileirão player | 8M - 20M |
+| 70-74 | Average | Liga Mestre squad player | 1M - 3M |
+| 75-79 | Good | Liga Mestre starter | 3M - 8M |
+| 80-84 | Very Good | Top Liga Mestre player | 8M - 20M |
 | 85-89 | Excellent | Brazilian NT candidate | 20M - 50M |
 | 90-94 | World Class | International star | 50M - 100M |
 | 95-99 | Legendary | Global superstars | 100M+ |

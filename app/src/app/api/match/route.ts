@@ -259,7 +259,7 @@ export async function POST(request: NextRequest) {
     const userPosition = allStandings.findIndex(t => t.name === gameState.user.team) + 1;
     gameState.season.position = userPosition;
 
-    // Check if season is complete (38 rounds in Brasileirão)
+    // Check if season is complete (38 rounds in Liga Mestre)
     const isSeasonEnd = gameState.season.week > 38;
 
     if (isSeasonEnd) {
@@ -279,7 +279,7 @@ export async function POST(request: NextRequest) {
         opponent: nextOpponent,
         isHome: Math.random() > 0.5,
         date: new Date().toISOString(),
-        competition: 'Brasileirão',
+        competition: 'Liga Mestre',
       };
     }
 

@@ -153,7 +153,7 @@ CREATE TABLE game_states (
     -- Season Progress
     season INTEGER DEFAULT 1,
     week INTEGER DEFAULT 1,
-    league TEXT DEFAULT 'Brasileirão Série A',
+    league TEXT DEFAULT 'Liga Mestre A',
     league_position INTEGER,
     league_points INTEGER DEFAULT 0,
     

@@ -314,7 +314,7 @@ Pain Points:
 How We Address:
   ✅ Elifoot-depth tactics
   ✅ AI provides intelligent opposition
-  ✅ Authentic Brasileirão
+  ✅ Authentic Liga Mestre
   ✅ Skill-based progression
 ```
 
@@ -656,7 +656,7 @@ Priority: P1 (Important for MVP)
 Description: Progress through league season week by week
 
 Requirements:
-  - 38-week season (Brasileirão)
+  - 38-week season (Liga Mestre)
   - Weekly fixture schedule
   - League table with standings
   - Points system (3-1-0)
@@ -1109,7 +1109,7 @@ CREATE TABLE game_states (
     team TEXT NOT NULL,
     season INTEGER DEFAULT 1,
     week INTEGER DEFAULT 1,
-    league TEXT DEFAULT 'Brasileirão Serie A',
+    league TEXT DEFAULT 'Liga Mestre A',
     position INTEGER,
     points INTEGER DEFAULT 0,
     

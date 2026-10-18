@@ -1000,7 +1000,7 @@ export function createInitialGameState(userId: string, teamName: string): GameSt
     },
     season: {
       week: 1,
-      league: 'Brasileirão',
+      league: 'Liga Mestre',
       division: 'Serie D' as TierDivision,
       position: SEASON_CONSTANTS.INITIAL_POSITION,
       points: SEASON_CONSTANTS.INITIAL_POINTS,
@@ -1012,7 +1012,7 @@ export function createInitialGameState(userId: string, teamName: string): GameSt
         opponent: 'Falcões de Aço',
         isHome: true,
         date: new Date().toISOString(),
-        competition: 'Brasileirão',
+        competition: 'Liga Mestre',
       },
     },
     squad: {

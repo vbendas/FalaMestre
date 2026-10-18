@@ -216,7 +216,7 @@ This plan identifies 8 quick-win initiatives broken into 42 actionable tasks. Th
 - **Subtasks:**
   - [ ] 4.4.1 Track total wins/draws/losses in game state
   - [ ] 4.4.2 Calculate position based on points relative to expected points: `position = Math.max(1, Math.min(20, 11 - Math.floor(points / (week * 3) * 10)))`
-  - [ ] 4.4.3 Add season end condition at week 38 (Brasileirao has 38 rounds)
+  - [ ] 4.4.3 Add season end condition at week 38 (Liga Mestre has 38 rounds)
   - [ ] 4.4.4 Show a season summary when week reaches 38
 
 ---
