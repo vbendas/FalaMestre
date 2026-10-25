@@ -24,13 +24,20 @@ interface SquadViewProps {
 export function SquadView({ gameState, onViewChange, onTrainPlayer, userId, isLoading = false }: SquadViewProps) {
   const { squad, season, user } = gameState;
 
+  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+  const [showFormationSelector, setShowFormationSelector] = useState(false);
+  const [captainId, setCaptainId] = useState<string | null>(null);
+  // Formation picked in this view, kept locally until the next gameState refresh.
+  const [pickedFormation, setPickedFormation] = useState<string | null>(null);
+
   if (isLoading) {
     return <SquadViewSkeleton />;
   }
 
-  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
-  const [showFormationSelector, setShowFormationSelector] = useState(false);
-  const [captainId, setCaptainId] = useState<string | null>(null);
+  const currentFormation = pickedFormation ?? squad.formation;
+  const displayedGameState: GameState = pickedFormation
+    ? { ...gameState, squad: { ...squad, formation: pickedFormation } }
+    : gameState;
 
   const playersByPosition = {
     GK: squad.players.filter(p => p.position === 'GK'),
@@ -77,7 +84,7 @@ export function SquadView({ gameState, onViewChange, onTrainPlayer, userId, isLo
       });
 
       if (response.ok) {
-        gameState.squad.formation = formationId;
+        setPickedFormation(formationId);
         setShowFormationSelector(false);
       }
     } catch (error) {
@@ -88,7 +95,7 @@ export function SquadView({ gameState, onViewChange, onTrainPlayer, userId, isLo
   return (
     <ViewContainer className="pb-20 gap-3">
       <SquadStats
-        gameState={gameState}
+        gameState={displayedGameState}
         onFormationClick={() => setShowFormationSelector(true)}
       />
 
@@ -151,7 +158,7 @@ export function SquadView({ gameState, onViewChange, onTrainPlayer, userId, isLo
       <FormationSelector
         isOpen={showFormationSelector}
         onClose={() => setShowFormationSelector(false)}
-        currentFormation={squad.formation}
+        currentFormation={currentFormation}
         players={squad.players}
         onSelectFormation={handleFormationChange}
       />
