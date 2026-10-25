@@ -1,4 +1,5 @@
 import { MatchEvent, MatchContext, EventIntensity, ShotType, EventType, Player } from './types';
+import { random as rng } from './rng';
 
 // Brazilian football slang and expressions - ENHANCED
 const SLANG = {
@@ -16,13 +17,13 @@ const SLANG = {
 };
 
 function random<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
+  return arr[Math.floor(rng() * arr.length)];
 }
 
 function shuffle<T>(arr: T[]): T[] {
   const shuffled = [...arr];
   for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(rng() * (i + 1));
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
   return shuffled;
@@ -37,7 +38,7 @@ function capitalize(str: string): string {
 }
 
 function generateEventId(): string {
-  return `evt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  return `evt_${Date.now()}_${rng().toString(36).substr(2, 9)}`;
 }
 
 // Commentary templates by event type and intensity

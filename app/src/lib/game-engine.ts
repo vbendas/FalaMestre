@@ -1,5 +1,6 @@
 import { GameState, Player, Match, FormState, MatchEvent, MatchContext, EventIntensity, EventType, MatchSettings, MATCH_SETTINGS_DEFAULTS, TierDivision, TurnResult } from './types';
 import { generatePlayerId, generateMatchId } from './utils';
+import { random as rng } from './rng';
 import {
   PLAYER_RATINGS,
   SQUAD_CONSTANTS,
@@ -47,7 +48,7 @@ function generatePlayer(position: 'GK' | 'DEF' | 'MID' | 'FWD'): Player {
       : position === 'MID'
         ? PLAYER_RATINGS.BASE_MID
         : PLAYER_RATINGS.BASE_FWD;
-  const variance = Math.random() * (PLAYER_RATINGS.VARIANCE * 2) - PLAYER_RATINGS.VARIANCE;
+  const variance = rng() * (PLAYER_RATINGS.VARIANCE * 2) - PLAYER_RATINGS.VARIANCE;
 
   const clampRating = (value: number) =>
     Math.max(PLAYER_RATINGS.MIN, Math.min(PLAYER_RATINGS.MAX, Math.floor(value)));
@@ -62,11 +63,11 @@ function generatePlayer(position: 'GK' | 'DEF' | 'MID' | 'FWD'): Player {
     dri: clampRating(baseRating + variance),
     def: clampRating(baseRating + variance),
     phy: clampRating(baseRating + variance),
-    potential: Math.floor(ATTRIBUTE_RANGES.POTENTIAL.MIN + Math.random() * (ATTRIBUTE_RANGES.POTENTIAL.MAX - ATTRIBUTE_RANGES.POTENTIAL.MIN)),
-    consistency: Math.floor(ATTRIBUTE_RANGES.CONSISTENCY.MIN + Math.random() * (ATTRIBUTE_RANGES.CONSISTENCY.MAX - ATTRIBUTE_RANGES.CONSISTENCY.MIN)),
-    bigMatchPlayer: Math.floor(ATTRIBUTE_RANGES.BIG_MATCH_PLAYER.MIN + Math.random() * (ATTRIBUTE_RANGES.BIG_MATCH_PLAYER.MAX - ATTRIBUTE_RANGES.BIG_MATCH_PLAYER.MIN)),
-    leadership: Math.floor(ATTRIBUTE_RANGES.LEADERSHIP.MIN + Math.random() * (ATTRIBUTE_RANGES.LEADERSHIP.MAX - ATTRIBUTE_RANGES.LEADERSHIP.MIN)),
-    injuryProneness: Math.floor(ATTRIBUTE_RANGES.INJURY_PRONENESS.MIN + Math.random() * (ATTRIBUTE_RANGES.INJURY_PRONENESS.MAX - ATTRIBUTE_RANGES.INJURY_PRONENESS.MIN)),
+    potential: Math.floor(ATTRIBUTE_RANGES.POTENTIAL.MIN + rng() * (ATTRIBUTE_RANGES.POTENTIAL.MAX - ATTRIBUTE_RANGES.POTENTIAL.MIN)),
+    consistency: Math.floor(ATTRIBUTE_RANGES.CONSISTENCY.MIN + rng() * (ATTRIBUTE_RANGES.CONSISTENCY.MAX - ATTRIBUTE_RANGES.CONSISTENCY.MIN)),
+    bigMatchPlayer: Math.floor(ATTRIBUTE_RANGES.BIG_MATCH_PLAYER.MIN + rng() * (ATTRIBUTE_RANGES.BIG_MATCH_PLAYER.MAX - ATTRIBUTE_RANGES.BIG_MATCH_PLAYER.MIN)),
+    leadership: Math.floor(ATTRIBUTE_RANGES.LEADERSHIP.MIN + rng() * (ATTRIBUTE_RANGES.LEADERSHIP.MAX - ATTRIBUTE_RANGES.LEADERSHIP.MIN)),
+    injuryProneness: Math.floor(ATTRIBUTE_RANGES.INJURY_PRONENESS.MIN + rng() * (ATTRIBUTE_RANGES.INJURY_PRONENESS.MAX - ATTRIBUTE_RANGES.INJURY_PRONENESS.MIN)),
     // Training system fields - initialized
     fatigue: 100,
     currentForm: 'average',
@@ -80,7 +81,7 @@ function generatePlayer(position: 'GK' | 'DEF' | 'MID' | 'FWD'): Player {
 function generatePlayerName(): string {
   const firstNames = ['João', 'Pedro', 'Lucas', 'Gabriel', 'Matheus', 'Rafael', 'Diego', 'Felipe', 'André', 'Bruno'];
   const lastNames = ['Silva', 'Santos', 'Oliveira', 'Souza', 'Rodrigues', 'Ferreira', 'Alves', 'Pereira', 'Lima', 'Costa'];
-  return `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`;
+  return `${firstNames[Math.floor(rng() * firstNames.length)]} ${lastNames[Math.floor(rng() * lastNames.length)]}`;
 }
 
 // Generate squad for a team
@@ -154,12 +155,89 @@ function selectPlayerByAttribute(squad: Player[], attribute: 'sho' | 'def' | 'ph
     return weight;
   });
 
-  let random = Math.random() * totalWeight;
+  let random = rng() * totalWeight;
   for (let i = 0; i < squad.length; i++) {
     random -= weights[i];
     if (random <= 0) return squad[i];
   }
   return squad[0]; // Fallback
+}
+
+/**
+ * Splits the match's expected goals between the two sides according to their
+ * share of the combined team power.
+ *
+ * Both sides' expected goals always add up to EXPECTED_GOALS_PER_MATCH, so a
+ * mismatch moves goals from one side to the other instead of inflating the
+ * scoreline, while the stronger squad takes a larger slice. The share is
+ * clamped at both ends so no fixture turns into a certainty.
+ *
+ * Everything that is meant to influence a result — squad quality, morale,
+ * home advantage, the big-match bonus, tactical power multipliers — reaches
+ * the scoreline through the two power figures handed to this function. Each
+ * simulator then converts its side's expected goals into a per-minute or
+ * per-tick chance, dividing by the match length exactly once.
+ */
+export function calculateExpectedGoals(
+  finalHomePower: number,
+  finalAwayPower: number
+): { homeExpectedGoals: number; awayExpectedGoals: number; homePowerShare: number } {
+  const totalPower = finalHomePower + finalAwayPower;
+
+  // Degenerate inputs (empty squads, NaN) fall back to an even split.
+  const rawShare =
+    Number.isFinite(totalPower) && totalPower > 0 ? finalHomePower / totalPower : 0.5;
+
+  const homePowerShare = Math.max(
+    MATCH_CONSTANTS.MIN_POWER_SHARE,
+    Math.min(MATCH_CONSTANTS.MAX_POWER_SHARE, rawShare)
+  );
+
+  return {
+    homeExpectedGoals: MATCH_CONSTANTS.EXPECTED_GOALS_PER_MATCH * homePowerShare,
+    awayExpectedGoals: MATCH_CONSTANTS.EXPECTED_GOALS_PER_MATCH * (1 - homePowerShare),
+    homePowerShare,
+  };
+}
+
+/**
+ * Per-tick goal chance for the side attacking in the narrative simulator.
+ *
+ * The narrative match advances in NARRATIVE_TICK_MINUTES steps and the two
+ * sides attack on alternate ticks, so each side gets half the ticks. The
+ * side's expected goals are spread over its ticks, weighted towards the
+ * closing half-hour; the weights are normalised over that side's own ticks so
+ * the weighting changes *when* goals come, not how many.
+ */
+export function narrativeGoalChance(
+  minute: number,
+  isHomeTurn: boolean,
+  sideExpectedGoals: number
+): number {
+  const {
+    DURATION_MINUTES,
+    NARRATIVE_TICK_MINUTES,
+    NARRATIVE_LATE_GAME_FROM_MINUTE,
+    NARRATIVE_EARLY_GOAL_WEIGHT,
+    NARRATIVE_LATE_GOAL_WEIGHT,
+  } = MATCH_CONSTANTS;
+
+  // Home attacks on odd ticks (5, 15, 25…), away on even (10, 20, 30…).
+  let weightTotal = 0;
+  for (let tick = NARRATIVE_TICK_MINUTES; tick <= DURATION_MINUTES; tick += NARRATIVE_TICK_MINUTES) {
+    const tickIsHome = tick % 2 === 1;
+    if (tickIsHome !== isHomeTurn) continue;
+    weightTotal += tick >= NARRATIVE_LATE_GAME_FROM_MINUTE
+      ? NARRATIVE_LATE_GOAL_WEIGHT
+      : NARRATIVE_EARLY_GOAL_WEIGHT;
+  }
+  if (weightTotal <= 0) return 0;
+
+  const weight = minute >= NARRATIVE_LATE_GAME_FROM_MINUTE
+    ? NARRATIVE_LATE_GOAL_WEIGHT
+    : NARRATIVE_EARLY_GOAL_WEIGHT;
+
+  return Math.min(1, sideExpectedGoals * (weight / weightTotal));
 }
 
 // Simulate a match
@@ -199,13 +277,9 @@ export function simulateMatch(
   const finalAwayPower = awayPower * (1 + awayBigMatchBonus);
 
   // Goal probability calculation using constants
-  let homeGoalProb = (finalHomePower / (finalHomePower + finalAwayPower)) * MATCH_CONSTANTS.MAX_GOAL_PROBABILITY + MATCH_CONSTANTS.BASE_HOME_GOAL_PROBABILITY;
-  let awayGoalProb = (finalAwayPower / (finalAwayPower + finalHomePower)) * 0.3 + MATCH_CONSTANTS.BASE_AWAY_GOAL_PROBABILITY;
-
-  // Cap probabilities to prevent extreme outliers like 15-0 scores
-  const MAX_PROB = 0.08; // Roughly limits max expected probability per minute
-  homeGoalProb = Math.min(homeGoalProb, MAX_PROB);
-  awayGoalProb = Math.min(awayGoalProb, MAX_PROB);
+  const { homeExpectedGoals, awayExpectedGoals } = calculateExpectedGoals(finalHomePower, finalAwayPower);
+  const homeGoalChance = homeExpectedGoals / MATCH_CONSTANTS.DURATION_MINUTES;
+  const awayGoalChance = awayExpectedGoals / MATCH_CONSTANTS.DURATION_MINUTES;
 
   // Simulate match minutes
   let homeScore = 0;
@@ -215,7 +289,7 @@ export function simulateMatch(
   // Minute-by-minute simulation
   for (let minute = 1; minute <= MATCH_CONSTANTS.DURATION_MINUTES; minute++) {
     // Home team scoring chance
-    if (Math.random() < homeGoalProb / MATCH_CONSTANTS.DURATION_MINUTES) {
+    if (rng() < homeGoalChance) {
       homeScore++;
       // Pick scorer based on shooting attribute
       const scorer = selectPlayerByAttribute(homeSquad, 'sho', 'FWD');
@@ -223,7 +297,7 @@ export function simulateMatch(
     }
 
     // Away team scoring chance
-    if (Math.random() < awayGoalProb / MATCH_CONSTANTS.DURATION_MINUTES) {
+    if (rng() < awayGoalChance) {
       awayScore++;
       // Pick scorer based on shooting attribute
       const scorer = selectPlayerByAttribute(awaySquad, 'sho', 'FWD');
@@ -231,20 +305,20 @@ export function simulateMatch(
     }
 
     // Random cards using constants
-    if (Math.random() < MATCH_CONSTANTS.YELLOW_CARD_PROBABILITY) {
-      const isHome = Math.random() < 0.5;
+    if (rng() < MATCH_CONSTANTS.YELLOW_CARD_PROBABILITY) {
+      const isHome = rng() < 0.5;
       const team = isHome ? homeTeam : awayTeam;
       const squad = isHome ? homeSquad : awaySquad;
-      const player = squad[Math.floor(Math.random() * squad.length)];
+      const player = squad[Math.floor(rng() * squad.length)];
       events.push(`🟨 ${minute}' - Cartão amarelo para ${player.name} (${team})`);
     }
 
     // Red card (rare)
-    if (Math.random() < MATCH_CONSTANTS.RED_CARD_PROBABILITY) {
-      const isHome = Math.random() < 0.5;
+    if (rng() < MATCH_CONSTANTS.RED_CARD_PROBABILITY) {
+      const isHome = rng() < 0.5;
       const team = isHome ? homeTeam : awayTeam;
       const squad = isHome ? homeSquad : awaySquad;
-      const player = squad[Math.floor(Math.random() * squad.length)];
+      const player = squad[Math.floor(rng() * squad.length)];
       events.push(`🟥 ${minute}' - Cartão vermelho! ${player.name} (${team}) é expulso!`);
     }
   }
@@ -287,13 +361,7 @@ export function simulateMatchWithCommentary(
   const finalHomePower = adjustedHomePower * (1 + homeBigMatchBonus);
   const finalAwayPower = awayPower * (1 + awayBigMatchBonus);
 
-  let homeGoalProb = (finalHomePower / (finalHomePower + finalAwayPower)) * MATCH_CONSTANTS.MAX_GOAL_PROBABILITY + MATCH_CONSTANTS.BASE_HOME_GOAL_PROBABILITY;
-  let awayGoalProb = (finalAwayPower / (finalAwayPower + finalHomePower)) * 0.3 + MATCH_CONSTANTS.BASE_AWAY_GOAL_PROBABILITY;
-
-  // Cap probabilities to prevent extreme outliers
-  const MAX_PROB = 0.08;
-  homeGoalProb = Math.min(homeGoalProb, MAX_PROB);
-  awayGoalProb = Math.min(awayGoalProb, MAX_PROB);
+  const { homeExpectedGoals, awayExpectedGoals } = calculateExpectedGoals(finalHomePower, finalAwayPower);
 
   let homeScore = 0;
   let awayScore = 0;
@@ -322,7 +390,7 @@ export function simulateMatchWithCommentary(
     return selectPlayerByAttribute(squad, 'sho', 'FWD');
   };
 
-  const getRandomPlayer = (squad: Player[]): Player => squad[Math.floor(Math.random() * squad.length)];
+  const getRandomPlayer = (squad: Player[]): Player => squad[Math.floor(rng() * squad.length)];
 
   for (let minute = 1; minute <= MATCH_CONSTANTS.DURATION_MINUTES; minute++) {
     context.minute = minute;
@@ -334,12 +402,16 @@ export function simulateMatchWithCommentary(
     const isEndGame = minute >= 75;
     context.tension = Math.min(100, isCloseGame ? 50 + (minute / 90) * 50 : 30 + (minute / 90) * 20);
 
-    const homeChance = homeGoalProb / MATCH_CONSTANTS.DURATION_MINUTES;
-    const awayChance = awayGoalProb / MATCH_CONSTANTS.DURATION_MINUTES;
+    // Per-minute goal chance, and the wider chance of an attack worth
+    // narrating (a goal is GOAL_SHARE_OF_ATTACKS of those).
+    const homeGoalChance = homeExpectedGoals / MATCH_CONSTANTS.DURATION_MINUTES;
+    const awayGoalChance = awayExpectedGoals / MATCH_CONSTANTS.DURATION_MINUTES;
+    const homeChance = homeGoalChance / MATCH_CONSTANTS.GOAL_SHARE_OF_ATTACKS;
+    const awayChance = awayGoalChance / MATCH_CONSTANTS.GOAL_SHARE_OF_ATTACKS;
 
-    if (Math.random() < homeChance * 0.4) {
+    if (rng() < homeGoalChance) {
       const player = getScorer(homeSquad);
-      const assist = Math.random() > 0.5 ? getRandomPlayer(homeSquad) : undefined;
+      const assist = rng() > 0.5 ? getRandomPlayer(homeSquad) : undefined;
       homeScore++;
       context.homeScore = homeScore;
 
@@ -357,11 +429,11 @@ export function simulateMatchWithCommentary(
         commentary,
         momentum: 30,
       });
-    } else if (Math.random() < homeChance) {
+    } else if (rng() < homeChance) {
       const player = getScorer(homeSquad);
       const intensity = calculateIntensity(minute, context);
 
-      if (Math.random() < 0.3) {
+      if (rng() < 0.3) {
         const commentary = generateNearMissCommentary(player, minute, context, true);
         events.push({
           id: generateEventId(),
@@ -375,7 +447,7 @@ export function simulateMatchWithCommentary(
           commentary,
           momentum: -5,
         });
-      } else if (Math.random() < 0.3) {
+      } else if (rng() < 0.3) {
         const gk = awaySquad.find(p => p.position === 'GK') || awaySquad[0];
         const commentary = generateSaveCommentary(gk, minute, context, false);
         events.push({
@@ -407,9 +479,9 @@ export function simulateMatchWithCommentary(
       }
     }
 
-    if (Math.random() < awayChance * 0.4) {
+    if (rng() < awayGoalChance) {
       const player = getScorer(awaySquad);
-      const assist = Math.random() > 0.5 ? getRandomPlayer(awaySquad) : undefined;
+      const assist = rng() > 0.5 ? getRandomPlayer(awaySquad) : undefined;
       awayScore++;
       context.awayScore = awayScore;
 
@@ -427,10 +499,10 @@ export function simulateMatchWithCommentary(
         commentary,
         momentum: -30,
       });
-    } else if (Math.random() < awayChance) {
+    } else if (rng() < awayChance) {
       const player = getScorer(awaySquad);
 
-      if (Math.random() < 0.3) {
+      if (rng() < 0.3) {
         const commentary = generateNearMissCommentary(player, minute, context, false);
         events.push({
           id: generateEventId(),
@@ -444,7 +516,7 @@ export function simulateMatchWithCommentary(
           commentary,
           momentum: 5,
         });
-      } else if (Math.random() < 0.3) {
+      } else if (rng() < 0.3) {
         const gk = homeSquad.find(p => p.position === 'GK') || homeSquad[0];
         const commentary = generateSaveCommentary(gk, minute, context, true);
         events.push({
@@ -476,8 +548,8 @@ export function simulateMatchWithCommentary(
       }
     }
 
-    if (Math.random() < MATCH_CONSTANTS.YELLOW_CARD_PROBABILITY * 0.5) {
-      const isHome = Math.random() < 0.5;
+    if (rng() < MATCH_CONSTANTS.YELLOW_CARD_PROBABILITY * 0.5) {
+      const isHome = rng() < 0.5;
       const player = getRandomPlayer(isHome ? homeSquad : awaySquad);
       const commentary = generateCardCommentary(player, minute, true, isHome);
       events.push({
@@ -494,8 +566,8 @@ export function simulateMatchWithCommentary(
       });
     }
 
-    if (Math.random() < MATCH_CONSTANTS.RED_CARD_PROBABILITY * 0.3) {
-      const isHome = Math.random() < 0.5;
+    if (rng() < MATCH_CONSTANTS.RED_CARD_PROBABILITY * 0.3) {
+      const isHome = rng() < 0.5;
       const player = getRandomPlayer(isHome ? homeSquad : awaySquad);
       const commentary = generateCardCommentary(player, minute, false, isHome);
       events.push({
@@ -513,7 +585,7 @@ export function simulateMatchWithCommentary(
     }
 
     if (minute % 10 === 0) {
-      const isHome = Math.random() < 0.5;
+      const isHome = rng() < 0.5;
       const commentary = generatePressureCommentary(minute, context, isHome);
       events.push({
         id: generateEventId(),
@@ -623,28 +695,22 @@ export function simulateMatchSegment(
   const finalHomePower = adjustedHomePower * (1 + homeBigMatchBonus);
   const finalAwayPower = adjustedAwayPower * (1 + awayBigMatchBonus);
 
-  let homeGoalProb = (finalHomePower / (finalHomePower + finalAwayPower)) * MATCH_CONSTANTS.MAX_GOAL_PROBABILITY + MATCH_CONSTANTS.BASE_HOME_GOAL_PROBABILITY;
-  let awayGoalProb = (finalAwayPower / (finalAwayPower + finalHomePower)) * 0.3 + MATCH_CONSTANTS.BASE_AWAY_GOAL_PROBABILITY;
-
-  // Cap probabilities to prevent extreme outliers
-  const MAX_PROB = 0.08;
-  homeGoalProb = Math.min(homeGoalProb, MAX_PROB);
-  awayGoalProb = Math.min(awayGoalProb, MAX_PROB);
+  let { homeExpectedGoals, awayExpectedGoals } = calculateExpectedGoals(finalHomePower, finalAwayPower);
 
   // Apply mentality modifiers from turn result
   if (turnResult?.mentalityShift) {
     const mentalityKey = turnResult.mentalityShift;
     if (Object.hasOwn(MENTALITY_MODIFIERS, mentalityKey)) {
       const modifier = MENTALITY_MODIFIERS[mentalityKey];
-      homeGoalProb *= modifier.homeGoalMultiplier;
-      awayGoalProb *= modifier.awayGoalMultiplier;
+      homeExpectedGoals *= modifier.homeGoalMultiplier;
+      awayExpectedGoals *= modifier.awayGoalMultiplier;
     }
   }
 
   // Apply tactical instruction risk factor (increases both teams' goal probability)
   if (tacticalInstr && riskFactor > 0) {
-    homeGoalProb *= (1 + riskFactor);
-    awayGoalProb *= (1 + riskFactor * 0.5);
+    homeExpectedGoals *= (1 + riskFactor);
+    awayExpectedGoals *= (1 + riskFactor * 0.5);
   }
 
   // Initialize state from priorState
@@ -677,9 +743,11 @@ export function simulateMatchSegment(
     return selectPlayerByAttribute(squad, 'sho', 'FWD');
   };
 
-  const getRandomPlayer = (squad: Player[]): Player => squad[Math.floor(Math.random() * squad.length)];
+  const getRandomPlayer = (squad: Player[]): Player => squad[Math.floor(rng() * squad.length)];
 
-  for (let minute = fromMinute; minute <= toMinute; minute++) {
+  // Play (fromMinute, toMinute]: the boundary minute belongs to the segment
+  // that ends on it, so six chained segments cover exactly 90 minutes.
+  for (let minute = fromMinute + 1; minute <= toMinute; minute++) {
     context.minute = minute;
     context.homeScore = homeScore;
     context.awayScore = awayScore;
@@ -689,12 +757,16 @@ export function simulateMatchSegment(
     context.tension = Math.min(100, isCloseGame ? 50 + (minute / 90) * 50 : 30 + (minute / 90) * 20);
     tension = context.tension;
 
-    const homeChance = homeGoalProb / MATCH_CONSTANTS.DURATION_MINUTES;
-    const awayChance = awayGoalProb / MATCH_CONSTANTS.DURATION_MINUTES;
+    // Per-minute goal chance, and the wider chance of an attack worth
+    // narrating (a goal is GOAL_SHARE_OF_ATTACKS of those).
+    const homeGoalChance = homeExpectedGoals / MATCH_CONSTANTS.DURATION_MINUTES;
+    const awayGoalChance = awayExpectedGoals / MATCH_CONSTANTS.DURATION_MINUTES;
+    const homeChance = homeGoalChance / MATCH_CONSTANTS.GOAL_SHARE_OF_ATTACKS;
+    const awayChance = awayGoalChance / MATCH_CONSTANTS.GOAL_SHARE_OF_ATTACKS;
 
-    if (Math.random() < homeChance * 0.4) {
+    if (rng() < homeGoalChance) {
       const player = getScorer(homeSquad);
-      const assist = Math.random() > 0.5 ? getRandomPlayer(homeSquad) : undefined;
+      const assist = rng() > 0.5 ? getRandomPlayer(homeSquad) : undefined;
       homeScore++;
       context.homeScore = homeScore;
 
@@ -713,11 +785,11 @@ export function simulateMatchSegment(
         momentum: 30,
       });
       homeMomentum = Math.max(-50, Math.min(50, homeMomentum + 30));
-    } else if (Math.random() < homeChance) {
+    } else if (rng() < homeChance) {
       const player = getScorer(homeSquad);
       const intensity = calculateIntensity(minute, context);
 
-      if (Math.random() < 0.3) {
+      if (rng() < 0.3) {
         const commentary = generateNearMissCommentary(player, minute, context, true);
         events.push({
           id: generateEventId(),
@@ -732,7 +804,7 @@ export function simulateMatchSegment(
           momentum: -5,
         });
         homeMomentum = Math.max(-50, Math.min(50, homeMomentum - 5));
-      } else if (Math.random() < 0.3) {
+      } else if (rng() < 0.3) {
         const gk = awaySquad.find(p => p.position === 'GK') || awaySquad[0];
         const commentary = generateSaveCommentary(gk, minute, context, false);
         events.push({
@@ -766,9 +838,9 @@ export function simulateMatchSegment(
       }
     }
 
-    if (Math.random() < awayChance * 0.4) {
+    if (rng() < awayGoalChance) {
       const player = getScorer(awaySquad);
-      const assist = Math.random() > 0.5 ? getRandomPlayer(awaySquad) : undefined;
+      const assist = rng() > 0.5 ? getRandomPlayer(awaySquad) : undefined;
       awayScore++;
       context.awayScore = awayScore;
 
@@ -787,10 +859,10 @@ export function simulateMatchSegment(
         momentum: -30,
       });
       awayMomentum = Math.max(-50, Math.min(50, awayMomentum - 30));
-    } else if (Math.random() < awayChance) {
+    } else if (rng() < awayChance) {
       const player = getScorer(awaySquad);
 
-      if (Math.random() < 0.3) {
+      if (rng() < 0.3) {
         const commentary = generateNearMissCommentary(player, minute, context, false);
         events.push({
           id: generateEventId(),
@@ -805,7 +877,7 @@ export function simulateMatchSegment(
           momentum: 5,
         });
         awayMomentum = Math.max(-50, Math.min(50, awayMomentum + 5));
-      } else if (Math.random() < 0.3) {
+      } else if (rng() < 0.3) {
         const gk = homeSquad.find(p => p.position === 'GK') || homeSquad[0];
         const commentary = generateSaveCommentary(gk, minute, context, true);
         events.push({
@@ -839,8 +911,8 @@ export function simulateMatchSegment(
       }
     }
 
-    if (Math.random() < MATCH_CONSTANTS.YELLOW_CARD_PROBABILITY * 0.5) {
-      const isHome = Math.random() < 0.5;
+    if (rng() < MATCH_CONSTANTS.YELLOW_CARD_PROBABILITY * 0.5) {
+      const isHome = rng() < 0.5;
       const player = getRandomPlayer(isHome ? homeSquad : awaySquad);
       const commentary = generateCardCommentary(player, minute, true, isHome);
       events.push({
@@ -857,8 +929,8 @@ export function simulateMatchSegment(
       });
     }
 
-    if (Math.random() < MATCH_CONSTANTS.RED_CARD_PROBABILITY * 0.3) {
-      const isHome = Math.random() < 0.5;
+    if (rng() < MATCH_CONSTANTS.RED_CARD_PROBABILITY * 0.3) {
+      const isHome = rng() < 0.5;
       const player = getRandomPlayer(isHome ? homeSquad : awaySquad);
       const commentary = generateCardCommentary(player, minute, false, isHome);
       events.push({
@@ -882,7 +954,7 @@ export function simulateMatchSegment(
     }
 
     if (minute % 10 === 0) {
-      const isHome = Math.random() < 0.5;
+      const isHome = rng() < 0.5;
       const commentary = generatePressureCommentary(minute, context, isHome);
       events.push({
         id: generateEventId(),
@@ -956,8 +1028,8 @@ export function processPostMatch(
     player.fatigue = Math.min(100, player.fatigue + recovery);
 
     // 2. Form updates based on match outcome
-    if (teamScore > 0 && Math.random() < 0.3) {
-      const scorer = squad.players[Math.floor(Math.random() * squad.players.length)];
+    if (teamScore > 0 && rng() < 0.3) {
+      const scorer = squad.players[Math.floor(rng() * squad.players.length)];
       updatePlayerForm(scorer, 2);
     }
 
@@ -1088,6 +1160,9 @@ interface NarrativeContext {
   isHome: boolean;
   homeTeam: string;
   awayTeam: string;
+  /** Expected goals for each side over the whole match, from calculateExpectedGoals. */
+  homeExpectedGoals: number;
+  awayExpectedGoals: number;
 }
 
 const MINIMAX_DEPTH = 3;
@@ -1197,14 +1272,20 @@ function generatePossibleEvents(
   const densityConfig = EVENT_DENSITY_CONFIG[settings.eventDensity];
   const multiplier = densityConfig.eventMultiplier;
 
-  const goalProb = (context.minute >= 60 ? 0.15 : 0.08) * multiplier;
+  // The goal chance comes from the attacking side's expected goals, so squad
+  // strength decides it and the commentary density setting does not: density
+  // only changes how much non-scoring narration surrounds the goals.
+  const attackingExpectedGoals = isHomeTurn
+    ? context.homeExpectedGoals
+    : context.awayExpectedGoals;
+  const goalProb = narrativeGoalChance(context.minute, isHomeTurn, attackingExpectedGoals);
   const missProb = (context.minute >= 60 ? 0.12 : 0.08) * multiplier;
   const saveProb = 0.10 * multiplier;
   const cardProb = 0.08 * multiplier;
   const pressureProb = 0.15 * multiplier;
   const buildupProb = 0.25 * multiplier;
 
-  const rand = Math.random();
+  const rand = rng();
 
   const getScorer = (): Player => {
     return selectPlayerByAttribute(squad, 'sho', 'FWD');
@@ -1225,7 +1306,7 @@ function generatePossibleEvents(
   // Goal
   if (rand < goalProb) {
     const player = getScorer();
-    const assist = Math.random() > 0.5 ? squad[Math.floor(Math.random() * squad.length)] : undefined;
+    const assist = rng() > 0.5 ? squad[Math.floor(rng() * squad.length)] : undefined;
     const commentary = generateGoalCommentary(player, assist, context.minute, {
       minute: context.minute,
       homeScore: context.homeScore,
@@ -1316,9 +1397,9 @@ function generatePossibleEvents(
   }
   // Card
   else if (rand < goalProb + missProb + saveProb + cardProb) {
-    const player = squad[Math.floor(Math.random() * squad.length)];
+    const player = squad[Math.floor(rng() * squad.length)];
     const commentary = generateCardCommentary(player, context.minute, true, isHomeTurn);
-    const intensity = Math.random() < 0.3 ? 'high' : 'medium';
+    const intensity = rng() < 0.3 ? 'high' : 'medium';
 
     events.push({
       id: `evt_${crypto.randomUUID()}`,
@@ -1513,14 +1594,20 @@ export function simulateMatchWithNarrative(
   const homePower = calculateTeamPower(homeSquad, SQUAD_CONSTANTS.FORMATION, homeMorale, SQUAD_CONSTANTS.MAX_FITNESS);
   const awayPower = calculateTeamPower(awaySquad, SQUAD_CONSTANTS.FORMATION, awayMorale, SQUAD_CONSTANTS.MAX_FITNESS);
 
-  const homeAdvantage = 1.1;
-  const finalHomePower = homePower * homeAdvantage;
-  const finalAwayPower = awayPower;
+  const homeAdvantage = MATCH_CONSTANTS.HOME_ADVANTAGE_MULTIPLIER;
 
-  // Goal probability based on power
-  const totalPower = finalHomePower + finalAwayPower;
-  const homeGoalBaseProb = (finalHomePower / totalPower) * 0.35;
-  const awayGoalBaseProb = (finalAwayPower / totalPower) * 0.25;
+  // Big-match players raise their side's power in the closing weeks.
+  const homeBigMatchBonus = isBigMatch
+    ? homeSquad.reduce((sum, p) => sum + p.bigMatchPlayer, 0) / (homeSquad.length * 100) * 0.1
+    : 0;
+  const awayBigMatchBonus = isBigMatch
+    ? awaySquad.reduce((sum, p) => sum + p.bigMatchPlayer, 0) / (awaySquad.length * 100) * 0.1
+    : 0;
+
+  const finalHomePower = homePower * homeAdvantage * (1 + homeBigMatchBonus);
+  const finalAwayPower = awayPower * (1 + awayBigMatchBonus);
+
+  const { homeExpectedGoals, awayExpectedGoals } = calculateExpectedGoals(finalHomePower, finalAwayPower);
 
   let homeScore = 0;
   let awayScore = 0;
@@ -1541,6 +1628,8 @@ export function simulateMatchWithNarrative(
     isHome: true,
     homeTeam,
     awayTeam,
+    homeExpectedGoals,
+    awayExpectedGoals,
   };
 
   // Generate events every 5 minutes to reduce commentary frequency
@@ -1581,7 +1670,7 @@ export function simulateMatchWithNarrative(
       const teamName = isHomeTurn ? homeTeam : awayTeam;
       const team: 'home' | 'away' = isHomeTurn ? 'home' : 'away';
 
-      const player = squad[Math.floor(Math.random() * squad.length)];
+      const player = squad[Math.floor(rng() * squad.length)];
       const commentary = generateBuildupCommentary(player, minute, {
         minute: context.minute,
         homeScore: context.homeScore,
@@ -1666,7 +1755,7 @@ export function simulateMatchWithNarrative(
     if (minute % 10 === 0 && allEvents.filter(e => e.minute === minute).length === 0) {
       // Ensure at least one event per minute
       const isHomeTurn = minute % 2 === 1;
-      const player = (isHomeTurn ? homeSquad : awaySquad)[Math.floor(Math.random() * 11)];
+      const player = (isHomeTurn ? homeSquad : awaySquad)[Math.floor(rng() * 11)];
       const teamName = isHomeTurn ? homeTeam : awayTeam;
 
       const commentary = generateBuildupCommentary(player, minute, {

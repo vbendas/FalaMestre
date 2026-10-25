@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { random as rng } from "./rng"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -10,7 +11,7 @@ export function cn(...inputs: ClassValue[]) {
  * Uses substring instead of deprecated substr
  */
 export function generateId(prefix?: string): string {
-  const randomPart = Math.random().toString(36).substring(2, 11)
+  const randomPart = rng().toString(36).substring(2, 11)
   return prefix ? `${prefix}_${randomPart}` : randomPart
 }
 

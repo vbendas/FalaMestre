@@ -347,7 +347,8 @@ export function applyTurnResult(
   squad: Player[];
   tacticalInstruction?: TacticalInstructionType;
 } {
-  let { formation, mentality, squad } = currentState;
+  let { formation, mentality } = currentState;
+  const { squad } = currentState;
 
   if (turnResult.mentalityShift) {
     mentality = turnResult.mentalityShift;
@@ -357,17 +358,10 @@ export function applyTurnResult(
     formation = turnResult.formationChange;
   }
 
-  if (turnResult.substitution) {
-    const { out: outId, in: inId } = turnResult.substitution;
-    const outIndex = squad.findIndex((p) => p.id === outId);
-    const inIndex = squad.findIndex((p) => p.id === inId);
-    if (outIndex !== -1 && inIndex !== -1 && outIndex !== inIndex) {
-      squad = squad.map((p) => ({ ...p }));
-      const temp = squad[outIndex];
-      squad[outIndex] = squad[inIndex];
-      squad[inIndex] = temp;
-    }
-  }
+  // Substitutions are recorded in the TurnResult but do not change the squad:
+  // the squad is a fixed 11 (SQUAD_CONSTANTS.SIZE) with no bench, so both
+  // players named in a substitution are already on the pitch. Swapping them
+  // would only reorder the array, which the simulation ignores.
 
   return {
     formation,

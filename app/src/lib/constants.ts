@@ -9,9 +9,33 @@ import { MatchSettings, TierDivision, StaffSpecialty, InvestmentTier, Prediction
 export const MATCH_CONSTANTS = {
   DURATION_MINUTES: 90,
   HOME_ADVANTAGE_MULTIPLIER: 1.1,
-  BASE_HOME_GOAL_PROBABILITY: 0.1,
-  BASE_AWAY_GOAL_PROBABILITY: 0.05,
-  MAX_GOAL_PROBABILITY: 0.4,
+
+  // How many goals a match is expected to produce in total, both sides
+  // combined. Every simulator derives its per-minute (or per-tick) goal chance
+  // from this one figure, so this is the single knob for how high-scoring the
+  // game is. Real top-flight football averages roughly 2.5–3.
+  EXPECTED_GOALS_PER_MATCH: 2.7,
+
+  // The expected goals are split between the two sides by their share of the
+  // combined team power. The total therefore stays constant whatever the
+  // fixture — a mismatch redistributes goals, it does not create them — while
+  // the share is what makes the better squad win. The share is clamped so even
+  // an overwhelming favourite does not run up a 15-0: at the limit the stronger
+  // side is 3x more likely to score.
+  MIN_POWER_SHARE: 0.25,
+  MAX_POWER_SHARE: 0.75,
+
+  // In the minute-by-minute simulators a goal is one outcome of an attack; the
+  // rest become misses, saves and pressure. Attacks per minute = goals / this.
+  GOAL_SHARE_OF_ATTACKS: 0.4,
+
+  // The narrative simulator advances in fixed ticks, alternating which side
+  // attacks, and weights the goal chance towards the closing half-hour.
+  NARRATIVE_TICK_MINUTES: 5,
+  NARRATIVE_LATE_GAME_FROM_MINUTE: 60,
+  NARRATIVE_EARLY_GOAL_WEIGHT: 0.08,
+  NARRATIVE_LATE_GOAL_WEIGHT: 0.15,
+
   YELLOW_CARD_PROBABILITY: 0.0015,
   RED_CARD_PROBABILITY: 0.0003,
 } as const;

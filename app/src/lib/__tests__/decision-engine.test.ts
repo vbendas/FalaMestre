@@ -7,6 +7,7 @@ import {
   applyTurnResult,
 } from '../decision-engine';
 import { Player, DecisionOption, TurnMentality } from '../types';
+import { DECISION_TURN_CONFIG } from '../constants';
 
 // ─── Test Helpers ───────────────────────────────────────────────────────────
 
@@ -212,13 +213,13 @@ describe('generateDecisionOptions', () => {
     expect(formationOption!.action).toBe('change_formation');
   });
 
-  test('tied scenario offers balanced option', () => {
+  test('tied scenario offers a mentality alternative', () => {
     const options = generateDecisionOptions(1, 1, 1, fitSquad, '4-3-3', 'attacking');
 
-    const balancedOption = options.find((o) => o.mentality === 'balanced');
-    expect(balancedOption).toBeDefined();
-    expect(balancedOption!.label).toBe('Equilibrar o time');
-    expect(balancedOption!.action).toBe('change_mentality');
+    const mentalityOption = options.find((o) => o.category === 'mentality');
+    expect(mentalityOption).toBeDefined();
+    expect(mentalityOption!.mentality).not.toBe('attacking');
+    expect(mentalityOption!.action).toBe('change_mentality');
   });
 
   test('always includes "Manter como está" as last option', () => {
@@ -251,10 +252,10 @@ describe('generateDecisionOptions', () => {
     expect(balancedOption).toBeUndefined();
   });
 
-  test('max 3 options returned', () => {
+  test('never returns more than MAX_OPTIONS options', () => {
     const options = generateDecisionOptions(1, 0, 3, fitSquad, '4-4-2', 'balanced');
 
-    expect(options.length).toBeLessThanOrEqual(3);
+    expect(options.length).toBeLessThanOrEqual(DECISION_TURN_CONFIG.MAX_OPTIONS);
   });
 
   test('never offers current formation as an option (losing)', () => {
@@ -271,18 +272,18 @@ describe('generateDecisionOptions', () => {
     expect(formationOption).toBeUndefined();
   });
 
-  test('losing with attacking mentality and 4-3-3 formation only offers keep', () => {
+  test('losing with attacking mentality and 4-3-3 formation still offers instructions + keep', () => {
     const options = generateDecisionOptions(1, 0, 3, fitSquad, '4-3-3', 'attacking');
 
-    expect(options.length).toBe(1);
-    expect(options[0].action).toBe('keep_setup');
+    expect(options.some((o) => o.category === 'instruction')).toBe(true);
+    expect(options[options.length - 1].action).toBe('keep_setup');
   });
 
-  test('winning with defensive mentality and 5-4-1 formation only offers keep', () => {
+  test('winning with defensive mentality and 5-4-1 formation still offers instructions + keep', () => {
     const options = generateDecisionOptions(1, 3, 0, fitSquad, '5-4-1', 'defensive');
 
-    expect(options.length).toBe(1);
-    expect(options[0].action).toBe('keep_setup');
+    expect(options.some((o) => o.category === 'instruction')).toBe(true);
+    expect(options[options.length - 1].action).toBe('keep_setup');
   });
 
   test('tied with balanced mentality and default formation offers keep + formation', () => {
