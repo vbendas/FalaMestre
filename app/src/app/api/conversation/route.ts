@@ -10,6 +10,8 @@ import { generateMessageId } from '@/lib/utils';
 import { ZodError } from 'zod';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { getAuthenticatedUser, requireAuth } from '@/lib/auth-helpers';
+import { readJsonBody } from '@/lib/request-body';
+import { createRequestLogger } from '@/lib/logger';
 
 type GameStateRecordShape = {
   currentState: GameState;
@@ -43,7 +45,8 @@ async function withTimeout<T>(
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
-  
+  const log = createRequestLogger('conversation', request);
+
   try {
     // Check authentication - returns 401 only if REQUIRE_AUTH=true and no session
     const authError = await requireAuth();
@@ -62,14 +65,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Parse request body with timeout protection
+    // Parse request body with a size limit and timeout protection
     let requestBody;
     try {
-      requestBody = await withTimeout(
-        request.json(),
+      const bodyResult = await withTimeout(
+        readJsonBody(request),
         5000,
         'Request body parsing'
       );
+      if (!bodyResult.ok) {
+        if (bodyResult.reason === 'too_large') {
+          log.warn('Request body rejected: too large');
+          return bodyResult.response;
+        }
+        throw new Error(bodyResult.reason);
+      }
+      requestBody = bodyResult.body;
     } catch {
       return NextResponse.json(
         { error: 'Invalid JSON body or timeout' },
@@ -131,7 +142,7 @@ export async function POST(request: NextRequest) {
         'Game state fetch'
       );
     } catch (error) {
-      console.error('[Conversation] Failed to fetch game state:', error);
+      log.error('Failed to fetch game state', { error });
       return NextResponse.json(
         { error: 'Failed to fetch game state' },
         { status: 503 }
@@ -159,7 +170,7 @@ export async function POST(request: NextRequest) {
           'Game state insert'
         );
       } catch (error) {
-        console.error('[Conversation] Failed to create game state:', error);
+        log.error('Failed to create game state', { error });
         return NextResponse.json(
           { error: 'Failed to create game state' },
           { status: 503 }
@@ -183,7 +194,7 @@ export async function POST(request: NextRequest) {
           'Mock AI call'
         );
       } catch (error) {
-        console.error('[Conversation] Mock AI call failed:', error);
+        log.error('Mock AI call failed', { error });
         return NextResponse.json(
           { error: 'AI service temporarily unavailable' },
           { status: 503 }
@@ -197,7 +208,7 @@ export async function POST(request: NextRequest) {
           'AI call'
         );
       } catch (error) {
-        console.warn('[Conversation] AI call failed, falling back to mock:', error);
+        log.warn('AI call failed, falling back to mock', { error });
         try {
           aiResponse = await withTimeout(
             callAIMock(message, gameState, conversationHistory),
@@ -205,7 +216,7 @@ export async function POST(request: NextRequest) {
             'Fallback mock AI call'
           );
         } catch (fallbackError) {
-          console.error('[Conversation] Fallback AI call also failed:', fallbackError);
+          log.error('Fallback AI call also failed', { error: fallbackError });
           return NextResponse.json(
             { error: 'AI service unavailable' },
             { status: 503 }
@@ -247,7 +258,7 @@ export async function POST(request: NextRequest) {
         'Game state update'
       );
     } catch (error) {
-      console.error('[Conversation] Failed to update game state:', error);
+      log.error('Failed to update game state', { error });
       // Continue to return response even if update fails
     }
 
@@ -274,7 +285,7 @@ export async function POST(request: NextRequest) {
         'Conversation logging'
       );
     } catch (error) {
-      console.error('[Conversation] Failed to log conversation:', error);
+      log.error('Failed to log conversation', { error });
       // Continue even if logging fails
     }
 
@@ -304,12 +315,12 @@ export async function POST(request: NextRequest) {
         'Analytics logging'
       );
     } catch (error) {
-      console.error('[Conversation] Failed to log analytics:', error);
+      log.error('Failed to log analytics', { error });
       // Continue even if analytics fails
     }
 
     const duration = Date.now() - startTime;
-    console.log(`[Conversation] Request processed in ${duration}ms`);
+    log.info('Request processed', { durationMs: duration });
 
     return NextResponse.json({
       response: aiResponse.content,
@@ -321,7 +332,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     const duration = Date.now() - startTime;
-    console.error(`[Conversation] API error after ${duration}ms:`, error);
+    log.error('API error', { durationMs: duration, error });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -331,6 +342,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
+  const log = createRequestLogger('conversation', request);
 
   try {
     const { searchParams } = new URL(request.url);
@@ -369,7 +381,7 @@ export async function GET(request: NextRequest) {
         'Game state fetch'
       );
     } catch (error) {
-      console.error('[Conversation] Failed to fetch game state:', error);
+      log.error('Failed to fetch game state', { error });
       return NextResponse.json(
         { error: 'Failed to fetch game state' },
         { status: 503 }
@@ -381,7 +393,7 @@ export async function GET(request: NextRequest) {
     }
 
     const duration = Date.now() - startTime;
-    console.log(`[Conversation] GET request processed in ${duration}ms`);
+    log.info('GET request processed', { durationMs: duration });
 
     return NextResponse.json({
       exists: true,
@@ -390,7 +402,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     const duration = Date.now() - startTime;
-    console.error(`[Conversation] GET API error after ${duration}ms:`, error);
+    log.error('GET API error', { durationMs: duration, error });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
