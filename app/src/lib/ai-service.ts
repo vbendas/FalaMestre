@@ -1,5 +1,7 @@
 import { GameState, Message } from './types';
 import { z } from 'zod';
+import { random, withSeed } from './rng';
+import type { Seed } from './validations';
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
@@ -112,17 +114,24 @@ export function classifyIntent(userMessage: string, gameState: GameState): strin
 }
 
 // Call OpenRouter API
+/**
+ * Calls the live model, falling back to {@link callAIMock} for cheap intents.
+ * `seed` only reaches that mock path: a remote model's wording is outside this
+ * process and cannot be replayed, which is why the match route prefers the
+ * mock when it wants a reproducible narration.
+ */
 export async function callAI(
   userMessage: string,
   gameState: GameState,
-  conversationHistory: Message[]
+  conversationHistory: Message[],
+  seed?: Seed
 ): Promise<AIResponse> {
   const startTime = Date.now();
 
   // Fast-path for simple intents like greetings to reduce API costs
   const preClassifiedIntent = classifyIntent(userMessage, gameState);
   if (preClassifiedIntent === 'greeting') {
-    return callAIMock(userMessage, gameState, conversationHistory);
+    return callAIMock(userMessage, gameState, conversationHistory, seed);
   }
 
   if (!OPENROUTER_API_KEY) {
@@ -236,16 +245,19 @@ export async function callAI(
 }
 
 // Mock AI for testing (no API key needed)
+/**
+ * Canned narration. Pass `seed` to make the wording reproducible: the same
+ * seed and the same game state always produce the same reply, so a replayed
+ * match narrates identically.
+ */
 export async function callAIMock(
   userMessage: string,
   gameState: GameState,
-  conversationHistory: Message[]
+  conversationHistory: Message[],
+  seed?: Seed
 ): Promise<AIResponse> {
   const startTime = Date.now();
   const intent = classifyIntent(userMessage, gameState);
-
-  // Helper to get random variant
-  const getRandomVariant = <T>(variants: T[]): T => variants[Math.floor(Math.random() * variants.length)];
 
   // Calculate squad statistics
   const avgRating = gameState.squad.players.length > 0
@@ -314,7 +326,13 @@ transfer_market: [
     ],
   };
 
-  const message = getRandomVariant(responses[intent] || responses.general_chat);
+  // Picking the wording is the only random step, and it is synchronous, so a
+  // seeded scope can wrap it on its own — withSeed cannot span the latency
+  // await below (see rng.ts), and it does not need to: that await only burns
+  // wall-clock and never touches the match content a caller sees.
+  const variants = responses[intent] || responses.general_chat;
+  const pick = () => variants[Math.floor(random() * variants.length)];
+  const message = seed === undefined ? pick() : withSeed(seed, pick);
 
   // Simulate realistic latency (300-800ms)
   await new Promise(r => setTimeout(r, 300 + Math.random() * 500));

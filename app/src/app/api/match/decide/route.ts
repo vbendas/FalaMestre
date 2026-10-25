@@ -9,6 +9,15 @@ import { createTurnResult, resolveDefaultAction } from '@/lib/decision-engine';
 import { runMatchSegment } from '@/lib/match-segment-engine';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { getAuthenticatedUser, requireAuth } from '@/lib/auth-helpers';
+import { readJsonBody } from '@/lib/request-body';
+import { createRequestLogger } from '@/lib/logger';
+import { rollOpponentMorale } from '@/lib/match-setup';
+import { generateSeed, withSeed } from '@/lib/rng';
+import { seedSchema, Seed } from '@/lib/validations';
+
+/** One message for every way a seed can be wrong; see seedSchema. */
+const SEED_MESSAGE =
+  'seed must be a token of 1-64 letters, digits or _ . : - , or an integer';
 
 type GameStateRecordShape = {
   currentState: GameState;
@@ -31,6 +40,7 @@ interface DecisionRequestBody {
   turnNumber: number;
   decision?: DecisionOption | null;
   priorState: PriorState;
+  seed?: Seed;
 }
 
 /**
@@ -77,6 +87,12 @@ function validateRequestBody(body: Record<string, unknown>): string | null {
 
   if (body.turnNumber < 0 || body.turnNumber >= DECISION_TURNS.length) {
     return `turnNumber must be between 0 and ${DECISION_TURNS.length - 1}`;
+  }
+
+  if (body.seed !== undefined) {
+    if (!seedSchema.safeParse(body.seed).success) {
+      return SEED_MESSAGE;
+    }
   }
 
   if (!body.priorState || typeof body.priorState !== 'object') {
@@ -136,6 +152,7 @@ function validateRequestBody(body: Record<string, unknown>): string | null {
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
+  const log = createRequestLogger('match-decide', request);
 
   try {
     // Check authentication
@@ -156,15 +173,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Parse request body with timeout protection
+    // Parse request body with a size limit and timeout protection
     let requestBody: DecisionRequestBody;
     try {
-      const parsed = await withTimeout(
-        request.json(),
+      const bodyResult = await withTimeout(
+        readJsonBody(request),
         5000,
         'Request body parsing'
       );
-      requestBody = parsed as DecisionRequestBody;
+      if (!bodyResult.ok) {
+        if (bodyResult.reason === 'too_large') {
+          log.warn('Request body rejected: too large');
+          return bodyResult.response;
+        }
+        throw new Error(bodyResult.reason);
+      }
+      requestBody = bodyResult.body as DecisionRequestBody;
     } catch {
       return NextResponse.json(
         { error: 'Invalid JSON body or timeout' },
@@ -182,6 +206,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { userId, turnNumber, decision, priorState } = requestBody;
+    const seed = requestBody.seed ?? generateSeed();
 
     // Ensure user can only access their own data
     if (sessionUserId && userId !== sessionUserId) {
@@ -210,7 +235,7 @@ export async function POST(request: NextRequest) {
         'Game state fetch'
       );
     } catch (error) {
-      console.error('[MatchDecide] Failed to fetch game state:', error);
+      log.error('Failed to fetch game state', { error });
       return NextResponse.json(
         { error: 'Failed to fetch game state' },
         { status: 503 }
@@ -227,78 +252,85 @@ export async function POST(request: NextRequest) {
     const gameState = (gameStateRecord as GameStateRecordShape).currentState;
     const match = gameState.season.nextMatch;
 
-    // Determine home and away teams based on isHome flag
-    const isHome = match.isHome;
-    const opponentTeam = match.opponent;
-    const opponentSquad = generateSquad(opponentTeam);
-    const opponentMorale = 55 + Math.floor(Math.random() * 30);
+    // Opponent morale and the segment simulation are the only random draws in
+    // this turn; keep them in one synchronous seeded block (withSeed cannot
+    // span an await, see rng.ts) so the turn replays from `seed`.
+    const { turnResult, segmentResult } = withSeed(seed, () => {
+      // Determine home and away teams based on isHome flag
+      const isHome = match.isHome;
+      const opponentTeam = match.opponent;
+      const opponentSquad = generateSquad(opponentTeam);
+      const opponentMorale = rollOpponentMorale();
 
-    const homeTeam = isHome ? gameState.user.team : opponentTeam;
-    const awayTeam = isHome ? opponentTeam : gameState.user.team;
-    const homeSquad = isHome ? priorState.squad : opponentSquad;
-    const awaySquad = isHome ? opponentSquad : priorState.squad;
-    const homeMorale = isHome ? gameState.squad.morale : opponentMorale;
-    const awayMorale = isHome ? opponentMorale : gameState.squad.morale;
+      const homeTeam = isHome ? gameState.user.team : opponentTeam;
+      const awayTeam = isHome ? opponentTeam : gameState.user.team;
+      const homeSquad = isHome ? priorState.squad : opponentSquad;
+      const awaySquad = isHome ? opponentSquad : priorState.squad;
+      const homeMorale = isHome ? gameState.squad.morale : opponentMorale;
+      const awayMorale = isHome ? opponentMorale : gameState.squad.morale;
 
-    // Build TurnResult from decision or resolve default on timeout
-    let turnResult: TurnResult;
-    const turnConfig = DECISION_TURNS[turnNumber];
+      // Build TurnResult from decision or resolve default on timeout
+      let turnResult: TurnResult;
+      const turnConfig = DECISION_TURNS[turnNumber];
 
-    if (decision) {
-      // User made a decision — create TurnResult from it
-      turnResult = createTurnResult(
-        turnNumber,
-        turnConfig.minute,
-        decision,
-        resolveDefaultAction(
+      if (decision) {
+        // User made a decision — create TurnResult from it
+        turnResult = createTurnResult(
+          turnNumber,
+          turnConfig.minute,
+          decision,
+          resolveDefaultAction(
+            priorState.homeScore,
+            priorState.awayScore,
+            priorState.squad,
+            priorState.hasRedCard
+          )
+        );
+      } else {
+        // Timeout — use context-aware default
+        const defaultOption = resolveDefaultAction(
           priorState.homeScore,
           priorState.awayScore,
           priorState.squad,
           priorState.hasRedCard
-        )
-      );
-    } else {
-      // Timeout — use context-aware default
-      const defaultOption = resolveDefaultAction(
-        priorState.homeScore,
-        priorState.awayScore,
-        priorState.squad,
-        priorState.hasRedCard
-      );
-      turnResult = createTurnResult(
-        turnNumber,
-        turnConfig.minute,
-        null,
-        defaultOption
-      );
-    }
+        );
+        turnResult = createTurnResult(
+          turnNumber,
+          turnConfig.minute,
+          null,
+          defaultOption
+        );
+      }
 
-    // Run the match segment
-    const segmentResult = runMatchSegment(
-      homeTeam,
-      awayTeam,
-      homeSquad,
-      awaySquad,
-      homeMorale,
-      awayMorale,
-      turnNumber,
-      {
-        homeScore: priorState.homeScore,
-        awayScore: priorState.awayScore,
-        homeMomentum: priorState.homeMomentum ?? 0,
-        awayMomentum: priorState.awayMomentum ?? 0,
-        tension: priorState.tension ?? 30,
-        formation: priorState.formation,
-        mentality: priorState.mentality,
-        hasRedCard: priorState.hasRedCard ?? false,
-        squad: priorState.squad,
-      },
-      turnResult,
-      gameState.season.week
-    );
+      // Run the match segment
+      const segmentResult = runMatchSegment(
+        homeTeam,
+        awayTeam,
+        homeSquad,
+        awaySquad,
+        homeMorale,
+        awayMorale,
+        turnNumber,
+        {
+          homeScore: priorState.homeScore,
+          awayScore: priorState.awayScore,
+          homeMomentum: priorState.homeMomentum ?? 0,
+          awayMomentum: priorState.awayMomentum ?? 0,
+          tension: priorState.tension ?? 30,
+          formation: priorState.formation,
+          mentality: priorState.mentality,
+          hasRedCard: priorState.hasRedCard ?? false,
+          squad: priorState.squad,
+        },
+        turnResult,
+        gameState.season.week
+      );
+
+      return { turnResult, segmentResult };
+    });
 
     const duration = Date.now() - startTime;
-    console.log(`[MatchDecide] Turn ${turnNumber} processed in ${duration}ms`);
+    log.info('Turn processed', { turnNumber, durationMs: duration });
 
     return NextResponse.json({
       events: segmentResult.events,
@@ -307,10 +339,11 @@ export async function POST(request: NextRequest) {
       nextTurn: segmentResult.nextTurn,
       endState: segmentResult.endState,
       turnResult,
+      seed,
     });
   } catch (error) {
     const duration = Date.now() - startTime;
-    console.error(`[MatchDecide] API error after ${duration}ms:`, error);
+    log.error('API error', { durationMs: duration, error });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

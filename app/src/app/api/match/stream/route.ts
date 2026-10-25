@@ -6,12 +6,23 @@ import { simulateMatchWithNarrative, BRAZILIAN_TEAMS, generateSquad } from '@/li
 import { MatchEvent } from '@/lib/types';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { getAuthenticatedUser, requireAuth } from '@/lib/auth-helpers';
+import { readJsonBody } from '@/lib/request-body';
+import { createRequestLogger } from '@/lib/logger';
+import { pickTeam, rollOpponentMorale } from '@/lib/match-setup';
+import { generateSeed, withSeed } from '@/lib/rng';
+import { seedSchema } from '@/lib/validations';
+
+/** One message for every way a seed can be wrong; see seedSchema. */
+const SEED_MESSAGE =
+  'seed must be a token of 1-64 letters, digits or _ . : - , or an integer';
 
 type GameStateRecordShape = {
   currentState: any;
 };
 
 export async function POST(request: NextRequest) {
+  const log = createRequestLogger('match-stream', request);
+
   try {
     const authError = await requireAuth();
     if (authError) {
@@ -28,7 +39,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { userId, opponent } = await request.json();
+    const bodyResult = await readJsonBody(request);
+    if (!bodyResult.ok) {
+      if (bodyResult.reason === 'too_large') {
+        log.warn('Request body rejected: too large');
+      } else {
+        log.warn('Request body rejected: invalid JSON');
+      }
+      // readJsonBody answers 413 for an oversized body and 400 for malformed
+      // JSON. This route has no body-parse timeout, so the plain
+      // 'Invalid JSON body' message fits it better than the
+      // 'Invalid JSON body or timeout' wording used by the timeout-wrapped
+      // routes.
+      return bodyResult.response;
+    }
+
+    const { userId, opponent, seed: requestedSeed } = bodyResult.body as {
+      userId: string;
+      opponent?: string;
+      seed?: unknown;
+    };
+
+    if (requestedSeed !== undefined) {
+      if (!seedSchema.safeParse(requestedSeed).success) {
+        return NextResponse.json(
+          { error: 'Validation failed', message: SEED_MESSAGE, field: 'seed' },
+          { status: 400 }
+        );
+      }
+    }
+    const seed = requestedSeed !== undefined ? (requestedSeed as string | number) : generateSeed();
 
     if (sessionUserId && userId !== sessionUserId) {
       return NextResponse.json(
@@ -50,31 +90,36 @@ export async function POST(request: NextRequest) {
 
     const gameState = (gameStateRecord as GameStateRecordShape).currentState;
     
-    const opponentTeam = opponent || gameState.season?.nextMatch?.opponent || 
-      BRAZILIAN_TEAMS[Math.floor(Math.random() * BRAZILIAN_TEAMS.length)].name;
-    const opponentSquad = generateSquad(opponentTeam);
-    const opponentMorale = 55 + Math.floor(Math.random() * 30);
+    // Opponent choice, opponent morale and the simulation are the stream's
+    // random draws; one synchronous seeded block (withSeed cannot span an
+    // await, see rng.ts) makes the whole match replay from `seed`.
+    const result = withSeed(seed, () => {
+      const opponentTeam = opponent || gameState.season?.nextMatch?.opponent ||
+        pickTeam(BRAZILIAN_TEAMS).name;
+      const opponentSquad = generateSquad(opponentTeam);
+      const opponentMorale = rollOpponentMorale();
 
-    // Determine home and away teams based on isHome flag
-    const isHome = gameState.season?.nextMatch?.isHome ?? true;
-    const homeTeam = isHome ? gameState.user.team : opponentTeam;
-    const awayTeam = isHome ? opponentTeam : gameState.user.team;
-    const homeSquad = isHome ? gameState.squad.players : opponentSquad;
-    const awaySquad = isHome ? opponentSquad : gameState.squad.players;
-    const homeMorale = isHome ? gameState.squad.morale : opponentMorale;
-    const awayMorale = isHome ? opponentMorale : gameState.squad.morale;
+      // Determine home and away teams based on isHome flag
+      const isHome = gameState.season?.nextMatch?.isHome ?? true;
+      const homeTeam = isHome ? gameState.user.team : opponentTeam;
+      const awayTeam = isHome ? opponentTeam : gameState.user.team;
+      const homeSquad = isHome ? gameState.squad.players : opponentSquad;
+      const awaySquad = isHome ? opponentSquad : gameState.squad.players;
+      const homeMorale = isHome ? gameState.squad.morale : opponentMorale;
+      const awayMorale = isHome ? opponentMorale : gameState.squad.morale;
 
-    const result = simulateMatchWithNarrative(
-      homeTeam,
-      awayTeam,
-      homeSquad,
-      awaySquad,
-      homeMorale,
-      awayMorale,
-      gameState.season?.week,
-      gameState.user.matchSettings,
-      isHome
-    );
+      return simulateMatchWithNarrative(
+        homeTeam,
+        awayTeam,
+        homeSquad,
+        awaySquad,
+        homeMorale,
+        awayMorale,
+        gameState.season?.week,
+        gameState.user.matchSettings,
+        isHome
+      );
+    });
 
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
@@ -83,7 +128,7 @@ export async function POST(request: NextRequest) {
           const minuteEvents = result.events.filter((e: MatchEvent) => e.minute <= i && e.minute > i - 5);
           
           if (i === 0) {
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'kickoff', minute: 0 })}\n\n`));
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'kickoff', minute: 0, seed })}\n\n`));
           }
           
           for (const event of minuteEvents) {
@@ -118,7 +163,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('[Match Stream] Error:', error);
+    log.error('Error', { error });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

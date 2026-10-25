@@ -1,4 +1,5 @@
 import { MatchEvent, GameAction, MatchScript, ActionType, PlayerPosition } from '@/lib/types';
+import { random } from '@/lib/rng';
 import { Formation, FormationPosition, getFormationPositions, getOpponentFormationPositions, mapPlayersToFormation, mapOpponentPlayersToFormation, PlayerData } from '@/lib/match-formations';
 
 const FIELD_LENGTH = 80;
@@ -33,8 +34,8 @@ function positionsToRecord(positions: FormationPosition[]): Record<string, Playe
 
 function addNoiseToPosition(pos: PlayerPosition, noiseRange: number = 1): PlayerPosition {
   return {
-    x: pos.x + (Math.random() - 0.5) * noiseRange,
-    z: pos.z + (Math.random() - 0.5) * noiseRange,
+    x: pos.x + (random() - 0.5) * noiseRange,
+    z: pos.z + (random() - 0.5) * noiseRange,
   };
 }
 
@@ -99,30 +100,30 @@ function getBallPositionForAction(actionType: ActionType, team: 'home' | 'away',
       
     case 'shot':
       return {
-        position: { x: goalX - 10 + Math.random() * 5, z: (Math.random() - 0.5) * 20 },
-        target: { x: goalX - 1, z: (Math.random() - 0.5) * 8 },
+        position: { x: goalX - 10 + random() * 5, z: (random() - 0.5) * 20 },
+        target: { x: goalX - 1, z: (random() - 0.5) * 8 },
         height: 0.8,
       };
       
     case 'miss':
       return {
-        position: { x: goalX - 8, z: (Math.random() - 0.5) * 15 },
-        target: { x: goalX - 3, z: (Math.random() - 0.5) * 25 },
+        position: { x: goalX - 8, z: (random() - 0.5) * 15 },
+        target: { x: goalX - 3, z: (random() - 0.5) * 25 },
         height: 2.0,
       };
       
     case 'save':
       return {
-        position: { x: goalX - 3, z: (Math.random() - 0.5) * 4 },
-        target: { x: defendX + 20, z: (Math.random() - 0.5) * 30 },
+        position: { x: goalX - 3, z: (random() - 0.5) * 4 },
+        target: { x: defendX + 20, z: (random() - 0.5) * 30 },
         height: 1.0,
       };
       
     case 'pass':
     case 'dribble':
       return {
-        position: { x: (Math.random() - 0.5) * 30, z: (Math.random() - 0.5) * 20 },
-        target: { x: (Math.random() - 0.5) * 30, z: (Math.random() - 0.5) * 20 },
+        position: { x: (random() - 0.5) * 30, z: (random() - 0.5) * 20 },
+        target: { x: (random() - 0.5) * 30, z: (random() - 0.5) * 20 },
         height: 0.4,
       };
       
@@ -135,23 +136,23 @@ function getBallPositionForAction(actionType: ActionType, team: 'home' | 'away',
       
     case 'freekick':
       return {
-        position: { x: defendX + 25, z: (Math.random() - 0.5) * 30 },
-        target: { x: goalX - 3, z: (Math.random() - 0.5) * 10 },
+        position: { x: defendX + 25, z: (random() - 0.5) * 30 },
+        target: { x: goalX - 3, z: (random() - 0.5) * 10 },
         height: 1.2,
       };
       
     case 'tackle':
       return {
-        position: { x: (Math.random() - 0.5) * 40, z: (Math.random() - 0.5) * 25 },
-        target: { x: (Math.random() - 0.5) * 40, z: (Math.random() - 0.5) * 25 },
+        position: { x: (random() - 0.5) * 40, z: (random() - 0.5) * 25 },
+        target: { x: (random() - 0.5) * 40, z: (random() - 0.5) * 25 },
         height: 0.3,
       };
       
     case 'pressure':
     case 'buildup':
       return {
-        position: { x: (Math.random() - 0.5) * 20, z: (Math.random() - 0.5) * 15 },
-        target: { x: (Math.random() - 0.5) * 25, z: (Math.random() - 0.5) * 18 },
+        position: { x: (random() - 0.5) * 20, z: (random() - 0.5) * 15 },
+        target: { x: (random() - 0.5) * 25, z: (random() - 0.5) * 18 },
         height: 0.35,
       };
       
@@ -259,7 +260,7 @@ export function generateMatchScript(
   // Helper: pick a random outfield player id from positions record
   const pickOutfieldPlayer = (positions: Record<string, PlayerPosition>, exclude?: string): string => {
     const ids = Object.keys(positions).filter(id => id !== 'gk' && id !== exclude);
-    return ids[Math.floor(Math.random() * ids.length)] || 'cm2';
+    return ids[Math.floor(random() * ids.length)] || 'cm2';
   };
 
   // Generate actions for EVERY minute (0-90)
@@ -275,16 +276,16 @@ export function generateMatchScript(
         const homePlayerIds = Object.keys(currentHomePositions);
         const awayPlayerIds = Object.keys(currentAwayPositions);
         const playerId = event.team === 'home'
-          ? homePlayerIds[Math.floor(Math.random() * homePlayerIds.length)] || 'st'
-          : awayPlayerIds[Math.floor(Math.random() * awayPlayerIds.length)] || 'st';
+          ? homePlayerIds[Math.floor(random() * homePlayerIds.length)] || 'st'
+          : awayPlayerIds[Math.floor(random() * awayPlayerIds.length)] || 'st';
         const playerPosition = event.team === 'home'
           ? currentHomePositions[playerId] || { x: 0, z: 0 }
           : currentAwayPositions[playerId] || { x: 0, z: 0 };
 
         const targetPlayerId = event.assistPlayer
           ? (event.team === 'home'
-              ? homePlayerIds[Math.floor(Math.random() * homePlayerIds.length)]
-              : awayPlayerIds[Math.floor(Math.random() * awayPlayerIds.length)])
+              ? homePlayerIds[Math.floor(random() * homePlayerIds.length)]
+              : awayPlayerIds[Math.floor(random() * awayPlayerIds.length)])
           : undefined;
         const targetPlayerPosition = targetPlayerId
           ? (event.team === 'home'
@@ -356,15 +357,15 @@ export function generateMatchScript(
     } else {
       // --- Minutes WITHOUT events: generate possession filler actions ---
       // Alternate possession, create passing chains to fill dead time
-      const possessionTeam: 'home' | 'away' = Math.random() < 0.55 ? lastTeam : (lastTeam === 'home' ? 'away' : 'home');
+      const possessionTeam: 'home' | 'away' = random() < 0.55 ? lastTeam : (lastTeam === 'home' ? 'away' : 'home');
       const direction = possessionTeam === 'home' ? 1 : -1;
 
       // Ball drifts forward with some lateral movement
       const newBallX = Math.max(-35, Math.min(35,
-        lastBallPos.x + (Math.random() * 6 - 1.5) * direction
+        lastBallPos.x + (random() * 6 - 1.5) * direction
       ));
       const newBallZ = Math.max(-18, Math.min(18,
-        lastBallPos.z + (Math.random() - 0.5) * 8
+        lastBallPos.z + (random() - 0.5) * 8
       ));
       const newBallPos: PlayerPosition = { x: newBallX, z: newBallZ };
 
@@ -387,8 +388,8 @@ export function generateMatchScript(
           const pullX = (newBallX - pos.x) * 0.08;
           const pullZ = (newBallZ - pos.z) * 0.06;
           homePositionsFiller[id] = clampPosition({
-            x: bx + pullX + (Math.random() - 0.5) * 3,
-            z: bz + pullZ + (Math.random() - 0.5) * 3,
+            x: bx + pullX + (random() - 0.5) * 3,
+            z: bz + pullZ + (random() - 0.5) * 3,
           });
         }
       });
@@ -403,14 +404,14 @@ export function generateMatchScript(
           const pullX = (newBallX - pos.x) * 0.08;
           const pullZ = (newBallZ - pos.z) * 0.06;
           awayPositionsFiller[id] = clampPosition({
-            x: bx + pullX + (Math.random() - 0.5) * 3,
-            z: bz + pullZ + (Math.random() - 0.5) * 3,
+            x: bx + pullX + (random() - 0.5) * 3,
+            z: bz + pullZ + (random() - 0.5) * 3,
           });
         }
       });
 
       // Randomly choose pass or dribble
-      const fillerType: ActionType = Math.random() < 0.6 ? 'pass' : 'dribble';
+      const fillerType: ActionType = random() < 0.6 ? 'pass' : 'dribble';
 
       const action: GameAction = {
         id: `action-${actionCounter++}`,
@@ -546,8 +547,8 @@ function determineTeamWithBall(
     const timeMultiplier = Math.min(secondsSincePrevious / 60, 3);
     const changeProbability = baseChangeProb * timeMultiplier;
     
-    if (Math.random() < changeProbability) {
-      return Math.random() < homeRetentionProb ? 'home' : 'away';
+    if (random() < changeProbability) {
+      return random() < homeRetentionProb ? 'home' : 'away';
     }
     
     return previousTeam;
@@ -623,7 +624,7 @@ function generateEventDrivenMovement(
         type: 'shot_flight',
         teamWithBall,
         playerWithBall: player?.id || 'player-0',
-        ballPosition: { x: 35 * direction, z: (Math.random() - 0.5) * 10 },
+        ballPosition: { x: 35 * direction, z: (random() - 0.5) * 10 },
         ballHeight: 1.2,
         intensity: 0.9,
         commentaryEventId: event.id,
@@ -635,7 +636,7 @@ function generateEventDrivenMovement(
         type: 'shot_flight',
         teamWithBall,
         playerWithBall: player?.id || 'player-0',
-        ballPosition: { x: 42 * direction, z: (Math.random() - 0.5) * 25 },
+        ballPosition: { x: 42 * direction, z: (random() - 0.5) * 25 },
         ballHeight: 2.5,
         intensity: 0.9,
         commentaryEventId: event.id,
@@ -647,7 +648,7 @@ function generateEventDrivenMovement(
         type: 'dribble',
         teamWithBall,
         playerWithBall: player?.id || 'player-0',
-        ballPosition: { x: 20 * direction, z: (Math.random() - 0.5) * 15 },
+        ballPosition: { x: 20 * direction, z: (random() - 0.5) * 15 },
         ballHeight: 0.3,
         intensity: 0.7,
         commentaryEventId: event.id,
@@ -659,7 +660,7 @@ function generateEventDrivenMovement(
         type: 'pass',
         teamWithBall,
         playerWithBall: player?.id || 'player-0',
-        ballPosition: { x: 10 * direction, z: (Math.random() - 0.5) * 20 },
+        ballPosition: { x: 10 * direction, z: (random() - 0.5) * 20 },
         ballHeight: 0.3,
         intensity: 0.5,
         commentaryEventId: event.id,
@@ -689,7 +690,7 @@ function interpolateTowardEvent(
   const startX = previousMovement?.ballPosition.x ?? 0;
   const startZ = previousMovement?.ballPosition.z ?? 0;
   const targetX = nextEvent.type === 'goal' || nextEvent.type === 'pressure' ? 30 * direction : 15 * direction;
-  const targetZ = (Math.random() - 0.5) * 18; // lateral drift target
+  const targetZ = (random() - 0.5) * 18; // lateral drift target
   const currentX = startX + (targetX - startX) * Math.max(0, Math.min(1, progress));
   const currentZ = startZ + (targetZ - startZ) * Math.max(0, Math.min(1, progress * 0.3)); // slower lateral drift
 
@@ -734,7 +735,7 @@ function generateDefaultMovement(
 ): MovementEvent {
   const direction = teamWithBall === 'home' ? 1 : -1;
 
-  const rand = Math.random();
+  const rand = random();
   const type: MovementType = rand < 0.6 ? 'dribble' : rand < 0.9 ? 'pass' : 'position';
 
   // Carry forward the ball carrier during dribble sequences for 3-8 seconds
@@ -747,7 +748,7 @@ function generateDefaultMovement(
   ) {
     // Keep same carrier for a dribble run, switch after 3-8 seconds
     const dribbleDuration = gameSecond % 8;
-    if (dribbleDuration < 3 + Math.floor(Math.random() * 5)) {
+    if (dribbleDuration < 3 + Math.floor(random() * 5)) {
       playerWithBall = previousMovement.playerWithBall;
     } else {
       playerWithBall = selectRandomPlayerFromSquad(squad)?.id || 'player-0';
@@ -759,8 +760,8 @@ function generateDefaultMovement(
   // Use previous position as base for both X and Z (smooth continuity)
   const baseX = previousMovement?.ballPosition.x ?? 0;
   const baseZ = previousMovement?.ballPosition.z ?? 0;
-  const xMovement = (Math.random() - 0.3) * 2 * direction;
-  const zMovement = (Math.random() - 0.5) * 3;
+  const xMovement = (random() - 0.3) * 2 * direction;
+  const zMovement = (random() - 0.5) * 3;
 
   return {
     gameSecond,
@@ -778,7 +779,7 @@ function generateDefaultMovement(
 
 function selectRandomPlayerFromSquad(squad: Squad): { id: string } | undefined {
   if (!squad.players || squad.players.length === 0) return undefined;
-  const idx = Math.floor(Math.random() * squad.players.length);
+  const idx = Math.floor(random() * squad.players.length);
   return { id: squad.players[idx]?.id || `player-${idx}` };
 }
 

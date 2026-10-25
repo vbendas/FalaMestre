@@ -4,6 +4,8 @@ import { MatchEvent } from '@/lib/types';
 interface StreamEvent {
   type: 'kickoff' | 'event' | 'halftime' | 'fulltime';
   minute?: number;
+  /** Replay seed for the match; sent on the kickoff event. */
+  seed?: string | number;
   event?: MatchEvent;
   homeScore?: number;
   awayScore?: number;

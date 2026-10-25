@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { classifyIntent, callAIMock } from '../ai-service';
+import { isSeeded, random, withSeed } from '../rng';
 import { createInitialGameState } from '../game-engine';
 import type { GameState } from '../types';
 
@@ -163,6 +164,50 @@ describe('AI Service', () => {
       
       const response = await callAIMock('quais是我的球员', mockGameState, history);
       expect(response).toBeDefined();
+    });
+  });
+
+  describe('callAIMock seeding', () => {
+    it('words its reply the same way for the same seed', async () => {
+      const first = await callAIMock('ola', mockGameState, [], 'wording');
+      const second = await callAIMock('ola', mockGameState, [], 'wording');
+
+      expect(first.content).toBe(second.content);
+    });
+
+    it('accepts a numeric seed', async () => {
+      const first = await callAIMock('ola', mockGameState, [], 12345);
+      const second = await callAIMock('ola', mockGameState, [], 12345);
+
+      expect(first.content).toBe(second.content);
+    });
+
+    it('still varies its wording across seeds', async () => {
+      const wordings = new Set<string>();
+      for (const seed of ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']) {
+        wordings.add((await callAIMock('ola', mockGameState, [], seed)).content);
+      }
+
+      expect(wordings.size).toBeGreaterThan(1);
+    }, 20_000);
+
+    it('leaves the seeded scope closed, despite being async', async () => {
+      await callAIMock('ola', mockGameState, [], 'scope');
+
+      // The wording is picked inside a synchronous withSeed; the latency await
+      // that follows must not run with the seed still installed.
+      expect(isSeeded()).toBe(false);
+    });
+
+    it('does not consume the caller\'s stream when seeded itself', async () => {
+      // Two identical seeded sequences, one with a narrator call in the
+      // middle: the narrator opens its own scope, so the outer stream is
+      // untouched and both sequences agree.
+      const withNarrator = withSeed('outer', () => [random(), random()]);
+      await callAIMock('ola', mockGameState, [], 'inner');
+      const withoutNarrator = withSeed('outer', () => [random(), random()]);
+
+      expect(withNarrator).toEqual(withoutNarrator);
     });
   });
 });
