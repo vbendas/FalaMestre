@@ -4,8 +4,12 @@ import { fanClubInvestments, investmentYields } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { calculateYieldExpiryDate } from '@/lib/economy';
 import { requireCronAuth } from '@/lib/cron-auth';
+import { withApiRoute, ApiContext } from '@/lib/api-route';
 
-export async function GET(request: NextRequest) {
+export const GET = withApiRoute('cron-daily-yield', async (
+  request: NextRequest,
+  { log }: ApiContext
+) => {
   const authError = requireCronAuth(request);
   if (authError) return authError;
 
@@ -45,7 +49,7 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('Error generating daily yields:', error);
+    log.error('Error generating daily yields', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

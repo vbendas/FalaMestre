@@ -186,10 +186,17 @@ export async function POST(request: NextRequest) {
           log.warn('Request body rejected: too large');
           return bodyResult.response;
         }
+        if (bodyResult.reason === 'not_object') {
+          log.warn('Request body rejected: not a JSON object');
+          return bodyResult.response;
+        }
         throw new Error(bodyResult.reason);
       }
       requestBody = bodyResult.body as DecisionRequestBody;
-    } catch {
+    } catch (error) {
+      // Covers both a body that will not parse and the 5s parse timeout;
+      // the reply cannot tell them apart, so the log line carries the cause.
+      log.warn('Request body rejected: invalid JSON or timeout', { error });
       return NextResponse.json(
         { error: 'Invalid JSON body or timeout' },
         { status: 400 }

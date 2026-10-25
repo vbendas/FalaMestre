@@ -5,23 +5,33 @@ import { eq } from 'drizzle-orm';
 import { GameState, Player } from '@/lib/types';
 import { calculatePlayerValue, calculatePlayerWage } from '@/lib/economy';
 import { getAuthenticatedUser, requireAuth } from '@/lib/auth-helpers';
+import { withApiRoute, ApiContext } from '@/lib/api-route';
 
 type GameStateRecordShape = {
   currentState: GameState;
 };
 
-export async function POST(request: NextRequest) {
+interface TransferBuyRequest {
+  userId: string;
+  player: Player;
+  sellValue?: number;
+}
+
+export const POST = withApiRoute('transfer-buy', async (
+  request: NextRequest,
+  { log, readJson }: ApiContext
+) => {
   try {
     const authError = await requireAuth();
     if (authError) return authError;
 
     const sessionUserId = await getAuthenticatedUser();
-    let requestBody;
-    try {
-      requestBody = await request.json();
-    } catch {
-      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+
+    const bodyResult = await readJson<TransferBuyRequest>();
+    if (!bodyResult.ok) {
+      return bodyResult.response;
     }
+    const requestBody = bodyResult.body;
 
     const { userId, player, sellValue } = requestBody;
 
@@ -84,7 +94,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[TransferBuy] API error:', error);
+    log.error('API error', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

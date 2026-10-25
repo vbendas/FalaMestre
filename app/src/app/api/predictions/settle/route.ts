@@ -4,8 +4,18 @@ import { predictions, userBets, predictionHistory, gameStates } from '@/db/schem
 import { eq, and } from 'drizzle-orm';
 import { getAuthenticatedUser, requireAuth } from '@/lib/auth-helpers';
 import { settlePrediction, calculateUserBetOutcome, updatePredictionHistory } from '@/lib/prediction-engine';
+import { withApiRoute, ApiContext } from '@/lib/api-route';
 
-export async function POST(request: NextRequest) {
+interface SettleRequest {
+  predictionId: string;
+  homeScore?: number;
+  awayScore?: number;
+}
+
+export const POST = withApiRoute('predictions-settle', async (
+  request: NextRequest,
+  { log, readJson }: ApiContext
+) => {
   try {
     const authError = await requireAuth();
     if (authError) {
@@ -27,13 +37,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Admin or cron auth required to settle predictions' }, { status: 403 });
     }
     
-    let body;
-    try {
-      body = await request.json();
-    } catch {
-      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    const bodyResult = await readJson<SettleRequest>();
+    if (!bodyResult.ok) {
+      return bodyResult.response;
     }
-    
+    const body = bodyResult.body;
+
     const { predictionId, homeScore, awayScore } = body;
     
     if (!predictionId || homeScore === undefined || awayScore === undefined) {
@@ -138,7 +147,7 @@ export async function POST(request: NextRequest) {
     });
     
   } catch (error) {
-    console.error('Error settling prediction:', error);
+    log.error('Error settling prediction', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

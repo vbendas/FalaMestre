@@ -4,6 +4,8 @@ import { gameStates } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { GameState } from '@/lib/types';
 import { requireAuth } from '@/lib/auth-helpers';
+import { withApiRoute, ApiContext } from '@/lib/api-route';
+import { Logger } from '@/lib/logger';
 import { z } from 'zod';
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
@@ -135,7 +137,7 @@ function generateRuleBasedInsights(gs: GameState): Insight[] {
   return insights;
 }
 
-async function generateAIInsights(gs: GameState): Promise<Insight[]> {
+async function generateAIInsights(gs: GameState, log: Logger): Promise<Insight[]> {
   if (!OPENROUTER_API_KEY) return [];
 
   const context = buildGameContext(gs);
@@ -182,7 +184,7 @@ Responda APENAS com um array JSON válido, sem markdown:
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      console.error('[Insights] AI API error:', response.status);
+      log.error('AI API error', { status: response.status });
       return [];
     }
 
@@ -201,22 +203,24 @@ Responda APENAS com um array JSON válido, sem markdown:
     }));
   } catch (error) {
     clearTimeout(timeoutId);
-    console.error('[Insights] AI generation failed:', error);
+    log.error('AI generation failed', { error });
     return [];
   }
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withApiRoute('insights', async (
+  request: NextRequest,
+  { log, readJson }: ApiContext
+) => {
   try {
     const authError = await requireAuth();
     if (authError) return authError;
 
-    let body;
-    try {
-      body = await request.json();
-    } catch {
-      return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+    const bodyResult = await readJson();
+    if (!bodyResult.ok) {
+      return bodyResult.response;
     }
+    const body = bodyResult.body;
 
     const validation = insightsRequestSchema.safeParse(body);
     if (!validation.success) {
@@ -247,7 +251,7 @@ export async function POST(request: NextRequest) {
       }
       gs = record.currentState;
     } catch (error) {
-      console.error('[Insights] Failed to load game state:', error);
+      log.error('Failed to load game state', { error });
       // Return rule-based only on DB failure
       const ruleBased = generateRuleBasedInsights({} as GameState);
       return NextResponse.json({ insights: ruleBased, cached: false });
@@ -255,7 +259,7 @@ export async function POST(request: NextRequest) {
 
     // Generate insights: AI + rule-based combined
     const ruleBased = generateRuleBasedInsights(gs);
-    const aiInsights = await generateAIInsights(gs);
+    const aiInsights = await generateAIInsights(gs, log);
 
     // Combine: AI first (personalized), then rule-based as supplement
     const combined = [...aiInsights, ...ruleBased].slice(0, 6);
@@ -269,10 +273,14 @@ export async function POST(request: NextRequest) {
       cached: false,
     });
   } catch (error) {
-    console.error('[Insights] Unexpected error:', error);
+    log.error('Unexpected error', { error });
     return NextResponse.json(
       { error: 'Internal server error', insights: [] },
       { status: 500 }
     );
   }
-}
+}, {
+  // This route answered a malformed body with 'Invalid JSON' rather than the
+  // helper's 'Invalid JSON body'; keep its wording.
+  invalidJsonResponse: () => NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }),
+});

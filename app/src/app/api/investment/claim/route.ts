@@ -4,8 +4,17 @@ import { fanClubInvestments, investmentYields, gameStates } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { getAuthenticatedUser, requireAuth } from '@/lib/auth-helpers';
 import { isYieldExpired } from '@/lib/economy';
+import { withApiRoute, ApiContext } from '@/lib/api-route';
 
-export async function POST(request: NextRequest) {
+interface ClaimRequest {
+  yieldId?: string;
+  claimAll?: boolean;
+}
+
+export const POST = withApiRoute('investment-claim', async (
+  request: NextRequest,
+  { log, readJson }: ApiContext
+) => {
   try {
     const authError = await requireAuth();
     if (authError) {
@@ -17,13 +26,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
     
-    let body;
-    try {
-      body = await request.json();
-    } catch {
-      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    const bodyResult = await readJson<ClaimRequest>();
+    if (!bodyResult.ok) {
+      return bodyResult.response;
     }
-    
+    const body = bodyResult.body;
+
     const { yieldId, claimAll } = body;
     
     // Get unclaimed yields
@@ -100,7 +108,7 @@ export async function POST(request: NextRequest) {
     });
     
   } catch (error) {
-    console.error('Error claiming yield:', error);
+    log.error('Error claiming yield', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

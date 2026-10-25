@@ -4,6 +4,7 @@ import { gameStates, users } from '@/db/schema';
 import { createInitialGameState } from '@/lib/game-engine';
 import { GameState } from '@/lib/types';
 import { generateUserId } from '@/lib/utils';
+import { withApiRoute, ApiContext } from '@/lib/api-route';
 import { z } from 'zod';
 
 // Validation schema for team creation
@@ -14,15 +15,16 @@ const teamCreationSchema = z.object({
   badgeStyle: z.enum(['shield', 'circle', 'crest', 'diamond']),
 });
 
-export async function POST(request: NextRequest) {
+export const POST = withApiRoute('onboarding-create-team', async (
+  request: NextRequest,
+  { log, readJson }: ApiContext
+) => {
   try {
-    let requestBody;
-
-    try {
-      requestBody = await request.json();
-    } catch {
-      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    const bodyResult = await readJson();
+    if (!bodyResult.ok) {
+      return bodyResult.response;
     }
+    const requestBody = bodyResult.body;
 
     // Validate request
     let validatedData;
@@ -77,7 +79,7 @@ export async function POST(request: NextRequest) {
         createdAt: new Date(),
       });
     } catch (userError) {
-      console.warn('Failed to create user record, continuing anyway:', userError);
+      log.warn('Failed to create user record, continuing anyway', { error: userError });
       // Continue even if user creation fails - it's not critical
     }
 
@@ -97,7 +99,9 @@ export async function POST(request: NextRequest) {
         },
       });
     } catch (gameStateError) {
-      console.warn('Failed to persist game state to DB, continuing with client-only mode:', gameStateError);
+      log.warn('Failed to persist game state to DB, continuing with client-only mode', {
+        error: gameStateError,
+      });
     }
 
     // Return success with userId (client will store in localStorage)
@@ -111,7 +115,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('Onboarding error:', error);
+    log.error('Onboarding error', { error });
     return NextResponse.json(
       {
         error: 'Internal server error',
@@ -120,4 +124,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

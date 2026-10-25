@@ -4,8 +4,12 @@ import { tournamentTickets, gameStates } from '@/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { getAuthenticatedUser, requireAuth } from '@/lib/auth-helpers';
 import { SPECIAL_TOURNAMENTS, TICKET_EARNING_METHODS } from '@/lib/constants';
+import { withApiRoute, ApiContext } from '@/lib/api-route';
 
-export async function GET(request: NextRequest) {
+export const GET = withApiRoute('tournaments-tickets', async (
+  request: NextRequest,
+  { log }: ApiContext
+) => {
   try {
     const sessionUserId = await getAuthenticatedUser();
     const { searchParams } = new URL(request.url);
@@ -41,13 +45,16 @@ export async function GET(request: NextRequest) {
     });
     
   } catch (error) {
-    console.error('Error fetching tickets:', error);
+    log.error('Error fetching tickets', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
 // Earn a ticket (triggered by certain achievements)
-export async function POST(request: NextRequest) {
+export const POST = withApiRoute('tournaments-tickets', async (
+  request: NextRequest,
+  { log, readJson }: ApiContext
+) => {
   try {
     const authError = await requireAuth();
     if (authError) {
@@ -59,13 +66,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
     
-    let body;
-    try {
-      body = await request.json();
-    } catch {
-      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    const bodyResult = await readJson<{ method?: string }>();
+    if (!bodyResult.ok) {
+      return bodyResult.response;
     }
-    
+    const body = bodyResult.body;
+
     const { method } = body;
     
     if (!method || !TICKET_EARNING_METHODS[method as keyof typeof TICKET_EARNING_METHODS]) {
@@ -91,7 +97,7 @@ export async function POST(request: NextRequest) {
     });
     
   } catch (error) {
-    console.error('Error earning ticket:', error);
+    log.error('Error earning ticket', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

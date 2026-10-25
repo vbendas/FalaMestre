@@ -5,12 +5,22 @@ import { eq } from 'drizzle-orm';
 import { GameState } from '@/lib/types';
 import { getDailyRewardAmount } from '@/lib/economy';
 import { getAuthenticatedUser, requireAuth } from '@/lib/auth-helpers';
+import { withApiRoute, ApiContext } from '@/lib/api-route';
 
 type GameStateRecordShape = {
   currentState: GameState;
 };
 
-export async function POST(request: NextRequest) {
+interface DailyRewardRequest {
+  userId: string;
+  lastClaimDate?: string;
+  currentStreak?: number;
+}
+
+export const POST = withApiRoute('daily-reward', async (
+  request: NextRequest,
+  { log, readJson }: ApiContext
+) => {
   try {
     const authError = await requireAuth();
     if (authError) {
@@ -18,13 +28,12 @@ export async function POST(request: NextRequest) {
     }
 
     const sessionUserId = await getAuthenticatedUser();
-    let requestBody;
-    
-    try {
-      requestBody = await request.json();
-    } catch {
-      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+
+    const bodyResult = await readJson<DailyRewardRequest>();
+    if (!bodyResult.ok) {
+      return bodyResult.response;
     }
+    const requestBody = bodyResult.body;
 
     const { userId } = requestBody;
 
@@ -85,7 +94,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[DailyReward] API error:', error);
+    log.error('API error', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

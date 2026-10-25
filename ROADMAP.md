@@ -17,29 +17,60 @@ there is no model training on this roadmap.
 
 ## Done
 
-- **Get the unit tests green.** `npm run test:run` passes (289 tests across 10
-  files). The decision-engine and game-engine failures are fixed.
+- **Get the unit tests green.** `npm run test:run` passes (573 tests across 11
+  files). The decision-engine and game-engine failures are fixed. The body
+  limit, logger and body-shape work above is covered by
+  `src/app/api/__tests__/body-limit.test.ts` (270 tests, every body route
+  against an oversized body, a body that only claims a huge length, a malformed
+  body and `null`/array/number, plus request IDs on the logger-only handlers),
+  `src/lib/__tests__/api-route.test.ts` (21), `request-body.test.ts` (28) and
+  `logger.test.ts` (36).
 - **Fix the typecheck error in the share card.** `html2canvas` is listed in
   `app/package.json` and `npx tsc --noEmit` is clean.
 - **Fix the conditional React hooks in `SquadView`.** ESLint reports no
   `react-hooks/rules-of-hooks` errors; the lint step passes with warnings only.
-- **Request size limits on public API routes.** `src/lib/request-body.ts`
-  provides `readJsonBody()`, which caps a body at 64 KiB by default (overridable
-  per route) and answers an oversized one with 413 before parsing. It checks
+- **Request size limits on every public API route.** `src/lib/request-body.ts`
+  provides `readJsonBody()`, which caps a body at 64 KiB
+  (`DEFAULT_MAX_BODY_BYTES`, overridable per route and per call) and answers an
+  oversized one with 413 `Request body too large` before parsing. It checks
   `Content-Length` when present and counts bytes while reading, so a chunked
-  body with no declared length is still bounded. Wired into `/api/conversation`,
-  `/api/match`, `/api/match/decide` and `/api/match/stream`.
-- **Structured logging with request IDs.** `src/lib/logger.ts` provides
-  `createRequestLogger()`, which writes one JSON object per line with time,
-  level, route, request ID, message and extra fields, expands `Error` values
-  into name/message/stack, and reuses a sanitised `x-request-id` header when one
-  is present. The conversation, match, decision and stream routes use it and
-  have no `console` calls left.
-- **Malformed JSON on the match stream route.** `/api/match/stream` now
-  answers a body that is not valid JSON with a 400 and the message
-  `Invalid JSON body` (it used to fall through to the 500 handler) and logs the
-  rejection at warn level. Covered by tests in
-  `src/app/api/__tests__/body-limit.test.ts`.
+  body with no declared length is still bounded. All 21 handlers that read a
+  body use it: the four wired first (`/api/conversation`, `/api/match`,
+  `/api/match/decide`, `/api/match/stream`) call it directly, and the other 17
+  go through the shared wrapper below. The two cron routes and `/api/predictions`
+  never read a body and are unaffected.
+- **Shared route wrapper.** `src/lib/api-route.ts` provides `withApiRoute()`,
+  which wraps a handler and hands it an `ApiContext` with a logger already bound
+  to the route name and request ID, and a `readJson()` that applies the size
+  cap, the shape check and the standard replies. It is used by 25 exported
+  handlers across 20 route files; 17 of those handlers read a body, the rest
+  take only the logger. `readJson` is a context method rather than
+  something the wrapper runs up front on purpose: routes differ in whether they
+  check auth, a shared secret or the body first, and reading eagerly would move
+  the size rejection ahead of the auth check on every route that authenticates
+  first. Routes keep their own order by calling it where `request.json()` used
+  to sit. `invalidJsonResponse` lets a route keep wording that differs from the
+  default; only `/api/insights` needs it, for its `Invalid JSON`.
+- **Structured logging with request IDs on every route.** `src/lib/logger.ts`
+  provides `createRequestLogger()`, which writes one JSON object per line with
+  time, level, route, request ID, message and extra fields, expands `Error`
+  values into name/message/stack, and reuses a sanitised `x-request-id` header
+  when one is present. No `console` call is left anywhere under
+  `src/app/api`; the bracketed tags (`[Insights]`, `[Migrate]`, `[TransferBuy]`,
+  `[Train]`) are gone, replaced by the `route` field. Levels and response bodies
+  were kept as each route had them. The cron routes and the GET handlers take
+  the logger even though they read no body. `/api/auth/[...nextauth]` is
+  NextAuth's own handler and is left alone.
+- **Non-object JSON bodies rejected on every body route.** A body that parses
+  but is `null`, an array or a bare primitive used to reach the 500 handler on
+  15 of the 21 body routes, and produced a misleading 403 or 404 on most of the
+  rest; only the five schema-validated routes answered sensibly. `readJsonBody`
+  now requires a plain object and answers anything else with 400
+  `Request body must be a JSON object`, so the check covers every route that
+  reads a body rather than `/api/match/stream` alone. The wording matches the
+  sentence `/api/match/decide` already used in its own validation. All three
+  rejections — too large, unparseable, not an object — are logged at warn as one
+  JSON line carrying the route name and request ID.
 - **Deterministic match mode.** A match is replayable end to end from a seed.
   `src/lib/rng.ts` holds the seeded source; `game-engine.ts`,
   `decision-engine.ts`, `match-segment-engine.ts`, `commentary.ts`,
@@ -64,54 +95,56 @@ there is no model training on this roadmap.
 
 ## Next items
 
-1. **Apply the body-size limit to the remaining public routes.** `readJsonBody`
-   is wired into the four busiest routes. The other handlers that call
-   `request.json()` directly — among them `/api/transfer/buy`,
-   `/api/transfer/sell`, `/api/squad/train`, `/api/squad/migrate`,
-   `/api/youth`, `/api/staff`, `/api/stadium/upgrade`, `/api/insights` — are
-   still unbounded. Wire them up and consider a shared wrapper so a new route
-   gets the limit by default.
+1. **Move the library modules onto the structured logger.** The API routes are
+   done, but `src/lib` and `src/db` still log with bare `console` calls that
+   carry no request ID: `game-engine.ts` writes three `[DEBUG]` lines on every
+   simulated match, and `match-formations.ts`, `memory-manager.ts`,
+   `ai-service.ts` and `db/index.ts` log at various levels. These run inside
+   request handlers but cannot reach the request logger, so their lines cannot
+   be correlated with the request that caused them. Either thread a logger
+   through or give these modules a module-scoped one, and drop the `[DEBUG]`
+   lines from the match hot path.
 
-2. **Move the remaining routes onto the structured logger.** The bracketed-tag
-   `console` calls are gone from the four wired routes but remain in the other
-   API handlers (`[Insights]`, `[Migrate]`, `[TransferBuy]`, `[Train]` and
-   others). Convert them so every route line carries a request ID.
+2. **Validate request bodies by schema on the routes that still hand-roll it.**
+   The shared reader now guarantees a body is a plain object within the size
+   cap, but what happens after that varies: five routes use Zod
+   (`/api/conversation`, `/api/match`, `/api/onboarding/create-team`,
+   `/api/insights`, and `seedSchema` on the stream), `/api/match/decide` has a
+   100-line hand-written validator, and the rest read fields straight off the
+   body with a cast. That is why a missing `userId` surfaces as 403 Forbidden on
+   the transfer and upgrade routes and 404 User not found on `/api/youth`
+   instead of a 400 naming the field. Give each route a schema and a consistent
+   validation reply.
 
-3. **Reject non-object JSON bodies on the match stream route.**
-   `/api/match/stream` casts the parsed body to an object and reads `userId`
-   from it, so a body that is valid JSON but not an object (for example `null`)
-   still ends in the 500 handler instead of a 400. Add a shape check after
-   `readJsonBody` and a test for it.
-
-4. **Track Drizzle migrations in the repository.** The schema is applied with
+3. **Track Drizzle migrations in the repository.** The schema is applied with
    `drizzle-kit push` and no `app/drizzle/` directory is committed. Generate a
    baseline migration and switch the documented setup to `db:generate` +
    `db:migrate`, so schema changes can be reviewed.
 
-5. **Shared rate limiting.** `src/lib/rate-limit.ts` keeps counters in an
+4. **Shared rate limiting.** `src/lib/rate-limit.ts` keeps counters in an
    in-memory `Map`, so limits reset on every cold start and are not shared
    between serverless instances. Move the counters to Postgres or another
    shared store.
 
-6. **Server-backed asynchronous PvP challenges.**
+5. **Server-backed asynchronous PvP challenges.**
    `docs/PHASE2_MATCH_ENGINE.md` describes a PvP async mode built on
    `runMatchSegment()`, but friend challenges in
    `src/contexts/FriendsContext.tsx` are simulated locally and stored in
    `localStorage`. Persist challenges and turns in the database and resolve
    them with the segment engine.
 
-7. **Bring back the 3D match view.** The Three.js match view
+6. **Bring back the 3D match view.** The Three.js match view
    (`src/components/vr/*`, `/test-vr` page) was removed in commit `b788a9c`,
    but `app/tests/vr.spec.ts` still targets `/test-vr`. Restore a trimmed
    version of the view from history behind a feature flag (see
    VR_IMMERSIVE_PLAN), or delete the stale spec if the view is dropped.
 
-8. **End-to-end tests for the core flow.** There is no `playwright.config.ts`
+7. **End-to-end tests for the core flow.** There is no `playwright.config.ts`
    and the browser checks in `scripts/` are ad-hoc scripts. Add a Playwright
    config and specs for login (with `AUTH_DISABLED=true`), onboarding, one
    chat turn and one match, running against the LLM mock mode.
 
-9. **Playable without a hosted database.** Without `DATABASE_URL`,
+8. **Playable without a hosted database.** Without `DATABASE_URL`,
    `src/db/index.ts` returns a no-op mock whose reads always return nothing,
    so a new player never gets past onboarding. Replace it with a working
    local store (for example an embedded Postgres such as PGlite behind the

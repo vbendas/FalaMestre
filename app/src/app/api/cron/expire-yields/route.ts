@@ -3,8 +3,12 @@ import { db } from '@/db';
 import { investmentYields } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { requireCronAuth } from '@/lib/cron-auth';
+import { withApiRoute, ApiContext } from '@/lib/api-route';
 
-export async function GET(request: NextRequest) {
+export const GET = withApiRoute('cron-expire-yields', async (
+  request: NextRequest,
+  { log }: ApiContext
+) => {
   const authError = requireCronAuth(request);
   if (authError) return authError;
 
@@ -47,7 +51,7 @@ export async function GET(request: NextRequest) {
       timestamp: now.toISOString(),
     });
   } catch (error) {
-    console.error('Error processing expired yields:', error);
+    log.error('Error processing expired yields', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

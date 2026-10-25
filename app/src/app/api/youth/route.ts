@@ -2,12 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { gameStates } from '@/db/schema';
 import { eq } from 'drizzle-orm';
-import { GameState, YouthAcademy, YouthPlayer } from '@/lib/types';
+import { GameState, YouthAcademy, YouthPlayer, TrainingFocus } from '@/lib/types';
 import { generateYouthIntake } from '@/lib/youth-generator';
+import { withApiRoute, ApiContext } from '@/lib/api-route';
 
 type GameStateRecordShape = {
   currentState: GameState;
 };
+
+interface YouthRequest {
+  action?: string;
+  playerId?: string;
+  focus: TrainingFocus;
+}
 
 function initializeYouthAcademy(currentWeek: number): YouthAcademy {
   return {
@@ -18,7 +25,10 @@ function initializeYouthAcademy(currentWeek: number): YouthAcademy {
   };
 }
 
-export async function GET(request: NextRequest) {
+export const GET = withApiRoute('youth', async (
+  request: NextRequest,
+  { log }: ApiContext
+) => {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
@@ -47,22 +57,24 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[YouthAcademy GET] API error:', error);
+    log.error('GET API error', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withApiRoute('youth', async (
+  request: NextRequest,
+  { log, readJson }: ApiContext
+) => {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
-    let requestBody;
-    try {
-      requestBody = await request.json();
-    } catch {
-      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    const bodyResult = await readJson<YouthRequest>();
+    if (!bodyResult.ok) {
+      return bodyResult.response;
     }
+    const requestBody = bodyResult.body;
 
     const action = requestBody.action;
     const playerId = requestBody.playerId;
@@ -217,10 +229,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
 
   } catch (error) {
-    console.error('[YouthAcademy POST] API error:', error);
+    log.error('POST API error', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
 function randomBetween(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;

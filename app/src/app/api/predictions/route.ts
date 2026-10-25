@@ -3,8 +3,12 @@ import { db } from '@/db';
 import { predictions, predictionHistory, userBets } from '@/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { getAuthenticatedUser, requireAuth } from '@/lib/auth-helpers';
+import { withApiRoute, ApiContext } from '@/lib/api-route';
 
-export async function GET(request: NextRequest) {
+export const GET = withApiRoute('predictions', async (
+  request: NextRequest,
+  { log }: ApiContext
+) => {
   try {
     const sessionUserId = await getAuthenticatedUser();
     const { searchParams } = new URL(request.url);
@@ -59,12 +63,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ predictions: predictionList });
     
   } catch (error) {
-    console.error('Error fetching predictions:', error);
+    log.error('Error fetching predictions', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withApiRoute('predictions', async (
+  request: NextRequest,
+  { log }: ApiContext
+) => {
   try {
     const authError = await requireAuth();
     if (authError) {
@@ -85,7 +92,7 @@ export async function POST(request: NextRequest) {
     });
     
   } catch (error) {
-    console.error('Error creating prediction:', error);
+    log.error('Error creating prediction', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

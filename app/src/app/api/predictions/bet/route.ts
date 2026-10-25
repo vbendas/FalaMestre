@@ -2,16 +2,26 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { predictions, userBets, predictionHistory, gameStates } from '@/db/schema';
 import { eq, sql } from 'drizzle-orm';
+import { withApiRoute, ApiContext } from '@/lib/api-route';
 
-export async function POST(request: NextRequest) {
+interface BetRequest {
+  predictionId: string;
+  optionId: string;
+  amount: number;
+  userId: string;
+}
+
+export const POST = withApiRoute('predictions-bet', async (
+  request: NextRequest,
+  { log, readJson }: ApiContext
+) => {
   try {
-    let body;
-    try {
-      body = await request.json();
-    } catch {
-      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    const bodyResult = await readJson<BetRequest>();
+    if (!bodyResult.ok) {
+      return bodyResult.response;
     }
-    
+    const body = bodyResult.body;
+
     const { predictionId, optionId, amount, userId } = body;
     const targetUserId = userId;
     
@@ -60,7 +70,7 @@ export async function POST(request: NextRequest) {
         newBalance = userMoney - amount;
       }
     } catch (err) {
-      console.error('Error updating balance:', err);
+      log.error('Error updating balance', { error: err });
     }
     
     const potentialWin = Math.round(amount * 1.8);
@@ -95,7 +105,7 @@ export async function POST(request: NextRequest) {
     });
     
   } catch (error) {
-    console.error('Error placing bet:', error);
+    log.error('Error placing bet', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

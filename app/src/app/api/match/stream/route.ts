@@ -43,14 +43,16 @@ export async function POST(request: NextRequest) {
     if (!bodyResult.ok) {
       if (bodyResult.reason === 'too_large') {
         log.warn('Request body rejected: too large');
+      } else if (bodyResult.reason === 'not_object') {
+        log.warn('Request body rejected: not a JSON object');
       } else {
         log.warn('Request body rejected: invalid JSON');
       }
-      // readJsonBody answers 413 for an oversized body and 400 for malformed
-      // JSON. This route has no body-parse timeout, so the plain
-      // 'Invalid JSON body' message fits it better than the
-      // 'Invalid JSON body or timeout' wording used by the timeout-wrapped
-      // routes.
+      // readJsonBody answers 413 for an oversized body, 400 for malformed
+      // JSON and 400 for valid JSON that is not an object. This route has no
+      // body-parse timeout, so the plain 'Invalid JSON body' message fits it
+      // better than the 'Invalid JSON body or timeout' wording used by the
+      // timeout-wrapped routes.
       return bodyResult.response;
     }
 

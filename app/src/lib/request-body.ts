@@ -15,7 +15,8 @@ export type ReadJsonBodyOptions = {
 export type ReadJsonBodyResult<T> =
   | { ok: true; body: T; bytesRead: number }
   | { ok: false; reason: 'too_large'; response: NextResponse }
-  | { ok: false; reason: 'invalid_json'; response: NextResponse };
+  | { ok: false; reason: 'invalid_json'; response: NextResponse }
+  | { ok: false; reason: 'not_object'; response: NextResponse };
 
 function tooLarge(maxBytes: number): ReadJsonBodyResult<never> {
   return {
@@ -26,6 +27,22 @@ function tooLarge(maxBytes: number): ReadJsonBodyResult<never> {
       { status: 413 }
     ),
   };
+}
+
+function notObject(): ReadJsonBodyResult<never> {
+  return {
+    ok: false,
+    reason: 'not_object',
+    response: NextResponse.json(
+      { error: 'Request body must be a JSON object' },
+      { status: 400 }
+    ),
+  };
+}
+
+/** True for a plain JSON object: not null, not an array, not a primitive. */
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function invalidJson(): ReadJsonBodyResult<never> {
@@ -66,8 +83,12 @@ function parseContentLength(request: Request): number | null {
  *     the limit is crossed the stream is cancelled and a 413 is returned.
  *
  * JSON.parse only runs once the whole body has been read and is within the
- * limit. Returns a discriminated result so routes can `return result.response`
- * on failure and keep their own validation flow on success.
+ * limit. The parsed value must then be a plain object: `null`, an array or a
+ * bare primitive are valid JSON but every route reads named fields off the
+ * body, so they are answered with 400 here instead of surfacing as a
+ * TypeError in the route's 500 handler. Returns a discriminated result so
+ * routes can `return result.response` on failure and keep their own
+ * validation flow on success.
  */
 export async function readJsonBody<T = unknown>(
   request: Request,
@@ -120,9 +141,16 @@ export async function readJsonBody<T = unknown>(
   // are reassembled correctly.
   const text = new TextDecoder('utf-8').decode(merged);
 
+  let parsed: unknown;
   try {
-    return { ok: true, body: JSON.parse(text) as T, bytesRead };
+    parsed = JSON.parse(text);
   } catch {
     return invalidJson();
   }
+
+  if (!isPlainObject(parsed)) {
+    return notObject();
+  }
+
+  return { ok: true, body: parsed as T, bytesRead };
 }

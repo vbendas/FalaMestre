@@ -4,13 +4,17 @@ import { gameStates } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { requireAuth, getAuthenticatedUser } from '@/lib/auth-helpers';
 import { FORMATIONS } from '@/lib/formations';
+import { withApiRoute, ApiContext } from '@/lib/api-route';
 
 interface FormationRequest {
   userId?: string;
   formation: string;
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withApiRoute('squad-formation', async (
+  request: NextRequest,
+  { log, readJson }: ApiContext
+) => {
   try {
     // Check authentication - returns 401 only if REQUIRE_AUTH=true and no session
     const authError = await requireAuth();
@@ -22,15 +26,11 @@ export async function POST(request: NextRequest) {
     const sessionUserId = await getAuthenticatedUser();
     
     // Parse and validate request
-    let body: FormationRequest;
-    try {
-      body = await request.json();
-    } catch {
-      return NextResponse.json(
-        { error: 'Invalid JSON body' },
-        { status: 400 }
-      );
+    const bodyResult = await readJson<FormationRequest>();
+    if (!bodyResult.ok) {
+      return bodyResult.response;
     }
+    const body = bodyResult.body;
 
     const { userId, formation } = body;
 
@@ -80,10 +80,10 @@ export async function POST(request: NextRequest) {
       message: `Formação alterada para ${FORMATIONS[formation].name}!`,
     });
   } catch (error) {
-    console.error('[Formation] Error:', error);
+    log.error('Error', { error });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     );
   }
-}
+});

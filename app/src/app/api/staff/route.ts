@@ -4,10 +4,18 @@ import { gameStates } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { GameState, StaffMember, StaffRole, StaffSpecialty } from '@/lib/types';
 import { STAFF_WAGES } from '@/lib/constants';
+import { withApiRoute, ApiContext } from '@/lib/api-route';
 
 type GameStateRecordShape = {
   currentState: GameState;
 };
+
+interface StaffRequest {
+  userId: string;
+  action: string;
+  role: StaffRole;
+  tier: 'rookie' | 'professional' | 'elite';
+}
 
 const STAFF_NAMES = {
   headCoach: [
@@ -54,14 +62,16 @@ function generateStaffMember(role: StaffRole, tier: 'rookie' | 'professional' | 
   };
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withApiRoute('staff', async (
+  request: NextRequest,
+  { log, readJson }: ApiContext
+) => {
   try {
-    let requestBody;
-    try {
-      requestBody = await request.json();
-    } catch {
-      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    const bodyResult = await readJson<StaffRequest>();
+    if (!bodyResult.ok) {
+      return bodyResult.response;
     }
+    const requestBody = bodyResult.body;
 
     const { userId, action, role, tier } = requestBody;
 
@@ -141,7 +151,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
 
   } catch (error) {
-    console.error('[Staff API] Error:', error);
+    log.error('Error', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

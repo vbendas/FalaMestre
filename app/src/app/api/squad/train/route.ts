@@ -4,6 +4,7 @@ import { gameStates } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { requireAuth, getAuthenticatedUser } from '@/lib/auth-helpers';
 import { Player, FormState } from '@/lib/types';
+import { withApiRoute, ApiContext } from '@/lib/api-route';
 
 interface TrainingRequest {
   userId?: string;
@@ -116,23 +117,25 @@ function updateForm(player: Player, change: number): void {
   player.currentForm = formLevels[newIndex];
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withApiRoute('squad-train', async (
+  request: NextRequest,
+  { log, readJson }: ApiContext
+) => {
   try {
     // Check authentication
     const authError = await requireAuth();
     if (authError) {
       return authError;
     }
-    
+
     const sessionUserId = await getAuthenticatedUser();
-    
+
     // Parse request
-    let body: TrainingRequest;
-    try {
-      body = await request.json();
-    } catch {
-      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    const bodyResult = await readJson<TrainingRequest>();
+    if (!bodyResult.ok) {
+      return bodyResult.response;
     }
+    const body = bodyResult.body;
 
     const { userId, playerId, focus } = body;
     const targetUserId = sessionUserId || userId;
@@ -303,10 +306,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error('[Train] Error:', error);
+    log.error('Error', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
 // Helper function for injury risk calculation (exported for UI)
 export function getInjuryRiskPreview(player: Player, focus: string): number {

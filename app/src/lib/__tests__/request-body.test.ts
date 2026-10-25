@@ -224,4 +224,40 @@ describe('readJsonBody', () => {
       }
     );
   });
+
+  describe('bodies that are valid JSON but not an object', () => {
+    it.each([
+      ['null', 'null'],
+      ['an array', '[{"userId":"u"}]'],
+      ['a number', '42'],
+      ['a string', '"hello"'],
+      ['a boolean', 'true'],
+    ])('rejects %s with 400 and reason not_object', async (_label, text) => {
+      const result = await readJsonBody(requestWithBody(text));
+
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.reason).toBe('not_object');
+      expect(result.response.status).toBe(400);
+      await expect(result.response.json()).resolves.toEqual({
+        error: 'Request body must be a JSON object',
+      });
+    });
+
+    it('still accepts an empty object and an object with null fields', async () => {
+      const empty = await readJsonBody(requestWithBody('{}'));
+      const withNull = await readJsonBody(requestWithBody('{"decision":null}'));
+
+      expect(empty).toMatchObject({ ok: true, body: {} });
+      expect(withNull).toMatchObject({ ok: true, body: { decision: null } });
+    });
+
+    it('keeps reporting malformed text as invalid_json, not not_object', async () => {
+      const result = await readJsonBody(requestWithBody('nul'));
+
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.reason).toBe('invalid_json');
+    });
+  });
 });

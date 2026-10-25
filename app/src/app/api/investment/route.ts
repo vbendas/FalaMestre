@@ -3,8 +3,18 @@ import { db } from '@/db';
 import { fanClubInvestments, gameStates } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { getInvestmentTier, createInvestment } from '@/lib/economy';
+import { InvestmentOption } from '@/lib/types';
+import { withApiRoute, ApiContext } from '@/lib/api-route';
 
-export async function GET(request: NextRequest) {
+interface InvestmentRequest {
+  option: InvestmentOption;
+  userId: string;
+}
+
+export const GET = withApiRoute('investment', async (
+  request: NextRequest,
+  { log }: ApiContext
+) => {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
@@ -26,20 +36,22 @@ export async function GET(request: NextRequest) {
     });
     
   } catch (error) {
-    console.error('Error fetching investments:', error);
+    log.error('Error fetching investments', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withApiRoute('investment', async (
+  request: NextRequest,
+  { log, readJson }: ApiContext
+) => {
   try {
-    let body;
-    try {
-      body = await request.json();
-    } catch {
-      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    const bodyResult = await readJson<InvestmentRequest>();
+    if (!bodyResult.ok) {
+      return bodyResult.response;
     }
-    
+    const body = bodyResult.body;
+
     const { option, userId } = body;
     const targetUserId = userId;
     
@@ -69,7 +81,7 @@ export async function POST(request: NextRequest) {
         userMoney = gameState.currentState.user.money;
       }
     } catch (err) {
-      console.log('Using default money');
+      log.info('Using default money', { error: err });
     }
     
     newBalance = userMoney - tier.amount;
@@ -85,7 +97,7 @@ export async function POST(request: NextRequest) {
       const investment = createInvestment(targetUserId, option);
       await db.insert(fanClubInvestments).values(investment);
     } catch (err) {
-      console.log('Investment recorded in memory');
+      log.info('Investment recorded in memory', { error: err });
     }
     
     return NextResponse.json({
@@ -98,7 +110,7 @@ export async function POST(request: NextRequest) {
     });
     
   } catch (error) {
-    console.error('Error creating investment:', error);
+    log.error('Error creating investment', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

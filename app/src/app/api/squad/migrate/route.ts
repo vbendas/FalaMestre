@@ -4,6 +4,7 @@ import { gameStates } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { requireAuth, getAuthenticatedUser } from '@/lib/auth-helpers';
 import { GameState, Player } from '@/lib/types';
+import { withApiRoute, ApiContext } from '@/lib/api-route';
 
 function migrateGameState(gameState: GameState): boolean {
   let modified = false;
@@ -51,23 +52,25 @@ function migrateGameState(gameState: GameState): boolean {
   return modified;
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withApiRoute('squad-migrate', async (
+  request: NextRequest,
+  { log, readJson }: ApiContext
+) => {
   try {
     // Check authentication
     const authError = await requireAuth();
     if (authError) {
       return authError;
     }
-    
+
     const sessionUserId = await getAuthenticatedUser();
-    
+
     // Parse request
-    let body: { userId?: string };
-    try {
-      body = await request.json();
-    } catch {
-      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    const bodyResult = await readJson<{ userId?: string }>();
+    if (!bodyResult.ok) {
+      return bodyResult.response;
     }
+    const body = bodyResult.body;
 
     const targetUserId = sessionUserId || body.userId;
     
@@ -105,13 +108,16 @@ export async function POST(request: NextRequest) {
       message: 'No migration needed - already up to date' 
     });
   } catch (error) {
-    console.error('[Migrate] Error:', error);
+    log.error('Error', { error });
     return NextResponse.json({ error: 'Migration failed' }, { status: 500 });
   }
-}
+});
 
 // GET endpoint for admin batch migration
-export async function GET() {
+export const GET = withApiRoute('squad-migrate', async (
+  request: NextRequest,
+  { log }: ApiContext
+) => {
   try {
     // Note: In production, add admin authentication check here
     
@@ -134,7 +140,7 @@ export async function GET() {
           alreadyUpToDate++;
         }
       } catch (e) {
-        console.error(`Migration failed for user ${state.userId}:`, e);
+        log.error('Migration failed for user', { userId: state.userId, error: e });
         errors++;
       }
     }
@@ -147,7 +153,7 @@ export async function GET() {
       errors 
     });
   } catch (error) {
-    console.error('[Migrate] Batch migration error:', error);
+    log.error('Batch migration error', { error });
     return NextResponse.json({ error: 'Batch migration failed' }, { status: 500 });
   }
-}
+});
