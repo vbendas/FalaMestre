@@ -3,18 +3,15 @@ import { db } from '@/db';
 import { gameStates } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { GameState } from '@/lib/types';
-import { requireAuth } from '@/lib/auth-helpers';
+import { requireAuth, getAuthenticatedUser } from '@/lib/auth-helpers';
+import { parseFailureFields } from '@/lib/log-safe';
 import { withApiRoute, ApiContext } from '@/lib/api-route';
 import { Logger } from '@/lib/logger';
-import { z } from 'zod';
+import { insightsRequestSchema } from '@/lib/validations';
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
 const AI_MODEL = process.env.AI_MODEL || 'google/gemini-2.0-flash-001';
-
-const insightsRequestSchema = z.object({
-  userId: z.string().min(1, 'User ID is required'),
-});
 
 interface Insight {
   title: string;
@@ -193,8 +190,22 @@ Responda APENAS com um array JSON válido, sem markdown:
 
     content = content.replace(/^```[a-z]*\s*/im, '').replace(/```\s*$/m, '').trim();
 
-    const parsed = JSON.parse(content);
-    if (!Array.isArray(parsed)) return [];
+    // The parse gets its own catch so the handler below never sees a
+    // SyntaxError: its message quotes the first bytes of the reply, and the
+    // reply is the model talking back about a prompt that carries the
+    // player's save. Reported by shape instead, as in `ai-service.ts`.
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(content);
+    } catch (error) {
+      log.warn('AI insights reply was not usable', parseFailureFields(error, content));
+      return [];
+    }
+
+    if (!Array.isArray(parsed)) {
+      log.warn('AI insights reply was not a list', { replyLength: content.length });
+      return [];
+    }
 
     return parsed.slice(0, 3).map((item: Record<string, unknown>) => ({
       title: String(item.title || '').slice(0, 30),
@@ -210,27 +221,39 @@ Responda APENAS com um array JSON válido, sem markdown:
 
 export const POST = withApiRoute('insights', async (
   request: NextRequest,
-  { log, readJson }: ApiContext
+  { log, readBody }: ApiContext
 ) => {
   try {
     const authError = await requireAuth();
     if (authError) return authError;
 
-    const bodyResult = await readJson();
+    const sessionUserId = await getAuthenticatedUser();
+
+    // This route had the schema already but answered a flat
+    // `{ error: 'Invalid request' }`, throwing away the one thing the check
+    // had worked out: which field was wrong. It now says so, like the rest.
+    const bodyResult = await readBody(insightsRequestSchema);
     if (!bodyResult.ok) {
       return bodyResult.response;
     }
-    const body = bodyResult.body;
 
-    const validation = insightsRequestSchema.safeParse(body);
-    if (!validation.success) {
+    const { userId } = bodyResult.body;
+
+    // A signed-in player only ever reads their own insights; naming anyone
+    // else is refused like on the other routes, never served from the body id.
+    if (sessionUserId && userId && userId !== sessionUserId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const targetUserId = sessionUserId || userId;
+
+    if (!targetUserId) {
+      // Auth disabled and no id named: same reply a malformed body always got.
       return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
     }
 
-    const { userId } = validation.data;
-
     // Check cache
-    const cached = cache.get(userId);
+    const cached = cache.get(targetUserId);
     if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
       return NextResponse.json({
         insights: cached.data,
@@ -243,7 +266,7 @@ export const POST = withApiRoute('insights', async (
     let gs: GameState;
     try {
       const record = await db.query.gameStates.findFirst({
-        where: eq(gameStates.userId, userId),
+        where: eq(gameStates.userId, targetUserId),
       }) as GameStateRecordShape | undefined;
 
       if (!record) {
@@ -265,7 +288,7 @@ export const POST = withApiRoute('insights', async (
     const combined = [...aiInsights, ...ruleBased].slice(0, 6);
 
     // Cache result
-    cache.set(userId, { data: combined, timestamp: Date.now() });
+    cache.set(targetUserId, { data: combined, timestamp: Date.now() });
 
     return NextResponse.json({
       insights: combined,

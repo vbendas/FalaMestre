@@ -31,8 +31,75 @@ jobs:
       - name: Typecheck
         run: npx tsc --noEmit
 
+      # The committed migrations, proved on a fresh embedded Postgres: applied
+      # from nothing, every statement run a second time to show it is safe to
+      # repeat, and src/db/schema.ts checked for changes no migration covers.
+      # Without this a broken migration only showed up on someone's machine.
+      # See app/scripts/check-migrations.mjs.
+      - name: Check migrations
+        run: npm run db:check
+
+      # Every API route that takes a body takes it through
+      # ctx.readBody(schema), and every one of them is covered by the
+      # contract tests. Both are assertions in the suite as well, but the
+      # suite is eleven hundred tests and this failure needs to arrive
+      # saying which route, why it matters and what to write — so it gets
+      # its own step, ahead of the suite, and fails fast.
+      # See app/scripts/check-route-bodies.mjs.
+      - name: Check request body schemas
+        run: npm run check:bodies
+
       - name: Run Tests
         run: npm run test:run
 
       - name: Build
         run: npm run build
+
+  # Browser tests. Playwright starts the app itself (see
+  # app/playwright.config.ts) on the embedded Postgres in a temporary
+  # directory and with the assistant in mock mode.
+  #
+  # Nothing here can reach a real database or a real model: this job
+  # references no secrets, so none are in its environment to begin with, and
+  # the two variables are pinned empty below as well — belt and braces, in
+  # case a repository- or organisation-level variable ever sets them. The
+  # run also checks itself from the inside: the conversation spec asserts the
+  # reply came back `source: "mock"`, which is only true if no live model was
+  # called.
+  app-e2e:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    env:
+      DATABASE_URL: ""
+      OPENROUTER_API_KEY: ""
+      USE_MOCK_AI: "true"
+      AUTH_DISABLED: "true"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Run browser tests
+        run: npm run test:e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: app/playwright-report/
+          retention-days: 7

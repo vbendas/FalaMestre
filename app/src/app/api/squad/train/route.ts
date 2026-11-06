@@ -1,16 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/db';
-import { gameStates } from '@/db/schema';
-import { eq } from 'drizzle-orm';
 import { requireAuth, getAuthenticatedUser } from '@/lib/auth-helpers';
 import { Player, FormState } from '@/lib/types';
 import { withApiRoute, ApiContext } from '@/lib/api-route';
-
-interface TrainingRequest {
-  userId?: string;
-  playerId: string;
-  focus: 'technical' | 'physical' | 'tactical' | 'rest';
-}
+import { squadTrainRequestSchema } from '@/lib/validations';
+import { loadSave, commitSave, saveConflictResponse } from '@/lib/save-store';
+import { loadInvestmentBonuses } from '@/lib/investment-bonuses-store';
 
 interface TrainingResult {
   success: boolean;
@@ -24,8 +18,10 @@ interface TrainingResult {
   message: string;
 }
 
+type TrainableAttribute = 'pac' | 'sho' | 'pas' | 'dri' | 'def' | 'phy';
+
 interface TrainingConfig {
-  attributes: string[];
+  attributes: TrainableAttribute[];
   fatigueCost: number;
   injuryRiskBonus: number;
 }
@@ -48,7 +44,15 @@ function getOverallRating(player: Player): number {
   return Math.round((player.pac + player.sho + player.pas + player.dri + player.def + player.phy) / 6);
 }
 
-function calculateTrainingGain(player: Player): number {
+/**
+ * What one attribute gains from a session.
+ *
+ * `speedPercent` is an active `staff_esportivo` investment. It scales the gain
+ * *and* the cap it is clamped to: the cap is a hard 3, so scaling the gain
+ * alone would have the clamp swallow the bonus on exactly the sessions it was
+ * meant to help. Defaults to zero, leaving an uninvested session untouched.
+ */
+function calculateTrainingGain(player: Player, speedPercent: number = 0): number {
   const rating = getOverallRating(player);
   let baseGain = 2;
 
@@ -67,8 +71,9 @@ function calculateTrainingGain(player: Player): number {
   if (player.currentForm === 'cold') baseGain *= 0.9;
 
   // Final gain: randomized within range
-  const actualGain = Math.max(1, Math.floor(baseGain + Math.random() * baseGain));
-  return clamp(actualGain, 0, 3);
+  const speed = 1 + speedPercent / 100;
+  const actualGain = Math.max(1, Math.floor((baseGain + Math.random() * baseGain) * speed));
+  return clamp(actualGain, 0, Math.ceil(3 * speed));
 }
 
 function calculateInjuryRisk(player: Player, focus: string): number {
@@ -119,7 +124,7 @@ function updateForm(player: Player, change: number): void {
 
 export const POST = withApiRoute('squad-train', async (
   request: NextRequest,
-  { log, readJson }: ApiContext
+  { log, readBody }: ApiContext
 ) => {
   try {
     // Check authentication
@@ -130,34 +135,33 @@ export const POST = withApiRoute('squad-train', async (
 
     const sessionUserId = await getAuthenticatedUser();
 
-    // Parse request
-    const bodyResult = await readJson<TrainingRequest>();
+    const bodyResult = await readBody(squadTrainRequestSchema);
     if (!bodyResult.ok) {
       return bodyResult.response;
     }
-    const body = bodyResult.body;
 
-    const { userId, playerId, focus } = body;
+    const { userId, playerId, focus } = bodyResult.body;
+
+    // A body naming someone other than the session user is refused, not
+    // silently redirected to the session user's own save.
+    if (sessionUserId && userId && userId !== sessionUserId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const targetUserId = sessionUserId || userId;
-    
+
     if (!targetUserId) {
       return NextResponse.json({ error: 'User not identified' }, { status: 401 });
     }
 
-    if (!playerId || !focus || !TRAINING_CONFIG[focus]) {
-      return NextResponse.json({ error: 'Invalid training focus' }, { status: 400 });
-    }
+    // Get game state, remembering the version it was read at
+    const save = await loadSave(targetUserId);
 
-    // Get game state
-    const gameStateRecord = await db.query.gameStates.findFirst({
-      where: eq(gameStates.userId, targetUserId),
-    });
-
-    if (!gameStateRecord) {
+    if (!save) {
       return NextResponse.json({ error: 'Game state not found' }, { status: 404 });
     }
 
-    const gameState = gameStateRecord.currentState;
+    const gameState = save.state;
     const squad = gameState.squad;
 
     // Find player
@@ -168,6 +172,9 @@ export const POST = withApiRoute('squad-train', async (
 
     const player = squad.players[playerIndex];
     const config = TRAINING_CONFIG[focus];
+
+    // An active `staff_esportivo` investment makes a session go further.
+    const { trainingSpeedPercent } = await loadInvestmentBonuses(targetUserId);
 
     // Handle undefined values from old game states - apply defaults
     const playerIsInjured = player.isInjured ?? false;
@@ -249,11 +256,11 @@ export const POST = withApiRoute('squad-train', async (
       const gains: Record<string, number> = {};
       
       for (const attr of config.attributes) {
-        const gain = calculateTrainingGain(player);
+        const gain = calculateTrainingGain(player, trainingSpeedPercent);
         if (gain > 0) {
-          const currentValue = player[attr as keyof Player] as number;
+          const currentValue = player[attr];
           const newValue = clamp(currentValue + gain, 50, 99);
-          player[attr as keyof Player] = newValue;
+          player[attr] = newValue;
           gains[attr] = gain;
         }
       }
@@ -299,10 +306,18 @@ export const POST = withApiRoute('squad-train', async (
       squad.players.reduce((sum: number, p: Player) => sum + p.fatigue, 0) / squad.players.length
     );
 
-    // Update database
-    await db.update(gameStates)
-      .set({ currentState: gameState })
-      .where(eq(gameStates.userId, targetUserId));
+    // Write back only if nothing else has written the save since it was read.
+    // A match banked meanwhile, or a second training session from another
+    // tab, would otherwise be erased by this write; instead this session is
+    // refused and the player retries against the current save.
+    const committed = await commitSave(targetUserId, gameState, save.version);
+    if (!committed.ok) {
+      log.warn('Training rejected: the save moved on while the session was being processed', {
+        playerId,
+        focus,
+      });
+      return saveConflictResponse();
+    }
 
     return NextResponse.json(result);
   } catch (error) {

@@ -27,7 +27,7 @@ interface DashboardViewProps {
   investments?: FanClubInvestment[];
   yields?: InvestmentYield[];
   onPlaceBet?: (predictionId: string, optionId: string, amount: number) => Promise<void>;
-  onInvest?: (option: 'A' | 'B' | 'C') => Promise<void>;
+  onInvest?: (productId: string) => Promise<void>;
   onClaimYields?: () => Promise<void>;
 }
 
@@ -176,8 +176,8 @@ export function DashboardView({
           userBalance={user.money}
           activeInvestments={investments}
           pendingYields={yields}
-          onInvest={async (option) => {
-            if (onInvest) await onInvest(option);
+          onInvest={async (productId) => {
+            if (onInvest) await onInvest(productId);
           }}
           onClaimYields={async () => {
             if (onClaimYields) await onClaimYields();

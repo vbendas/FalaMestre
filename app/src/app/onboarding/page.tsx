@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { TeamCreationForm, type TeamFormData } from '@/components/onboarding/TeamCreationForm';
 import { TeamPreviewCard } from '@/components/onboarding/TeamPreviewCard';
@@ -9,6 +9,7 @@ import { ViewContainer } from '@/components/crt/ViewContainer';
 import { CrtButton } from '@/components/crt/CrtButton';
 import { GlassCard } from '@/components/crt/GlassCard';
 import { Divider } from '@/components/crt/Divider';
+import { LOCAL_USER_ID_KEY, usePlayerId } from '@/hooks/usePlayerId';
 
 type Step = 'create' | 'preview' | 'confirm';
 
@@ -20,10 +21,19 @@ const STEP_LABELS: Record<Step, string> = {
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const { isSignedIn, isResolved, requiresSignIn } = usePlayerId();
   const [step, setStep] = useState<Step>('create');
   const [teamData, setTeamData] = useState<TeamFormData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // With auth on, the server refuses to create a team for a signed-out
+  // visitor, so send them to sign in before they design one rather than after.
+  useEffect(() => {
+    if (requiresSignIn) {
+      router.push('/login');
+    }
+  }, [requiresSignIn, router]);
 
   const handleCreateTeam = async (data: TeamFormData) => {
     setTeamData(data);
@@ -49,14 +59,22 @@ export default function OnboardingPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Erro ao criar time');
+        const errorData = await response.json().catch(() => ({}));
+        // `message` is the sentence that says what to fix ('teamName must be
+        // at least 3 characters'); `error` is only the label ('Validation
+        // failed'), so on its own it told the player nothing.
+        throw new Error(errorData.message || errorData.error || 'Erro ao criar time');
       }
 
       const result = await response.json();
 
       if (result.userId) {
-        localStorage.setItem('falaMestreUserId', result.userId);
+        // A signed-in player's save is keyed on their session user id, which the
+        // client reads back from the session; writing it to localStorage would
+        // only leave a stale id behind for the next player on this browser.
+        if (!isSignedIn) {
+          localStorage.setItem(LOCAL_USER_ID_KEY, result.userId);
+        }
         localStorage.setItem('falaMestreJustOnboarded', 'true');
       }
 
@@ -74,6 +92,20 @@ export default function OnboardingPage() {
       setTeamData(null);
     }
   };
+
+  // Hold the form back until we know whether a session is needed, so nobody
+  // starts designing a team they will be sent away from.
+  if (!isResolved || requiresSignIn) {
+    return (
+      <CrtCabinet>
+        <div className="w-full h-full flex items-center justify-center">
+          <div className="text-[0.5rem] text-[rgba(255,223,0,0.5)] font-[family-name:var(--font-pixel)]">
+            Carregando...
+          </div>
+        </div>
+      </CrtCabinet>
+    );
+  }
 
   const stepIndex = step === 'create' ? 0 : step === 'preview' ? 1 : 2;
 

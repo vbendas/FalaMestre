@@ -1,25 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/db';
-import { gameStates } from '@/db/schema';
-import { eq } from 'drizzle-orm';
-import { GameState, Player } from '@/lib/types';
+import { Player } from '@/lib/types';
 import { calculatePlayerValue, calculatePlayerWage } from '@/lib/economy';
 import { getAuthenticatedUser, requireAuth } from '@/lib/auth-helpers';
 import { withApiRoute, ApiContext } from '@/lib/api-route';
-
-type GameStateRecordShape = {
-  currentState: GameState;
-};
-
-interface TransferBuyRequest {
-  userId: string;
-  player: Player;
-  sellValue?: number;
-}
+import { transferBuyRequestSchema } from '@/lib/validations';
+import { loadSave, commitSave, saveConflictResponse } from '@/lib/save-store';
 
 export const POST = withApiRoute('transfer-buy', async (
   request: NextRequest,
-  { log, readJson }: ApiContext
+  { log, readBody }: ApiContext
 ) => {
   try {
     const authError = await requireAuth();
@@ -27,27 +16,33 @@ export const POST = withApiRoute('transfer-buy', async (
 
     const sessionUserId = await getAuthenticatedUser();
 
-    const bodyResult = await readJson<TransferBuyRequest>();
+    const bodyResult = await readBody(transferBuyRequestSchema);
     if (!bodyResult.ok) {
       return bodyResult.response;
     }
-    const requestBody = bodyResult.body;
 
-    const { userId, player, sellValue } = requestBody;
+    const { userId, player, sellValue } = bodyResult.body;
 
     if (sessionUserId && userId !== sessionUserId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const gameStateRecord = await db.query.gameStates.findFirst({
-      where: eq(gameStates.userId, userId),
-    });
+    // Read and write the session's own save, not the id the body named. The
+    // check above already makes them equal; working off the session id means
+    // the safety does not depend on that check staying correct.
+    const targetUserId = sessionUserId || userId;
 
-    if (!gameStateRecord) {
+    if (!targetUserId) {
+      return NextResponse.json({ error: 'User not identified' }, { status: 401 });
+    }
+
+    const save = await loadSave(targetUserId);
+
+    if (!save) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const gameState = (gameStateRecord as GameStateRecordShape).currentState;
+    const gameState = save.state;
     const playerValue = sellValue 
       ? Math.floor(sellValue * 0.5) 
       : calculatePlayerValue(player);
@@ -79,10 +74,17 @@ export const POST = withApiRoute('transfer-buy', async (
     
     gameState.squad.players.push(newPlayer);
 
-    await db
-      .update(gameStates)
-      .set({ currentState: gameState, updatedAt: new Date() })
-      .where(eq(gameStates.userId, userId));
+    // The funds check above was made against the save as it was read. If
+    // anything else wrote the save since (a sale, a match, another purchase)
+    // the money and the squad it was checked against are gone, so the write
+    // is refused rather than landing on top of them.
+    const committed = await commitSave(targetUserId, gameState, save.version);
+    if (!committed.ok) {
+      log.warn('Transfer purchase rejected: the save moved on while it was being processed', {
+        playerId: player.id,
+      });
+      return saveConflictResponse();
+    }
 
     return NextResponse.json({
       success: true,

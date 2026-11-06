@@ -2,10 +2,67 @@ import { GameState, Message } from './types';
 import { z } from 'zod';
 import { random, withSeed } from './rng';
 import type { Seed } from './validations';
+import { SEASON_LENGTH, isSeasonOver } from './constants';
+import { allowedActionsFor, filterSuggestions, suggestActions } from './assistant-actions';
+import { getLogger } from './request-context';
+import type { LogFields } from './logger';
+import { parseFailureFields } from './log-safe';
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
 const AI_MODEL = process.env.AI_MODEL || 'google/gemini-2.0-flash-001';
+/** How long a live model call may take before it is abandoned for the fallback. */
+const AI_TIMEOUT_MS = 8000;
+
+/**
+ * Identifier-shaped: an upstream error code, not prose. Anything longer or
+ * punctuated is treated as free text and dropped.
+ */
+const UPSTREAM_IDENTIFIER = /^[A-Za-z0-9_.:-]{1,64}$/;
+
+/** Keys of the conventional `{ error: { ... } }` upstream shape worth keeping. */
+const UPSTREAM_ERROR_KEYS = ['code', 'type', 'param'] as const;
+
+/**
+ * What may be recorded from an upstream error body.
+ *
+ * The body belongs to the provider, not to us, so there is no bound on what
+ * it contains. Logging it verbatim was shown to copy our own system prompt —
+ * and with it the player's team, budget, morale and league position — into
+ * the log, and to copy the API key itself when the far end reflects the
+ * Authorization header back. So the free text is dropped and only the
+ * provider's machine-readable identifiers survive, each one checked to be
+ * identifier-shaped and never to contain the key. The status and the body's
+ * size are what actually distinguish one upstream failure from another.
+ */
+function upstreamErrorFields(status: number, body: string): LogFields {
+  const fields: LogFields = {
+    status,
+    bodyBytes: new TextEncoder().encode(body).byteLength,
+  };
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(body);
+  } catch {
+    // A body that is not JSON carries nothing we are willing to quote.
+    return fields;
+  }
+
+  const error = (parsed as { error?: unknown } | null)?.error;
+  if (error === null || typeof error !== 'object') return fields;
+
+  for (const key of UPSTREAM_ERROR_KEYS) {
+    const value = (error as Record<string, unknown>)[key];
+    if (typeof value !== 'string' || !UPSTREAM_IDENTIFIER.test(value)) continue;
+    // Belt and braces: an identifier-shaped value is still not worth the risk
+    // if it happens to carry the credential.
+    if (OPENROUTER_API_KEY && value.includes(OPENROUTER_API_KEY)) continue;
+    fields[`upstream${key[0].toUpperCase()}${key.slice(1)}`] = value;
+  }
+
+  return fields;
+}
 
 const AIResponseSchema = z.object({
   message: z.string(),
@@ -13,26 +70,45 @@ const AIResponseSchema = z.object({
   intent: z.string().optional()
 });
 
-interface AIResponse {
+/**
+ * Where a reply came from. `model` is the live model, `mock` the built-in
+ * assistant answering because that is the mode the game is in, and
+ * `fallback` the mock standing in for a live model that failed — the player
+ * is told about that last one rather than being handed canned text that
+ * looks like the real thing.
+ */
+export type AISource = 'model' | 'mock' | 'fallback';
+
+export interface AIResponse {
   content: string;
   actions: string[];
   intent: string;
   cost: number;
   latency: number;
+  source: AISource;
 }
 
 // System prompt generator
 function generateSystemPrompt(gameState: GameState): string {
+  const seasonOver = isSeasonOver(gameState.season);
+  // The fixture a finished save carries is the 'Temporada Completa'
+  // placeholder, so it is described as the end of the season rather than
+  // handed over as an opponent the model will happily talk up.
+  const fixture = seasonOver
+    ? `NONE. The season is over after ${SEASON_LENGTH} rounds. There is no next match, and no new season can be started yet. Do not invent or promise one.`
+    : `${gameState.season.nextMatch.opponent} (${gameState.season.nextMatch.isHome ? 'Home' : 'Away'}), round ${gameState.season.week} of ${SEASON_LENGTH}`;
+
   return `You are the narrator and game engine for "Fala Mestre!", a football management game.
   
 CURRENT GAME STATE:
 - User Team: ${gameState.user.team}
-- Season Week: ${gameState.season.week}
+- Season Week: ${gameState.season.week} of ${SEASON_LENGTH}${seasonOver ? ' (SEASON FINISHED)' : ''}
 - League Position: ${gameState.season.position}
-- Points: ${gameState.season.points}
-- Next Match: ${gameState.season.nextMatch.opponent} (${gameState.season.nextMatch.isHome ? 'Home' : 'Away'})
+- Points: ${gameState.season.points} (${gameState.season.wins}W ${gameState.season.draws}D ${gameState.season.losses}L)
+- Next Match: ${fixture}
+- Budget: R$ ${gameState.user.money.toLocaleString('pt-BR')}
 - Squad Morale: ${gameState.squad.morale}%
-- Available Actions: ${gameState.context.availableActions.join(', ')}
+- Squad Size: ${gameState.squad.players.length}
 
 GAME RULES:
 1. Match results based on team strength + tactics + randomness
@@ -44,10 +120,20 @@ GAME RULES:
 RESPONSE GUIDELINES:
 - Use emojis for visual appeal
 - Keep responses concise but engaging (2-4 sentences)
-- Always provide 2-4 action options
+- Always provide 2-4 action options, taken ONLY from the ALLOWED ACTIONS list
+  below, using those exact keys. Never invent an action key, and never suggest
+  one that is not listed — the listed ones are the only screens the player can
+  reach from this chat right now
+- The suggestions must follow what you just said: suggest the squad after
+  talking about players, the market after talking about signings, and so on
+- Say only what the state above supports. If the season is finished, say so,
+  and talk about the campaign that ended instead of a next match
 - Include relevant stats when needed
 - Use Brazilian Portuguese
 - Be passionate and authentic
+
+ALLOWED ACTIONS (key — what it opens):
+${allowedActionsFor(gameState).map((a) => `- ${a.key} — ${a.label}`).join('\n')}
 
 TRACK THESE INTENTS FOR ANALYTICS:
 - playing_style (aggressive/defensive/balanced)
@@ -144,9 +230,11 @@ export async function callAI(
     { role: 'user', content: userMessage },
   ];
 
+  const log = getLogger('ai-service');
+
   // Create AbortController for timeout
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+  const timeoutId = setTimeout(() => controller.abort(), AI_TIMEOUT_MS);
 
   try {
     const response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
@@ -170,7 +258,7 @@ export async function callAI(
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('OpenRouter API error:', response.status, errorText);
+      log.error('OpenRouter API error', upstreamErrorFields(response.status, errorText));
       throw new Error(`AI API error: ${response.status}`);
     }
 
@@ -185,7 +273,15 @@ export async function callAI(
       const rawJson = JSON.parse(content);
       parsed = AIResponseSchema.parse(rawJson);
     } catch (error) {
-      console.warn('Failed to parse or validate AI JSON response, falling back:', error);
+      // Not the error object: a JSON.parse SyntaxError quotes the first bytes
+      // of the reply in its message, and the reply is the model talking back
+      // about whatever the player asked. What is worth knowing is which of the
+      // two checks failed and, for the schema, where — the field names are
+      // ours, not the model's.
+      log.warn(
+        'AI reply was not usable, falling back to its raw text',
+        parseFailureFields(error, content)
+      );
       // Fallback logic
       parsed = {
         message: content, // use the raw text content as message
@@ -197,12 +293,17 @@ export async function callAI(
     const latency = Date.now() - startTime;
     const cost = (data.usage?.total_tokens || 0) * 0.000001; // Rough estimate
 
+    const intent = parsed.intent || classifyIntent(userMessage, gameState);
+
     return {
       content: parsed.message,
-      actions: parsed.actions || [],
-      intent: parsed.intent || classifyIntent(userMessage, gameState),
+      // The model picks its own suggestions; only the ones this save can act
+      // on survive, and if none do it gets the ones the intent implies.
+      actions: filterSuggestions(gameState, intent, parsed.actions),
+      intent,
       cost,
       latency,
+      source: 'model',
     };
   } catch (error) {
     clearTimeout(timeoutId);
@@ -212,15 +313,19 @@ export async function callAI(
 
     if (error instanceof Error) {
       if (error.name === 'AbortError') {
-        console.warn('AI call timed out after 8 seconds');
+        log.warn('AI call timed out', { timeoutMs: AI_TIMEOUT_MS });
       } else {
-        console.error('AI call failed:', error.message);
+        log.error('AI call failed', { error });
       }
     }
 
     // Generate contextual fallback response based on intent
+    const seasonOver = isSeasonOver(gameState.season);
     let fallbackMessage = '';
-    switch (intent) {
+    switch (seasonOver && intent === 'play_match' ? 'season_over' : intent) {
+      case 'season_over':
+        fallbackMessage = `🏁 A temporada do ${gameState.user.team} acabou: ${gameState.season.points} pontos e ${gameState.season.position}º lugar. Não há mais jogos nesta liga. Quer rever a campanha?`;
+        break;
       case 'play_match':
         fallbackMessage = `⚽ Vamos jogar! O ${gameState.user.team} está pronto para o confronto contra ${gameState.season.nextMatch.opponent}. O que você decide fazer?`;
         break;
@@ -236,10 +341,12 @@ export async function callAI(
 
     return {
       content: fallbackMessage,
-      actions: gameState.context.availableActions,
+      actions: suggestActions(gameState, seasonOver ? 'season_over' : intent),
       intent,
       cost: 0,
       latency,
+      // The live model did not answer this one.
+      source: 'fallback',
     };
   }
 }
@@ -257,7 +364,15 @@ export async function callAIMock(
   seed?: Seed
 ): Promise<AIResponse> {
   const startTime = Date.now();
-  const intent = classifyIntent(userMessage, gameState);
+  const classified = classifyIntent(userMessage, gameState);
+
+  // A finished season has no fixture: `season.nextMatch` holds the
+  // 'Temporada Completa' placeholder. Anything the player asks about the
+  // next game is answered as the end of the campaign instead, because the
+  // alternative is the assistant pitching a match against a placeholder.
+  const seasonOver = isSeasonOver(gameState.season);
+  const ABOUT_NEXT_MATCH = ['play_match', 'next_opponent', 'tactics'];
+  const intent = seasonOver && ABOUT_NEXT_MATCH.includes(classified) ? 'season_over' : classified;
 
   // Calculate squad statistics
   const avgRating = gameState.squad.players.length > 0
@@ -266,9 +381,20 @@ export async function callAIMock(
   const bestPlayers = gameState.squad.players.slice(0, 3).map(p => p.name).join(', ');
   const starPlayer = gameState.squad.players[0]?.name || 'seu capitão';
 
+  const record = `${gameState.season.wins}V ${gameState.season.draws}E ${gameState.season.losses}D`;
+
   // Response variants for each intent
   const responses: Record<string, string[]> = {
-    greeting: [
+    season_over: [
+      `🏁 Fim de temporada, Mestre! O ${gameState.user.team} fechou a Liga Mestre em ${gameState.season.position}º lugar, com ${gameState.season.points} pontos em ${SEASON_LENGTH} rodadas (${record}). Não há mais partidas nesta temporada. Quer rever a campanha?`,
+      `🏆 A temporada acabou. Foram ${SEASON_LENGTH} rodadas e o ${gameState.user.team} terminou na ${gameState.season.position}ª posição com ${gameState.season.points} pontos (${record}). Sem jogos à frente por ora — bom momento para olhar o elenco e o mercado.`,
+    ],
+    greeting: seasonOver
+      ? [
+          `⚽ Olá, Mestre! A temporada do ${gameState.user.team} está encerrada: ${gameState.season.position}º lugar com ${gameState.season.points} pontos. Como posso ajudar?`,
+          `👋 Saudações, treinador! Campanha concluída (${record}) e nenhum jogo marcado. Quer analisar o elenco?`,
+        ]
+      : [
       `⚽ Olá, Mestre! Bem-vindo ao comando do ${gameState.user.team}! Estamos na ${gameState.season.week}ª rodada e ocupamos a ${gameState.season.position}ª posição. Como posso ajudar hoje?`,
       `👋 Saudações, treinador! O ${gameState.user.team} aguarda suas ordens. Atualmente temos ${gameState.season.points} pontos no campeonato. O que deseja fazer?`,
       `🔥 E aí, Mestre! Pronto para mais uma jornada com o ${gameState.user.team}? Estamos ${gameState.season.nextMatch.isHome ? 'em casa' : 'fora'} contra o ${gameState.season.nextMatch.opponent} na próxima partida!`,
@@ -297,12 +423,20 @@ transfer_market: [
       `💪 Hora de suar! Com ${gameState.squad.morale}% de moral, um treino focado pode fazer toda a diferença. Qual aspecto quer aprimorar?`,
     ],
     next_opponent: [
-      `🔍 Análise do próximo adversário: ${gameState.season.nextMatch.opponent}\n• Local: ${gameState.season.nextMatch.isHome ? 'Em casa (vantagem)' : 'Fora (desafio maior)'}\n• Competição: ${gameState.season.nextMatch.competition}\n• Semana: ${gameState.season.week} de 38\n\nQuer ver mais detalhes ou preparar a estratégia?`,
+      `🔍 Análise do próximo adversário: ${gameState.season.nextMatch.opponent}\n• Local: ${gameState.season.nextMatch.isHome ? 'Em casa (vantagem)' : 'Fora (desafio maior)'}\n• Competição: ${gameState.season.nextMatch.competition}\n• Semana: ${gameState.season.week} de ${SEASON_LENGTH}\n\nQuer ver mais detalhes ou preparar a estratégia?`,
     ],
-    standings: [
-      `📊 Situação no championship:\n• Posição: ${gameState.season.position}º lugar\n• Pontos: ${gameState.season.points}\n• Rodada: ${gameState.season.week}/38\n• Próximo: ${gameState.season.nextMatch.opponent}\n\nEstamos ${gameState.season.position <= 6 ? 'na briga pelo título!' : 'precisando subir na tabela.'}`,
+    standings: seasonOver
+      ? [
+          `📊 Classificação final:\n• Posição: ${gameState.season.position}º lugar\n• Pontos: ${gameState.season.points}\n• Campanha: ${record} em ${SEASON_LENGTH} rodadas\n\nTemporada encerrada — ${gameState.season.position <= 6 ? 'campanha de respeito!' : 'há o que melhorar para a próxima.'}`,
+        ]
+      : [
+      `📊 Situação no campeonato:\n• Posição: ${gameState.season.position}º lugar\n• Pontos: ${gameState.season.points}\n• Rodada: ${gameState.season.week}/${SEASON_LENGTH}\n• Próximo: ${gameState.season.nextMatch.opponent}\n\nEstamos ${gameState.season.position <= 6 ? 'na briga pelo título!' : 'precisando subir na tabela.'}`,
     ],
-    match_result: [
+    match_result: seasonOver
+      ? [
+          `⚽ Foi a última da temporada! O ${gameState.user.team} fecha a campanha em ${gameState.season.position}º com ${gameState.season.points} pontos (${record}). Agora é balanço: quer rever a classificação final?`,
+        ]
+      : [
       `⚽ Que partida! O ${gameState.user.team} mostrou garra e determinação. Agora é hora de analisar o que funcionou e o que precisamos melhorar para o próximo confronto!\n\nVamos conversar sobre os próximos passos?`,
       `🏆 ${gameState.user.team} deu Show hoje! A torcida aplaudiu de pé. Agora é hora de recuperar os jogadores e pensar na próxima batalha!\n\nO que você quer fazer agora, Mestre?`,
       `💪 ${gameState.user.team} deixou tudo em campo! Mesmo com o resultado, o time mostrou personalidade. Agora é hora de trabalhar nos pontos fracos.\n\nVamos analisar o elenco ou partir para o mercado?`,
@@ -319,7 +453,12 @@ transfer_market: [
     spending_aggressive: [
       `💸 Modo investidor ligado! Vamos buscar estrelas para o ${gameState.user.team}. Com R$ ${gameState.user.money.toLocaleString()}, podemos montar um time de peso. Quem você quer contratar?`,
     ],
-    general_chat: [
+    general_chat: seasonOver
+      ? [
+          `🤔 Entendido! A temporada do ${gameState.user.team} terminou em ${gameState.season.position}º com ${gameState.season.points} pontos, e temos R$ ${gameState.user.money.toLocaleString()} em caixa. O que você precisa?`,
+          `👔 Às suas ordens, Mestre! Sem jogos no calendário por enquanto — dá para cuidar do elenco com calma. O que fazer?`,
+        ]
+      : [
       `🤔 Entendido! Estou aqui para ajudar o ${gameState.user.team} a conquistar a glória. Temos ${gameState.season.points} pontos na tabela e R$ ${gameState.user.money.toLocaleString()} na conta. O que você precisa?`,
       `⚽ Pode contar comigo, Mestre! O ${gameState.user.team} está na ${gameState.season.position}ª posição. Como posso ajudar você hoje?`,
       `👔 Às suas ordens! O time está ${gameState.squad.morale > 70 ? 'motivado' : 'precisando de um empurrão'}. Temos um jogo importante contra o ${gameState.season.nextMatch.opponent}. O que fazer?`,
@@ -339,9 +478,10 @@ transfer_market: [
 
   return {
     content: message,
-    actions: gameState.context.availableActions,
+    actions: suggestActions(gameState, intent),
     intent,
     cost: 0,
     latency: Date.now() - startTime,
+    source: 'mock',
   };
 }

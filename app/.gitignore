@@ -40,3 +40,14 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 !.env.example
+
+# embedded local database (used when DATABASE_URL is unset)
+/.data/
+
+# playwright output
+/test-results/
+/playwright-report/
+.migration-check-*
+
+# bundle the repair tool runs from (scripts/repair-betting.mjs)
+.repair/

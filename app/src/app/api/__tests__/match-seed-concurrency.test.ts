@@ -84,16 +84,36 @@ vi.mock('@/db', () => ({
     },
     update: () => ({
       set: () => ({
-        where: async () => {
-          // The write lands after the seeded block; yielding here gives the
-          // other in-flight handlers another chance to interleave.
-          await new Promise((resolve) => setTimeout(resolve, 5));
-          return { rows: [] };
-        },
+        where: () => ({
+          returning: async () => {
+            // The write lands after the seeded block; yielding here gives the
+            // other in-flight handlers another chance to interleave. Every
+            // write wins here: this file is about the seed, not the race.
+            await new Promise((resolve) => setTimeout(resolve, 5));
+            return [{ version: 2 }];
+          },
+        }),
       }),
     }),
   },
 }));
+
+// A fixture is played under the seed its kickoff drew (fixture-kickoff.ts),
+// one seed per player and round. The kickoff writes to tables this mocked
+// database does not have; the fake keeps its contract in memory and lets
+// these tests name the seed. Requests overlapping under different seeds are
+// therefore different players' fixtures (the mocked save is the same for
+// any id), each kicked off under its own seed.
+vi.mock('@/lib/fixture-kickoff', async () => (await import('@/test/fake-kickoff')).fakeKickoffModule);
+
+import { resetFakeKickoffs, seedFixtureFor } from '@/test/fake-kickoff';
+
+/** A player whose fixture kicks off under `seed`, for route `route`. */
+function playerFor(seed: string, route = 'any'): string {
+  const userId = `user_${route}_${seed}`;
+  seedFixtureFor(userId, seed);
+  return userId;
+}
 
 import { POST as matchPOST } from '../match/route';
 import { POST as decidePOST } from '../match/decide/route';
@@ -147,6 +167,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  resetFakeKickoffs();
   barrier.setSize(1);
   vi.unstubAllEnvs();
   vi.restoreAllMocks();
@@ -158,14 +179,14 @@ describe('overlapping requests with different seeds', () => {
     barrier.setSize(1);
     const solo = new Map<string, unknown>();
     for (const seed of SEEDS) {
-      const response = await matchPOST(post('http://localhost/api/match', { userId: USER_ID, seed }));
+      const response = await matchPOST(post('http://localhost/api/match', { userId: playerFor(seed), seed }));
       solo.set(seed, stripIdentity(await response.json()));
     }
 
     // Now the same seeds in flight together, all parked at the database await.
     barrier.setSize(SEEDS.length);
     const responses = await Promise.all(
-      SEEDS.map((seed) => matchPOST(post('http://localhost/api/match', { userId: USER_ID, seed })))
+      SEEDS.map((seed) => matchPOST(post('http://localhost/api/match', { userId: playerFor(seed), seed })))
     );
     const concurrent = await Promise.all(responses.map((r) => r.json()));
 
@@ -184,13 +205,13 @@ describe('overlapping requests with different seeds', () => {
     barrier.setSize(1);
     const soloNarration = new Map<string, string>();
     for (const seed of SEEDS) {
-      const response = await matchPOST(post('http://localhost/api/match', { userId: USER_ID, seed }));
+      const response = await matchPOST(post('http://localhost/api/match', { userId: playerFor(seed), seed }));
       soloNarration.set(seed, (await response.json()).narration);
     }
 
     barrier.setSize(SEEDS.length);
     const responses = await Promise.all(
-      SEEDS.map((seed) => matchPOST(post('http://localhost/api/match', { userId: USER_ID, seed })))
+      SEEDS.map((seed) => matchPOST(post('http://localhost/api/match', { userId: playerFor(seed), seed })))
     );
     const bodies = await Promise.all(responses.map((r) => r.json()));
 
@@ -201,17 +222,17 @@ describe('overlapping requests with different seeds', () => {
 
   it('match: an unseeded request in the batch does not disturb the seeded ones', async () => {
     barrier.setSize(1);
-    const response = await matchPOST(post('http://localhost/api/match', { userId: USER_ID, seed: 'alpha' }));
+    const response = await matchPOST(post('http://localhost/api/match', { userId: playerFor('alpha'), seed: 'alpha' }));
     const soloAlpha = stripIdentity(await response.json());
 
     // Three unseeded matches alongside one seeded match: the unseeded ones
     // draw from Math.random while the seeded one holds its scope.
     barrier.setSize(4);
     const [seeded, ...unseeded] = await Promise.all([
-      matchPOST(post('http://localhost/api/match', { userId: USER_ID, seed: 'alpha' })),
-      matchPOST(post('http://localhost/api/match', { userId: USER_ID })),
-      matchPOST(post('http://localhost/api/match', { userId: USER_ID })),
-      matchPOST(post('http://localhost/api/match', { userId: USER_ID })),
+      matchPOST(post('http://localhost/api/match', { userId: playerFor('alpha'), seed: 'alpha' })),
+      matchPOST(post('http://localhost/api/match', { userId: `user_unseeded_1` })),
+      matchPOST(post('http://localhost/api/match', { userId: `user_unseeded_2` })),
+      matchPOST(post('http://localhost/api/match', { userId: `user_unseeded_3` })),
     ]);
 
     const seededBody = await seeded.json();
@@ -224,7 +245,7 @@ describe('overlapping requests with different seeds', () => {
 
   it('decide: each concurrent response equals its solo run', async () => {
     const body = (seed: string) => ({
-      userId: USER_ID,
+      userId: playerFor(seed, 'decide'),
       turnNumber: 1,
       decision: null,
       priorState: {
@@ -255,7 +276,7 @@ describe('overlapping requests with different seeds', () => {
     const concurrent = await Promise.all(responses.map((r) => r.json()));
 
     SEEDS.forEach((seed, i) => {
-      expect(concurrent[i].seed).toBe(seed);
+      expect(concurrent[i].seed).toBeUndefined();
       expect(stripIdentity(concurrent[i])).toEqual(solo.get(seed));
     });
   }, 30_000);
@@ -276,14 +297,14 @@ describe('overlapping requests with different seeds', () => {
     barrier.setSize(1);
     const solo = new Map<string, unknown>();
     for (const seed of streamSeeds) {
-      const response = await streamPOST(post('http://localhost/api/match/stream', { userId: USER_ID, seed }));
+      const response = await streamPOST(post('http://localhost/api/match/stream', { userId: playerFor(seed), seed }));
       solo.set(seed, stripIdentity(await readStream(response)));
     }
 
     barrier.setSize(streamSeeds.length);
     const responses = await Promise.all(
       streamSeeds.map((seed) =>
-        streamPOST(post('http://localhost/api/match/stream', { userId: USER_ID, seed }))
+        streamPOST(post('http://localhost/api/match/stream', { userId: playerFor(seed), seed }))
       )
     );
     const concurrent = await Promise.all(responses.map(readStream));
@@ -296,7 +317,7 @@ describe('overlapping requests with different seeds', () => {
 
   it('all three routes overlapping at once keep their seeds apart', async () => {
     const decideBody = {
-      userId: USER_ID,
+      userId: playerFor('mixed', 'decide'),
       turnNumber: 1,
       decision: null,
       priorState: {
@@ -315,7 +336,7 @@ describe('overlapping requests with different seeds', () => {
 
     barrier.setSize(1);
     const soloMatch = stripIdentity(
-      await (await matchPOST(post('http://localhost/api/match', { userId: USER_ID, seed: 'mixed' }))).json()
+      await (await matchPOST(post('http://localhost/api/match', { userId: playerFor('mixed', 'match'), seed: 'mixed' }))).json()
     );
     const soloDecide = stripIdentity(
       await (await decidePOST(post('http://localhost/api/match/decide', decideBody))).json()
@@ -325,9 +346,9 @@ describe('overlapping requests with different seeds', () => {
     // its own, so none of them should shift.
     barrier.setSize(3);
     const [matchRes, decideRes, streamRes] = await Promise.all([
-      matchPOST(post('http://localhost/api/match', { userId: USER_ID, seed: 'mixed' })),
+      matchPOST(post('http://localhost/api/match', { userId: playerFor('mixed', 'match'), seed: 'mixed' })),
       decidePOST(post('http://localhost/api/match/decide', decideBody)),
-      streamPOST(post('http://localhost/api/match/stream', { userId: USER_ID, seed: 'mixed' })),
+      streamPOST(post('http://localhost/api/match/stream', { userId: playerFor('mixed', 'stream'), seed: 'mixed' })),
     ]);
 
     expect(stripIdentity(await matchRes.json())).toEqual(soloMatch);

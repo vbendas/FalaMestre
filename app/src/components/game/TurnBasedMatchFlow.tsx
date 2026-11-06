@@ -6,51 +6,35 @@ import {
   MatchEvent,
   DecisionTurn,
   DecisionOption,
-  TurnMentality,
-  Player,
 } from '@/lib/types';
-import { DECISION_TURNS } from '@/lib/constants';
-import { buildDecisionTurn } from '@/lib/decision-engine';
 import { getTeamData } from '@/lib/team-data';
+import {
+  MatchSettlement,
+  useTurnBasedMatch,
+  turnMinutes,
+} from '@/hooks/useTurnBasedMatch';
 import { MatchSimulation } from './MatchSimulation';
 import { HighlightOverlay } from './HighlightOverlay';
 import { DecisionPrompt } from './DecisionPrompt';
 import { TurnSummary } from './TurnSummary';
 
-interface PriorState {
-  homeScore: number;
-  awayScore: number;
-  homeMomentum: number;
-  awayMomentum: number;
-  tension: number;
-  formation: string;
-  mentality: TurnMentality;
-  hasRedCard: boolean;
-  squad: Player[];
-}
-
-interface DecideResponse {
-  events: MatchEvent[];
-  segmentSummary: string;
-  turnPrompt: string;
-  nextTurn: DecisionTurn | null;
-  endState: PriorState;
-  turnResult: unknown;
-}
-
-type Phase = 'loading' | 'segment_playback' | 'turn_summary' | 'decision_prompt' | 'match_end';
+type Phase =
+  | 'decision_prompt'
+  | 'loading'
+  | 'segment_playback'
+  | 'turn_summary'
+  | 'finalizing'
+  | 'failed';
 
 interface TurnBasedMatchFlowProps {
   gameState: GameState;
-  onMatchEnd: (result: {
-    homeScore: number;
-    awayScore: number;
-    winner: string;
-    events: MatchEvent[];
-  }) => void;
+  /** Called once the server has had its say on the match. */
+  onMatchEnd: (settlement: MatchSettlement) => void;
+  /** The player leaving a match that did not count, after being told so. */
+  onAbandon: () => void;
 }
 
-export function TurnBasedMatchFlow({ gameState, onMatchEnd }: TurnBasedMatchFlowProps) {
+export function TurnBasedMatchFlow({ gameState, onMatchEnd, onAbandon }: TurnBasedMatchFlowProps) {
   const { user, season } = gameState;
   const match = season.nextMatch;
   const isHome = match.isHome;
@@ -60,14 +44,20 @@ export function TurnBasedMatchFlow({ gameState, onMatchEnd }: TurnBasedMatchFlow
   const homeTeamData = getTeamData(homeTeam);
   const awayTeamData = getTeamData(awayTeam);
 
+  const { firstTurn, submitTurn, finalizeMatch, totalTurns } = useTurnBasedMatch(gameState);
+
   const [phase, setPhase] = useState<Phase>('decision_prompt');
+  // The turn whose prompt is on screen, and the turn whose segment was last
+  // played. They differ by one while a summary is up, and the match now starts
+  // at turn 0 so the opening fifteen minutes are played like any other segment.
   const [currentTurnNumber, setCurrentTurnNumber] = useState(0);
-  const [priorState, setPriorState] = useState<PriorState | null>(null);
-  const [currentTurn, setCurrentTurn] = useState<DecisionTurn | null>(null);
+  const [playedTurnNumber, setPlayedTurnNumber] = useState(0);
+  const [currentTurn, setCurrentTurn] = useState<DecisionTurn | null>(firstTurn);
   const [turnPrompt, setTurnPrompt] = useState('');
   const [segmentSummary, setSegmentSummary] = useState('');
   const [segmentEvents, setSegmentEvents] = useState<MatchEvent[]>([]);
-  const [allEvents, setAllEvents] = useState<MatchEvent[]>([]);
+  const [scoreAfterSegment, setScoreAfterSegment] = useState({ home: 0, away: 0 });
+  const [failure, setFailure] = useState<{ message: string; canRetry: boolean } | null>(null);
 
   const [playbackMinute, setPlaybackMinute] = useState(0);
   const [playbackHomeScore, setPlaybackHomeScore] = useState(0);
@@ -79,51 +69,13 @@ export function TurnBasedMatchFlow({ gameState, onMatchEnd }: TurnBasedMatchFlow
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isMountedRef = useRef(true);
 
-  const buildInitialPriorState = useCallback((): PriorState => {
-    return {
-      homeScore: 0,
-      awayScore: 0,
-      homeMomentum: 0,
-      awayMomentum: 0,
-      tension: 30,
-      formation: gameState.squad.formation || '4-3-3',
-      mentality: 'balanced',
-      hasRedCard: false,
-      squad: [...gameState.squad.players],
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [gameState]);
-
-  // Build first decision client-side — no API call, no loading
-  const buildFirstDecision = useCallback((): DecisionTurn => {
-    const state = buildInitialPriorState();
-    return buildDecisionTurn(
-      0,
-      state.homeScore,
-      state.awayScore,
-      state.squad,
-      state.formation,
-      state.mentality,
-      state.hasRedCard,
-    );
-  }, [buildInitialPriorState]);
-
-  const callDecideAPI = useCallback(
-    async (turnNumber: number, decision: DecisionOption | null, state: PriorState): Promise<DecideResponse> => {
-      const response = await fetch('/api/match/decide', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user.id || 'anonymous',
-          turnNumber,
-          decision,
-          priorState: state,
-        }),
-      });
-      if (!response.ok) throw new Error(`Decide API error: ${response.status}`);
-      return response.json();
-    },
-    [user.id],
-  );
+  }, []);
 
   const playSegmentAnimation = useCallback(
     (events: MatchEvent[], fromMinute: number, toMinute: number) => {
@@ -190,53 +142,77 @@ export function TurnBasedMatchFlow({ gameState, onMatchEnd }: TurnBasedMatchFlow
     [],
   );
 
-  // Handle user decision → simulate segment with decision applied
+  /**
+   * Asks the server to bank the match and reports what it said. Shared by the
+   * final whistle and the retry button, so a retry goes through exactly the
+   * same path — the same seed, the same decisions — as the first attempt.
+   */
+  const settleMatch = useCallback(async () => {
+    setPhase('finalizing');
+    const settlement = await finalizeMatch();
+    if (!isMountedRef.current) return;
+
+    if (settlement.status === 'rejected') {
+      setFailure({ message: settlement.error, canRetry: settlement.retryable });
+      setPhase('failed');
+    }
+    onMatchEnd(settlement);
+  }, [finalizeMatch, onMatchEnd]);
+
+  // The player's decision for the turn on screen, or null when the timer ran
+  // out. Either way the turn it belongs to is the one being prompted — the
+  // segment it decides is that turn's own, not the next one's.
   const handleDecision = useCallback(
-    async (option: DecisionOption) => {
-      if (!priorState) return;
+    async (option: DecisionOption | null) => {
+      const turnNumber = currentTurnNumber;
 
       try {
         setPhase('loading');
-        const nextTurn = currentTurnNumber + 1;
-        const data = await callDecideAPI(nextTurn, option, priorState);
+        const segment = await submitTurn(turnNumber, option);
         if (!isMountedRef.current) return;
 
-        setCurrentTurnNumber(nextTurn);
-        setPriorState(data.endState);
-        setAllEvents((prev) => [...prev, ...data.events]);
-        setSegmentEvents(data.events);
-        setSegmentSummary(data.segmentSummary);
-        setTurnPrompt(data.turnPrompt);
-        setCurrentTurn(data.nextTurn);
+        setPlayedTurnNumber(turnNumber);
+        setSegmentEvents(segment.events);
+        setSegmentSummary(segment.segmentSummary);
+        setTurnPrompt(segment.turnPrompt);
+        setCurrentTurn(segment.nextTurn);
+        setScoreAfterSegment({
+          home: segment.endState.homeScore,
+          away: segment.endState.awayScore,
+        });
+        if (segment.nextTurn) {
+          setCurrentTurnNumber(turnNumber + 1);
+        }
 
-        // Play segment animation
-        const fromMinute = DECISION_TURNS[nextTurn].minute;
-        const toMinute = nextTurn < DECISION_TURNS.length - 1 ? DECISION_TURNS[nextTurn + 1].minute : 90;
-
-        if (data.events.length > 0) {
+        if (segment.events.length > 0) {
           setPhase('segment_playback');
-          await playSegmentAnimation(data.events, fromMinute, toMinute);
+          await playSegmentAnimation(segment.events, segment.fromMinute, segment.toMinute);
           if (!isMountedRef.current) return;
         }
 
-        if (data.nextTurn) {
+        if (segment.nextTurn) {
           setPhase('turn_summary');
-        } else {
-          // Last turn — match over
-          const homeScore = data.endState.homeScore;
-          const awayScore = data.endState.awayScore;
-          const winner = homeScore > awayScore ? 'home' : awayScore > homeScore ? 'away' : 'draw';
-          setPhase('match_end');
-          setAllEvents((prev) => {
-            onMatchEnd({ homeScore, awayScore, winner, events: prev });
-            return prev;
-          });
+          return;
         }
+
+        // Full time. The match only counts once the server has replayed it,
+        // so the screen waits here rather than showing a result.
+        await settleMatch();
       } catch (err) {
+        // A turn that never came back: the match cannot be finished, and
+        // nothing was written, so there is nothing to retry — the player
+        // plays the week again from the start.
         console.error('[TurnBasedMatchFlow] handleDecision error:', err);
+        if (!isMountedRef.current) return;
+        setFailure({
+          message:
+            'A partida foi interrompida e não contou. Verifique sua conexão e jogue novamente.',
+          canRetry: false,
+        });
+        setPhase('failed');
       }
     },
-    [priorState, currentTurnNumber, callDecideAPI, playSegmentAnimation, onMatchEnd],
+    [currentTurnNumber, submitTurn, playSegmentAnimation, settleMatch],
   );
 
   const handleSummaryContinue = useCallback(() => {
@@ -246,29 +222,49 @@ export function TurnBasedMatchFlow({ gameState, onMatchEnd }: TurnBasedMatchFlow
   }, [currentTurn]);
 
   const handleTimeout = useCallback(() => {
-    if (!priorState || !currentTurn) return;
-    handleDecision(currentTurn.defaultOption);
-  }, [priorState, currentTurn, handleDecision]);
+    // A timeout is a real decision: the server resolves the same
+    // context-aware default, and finalize replays it from a null id.
+    handleDecision(null);
+  }, [handleDecision]);
 
-  // Initial mount — build first decision client-side, show immediately
-  useEffect(() => {
-    isMountedRef.current = true;
-    const initialState = buildInitialPriorState();
-    setPriorState(initialState);
-    setCurrentTurn(buildFirstDecision());
-
-    return () => {
-      isMountedRef.current = false;
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Show loading only for API calls (not initial)
-  if (phase === 'loading') {
+  if (phase === 'loading' || phase === 'finalizing') {
     return (
       <div className="flex flex-col items-center justify-center py-20 space-y-6">
         <div className="animate-spin text-6xl">⚽</div>
-        <div className="text-xl font-bold text-white font-[family-name:var(--font-retro)]">Processando...</div>
+        <div className="text-xl font-bold text-white font-[family-name:var(--font-retro)]">
+          {phase === 'finalizing' ? 'Encerrando a partida...' : 'Processando...'}
+        </div>
+      </div>
+    );
+  }
+
+  if (phase === 'failed') {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 space-y-6 px-6">
+        <div className="text-6xl">⚠️</div>
+        <div className="text-xl font-bold text-[#FF3333] font-[family-name:var(--font-retro)] text-center">
+          A partida não contou
+        </div>
+        <p className="text-white/70 text-center text-sm max-w-md">{failure?.message}</p>
+        <div className="flex items-center gap-3">
+          {/* Retrying sends the same match again — same seed, same decisions —
+              so the player does not replay 90 minutes over a dropped
+              connection. It is offered only where it could work. */}
+          {failure?.canRetry && (
+            <button
+              onClick={settleMatch}
+              className="px-6 py-3 rounded-sm bg-[#FFDF00]/20 hover:bg-[#FFDF00]/30 text-[#FFDF00] font-[family-name:var(--font-pixel)] text-xs transition-colors"
+            >
+              Tentar novamente
+            </button>
+          )}
+          <button
+            onClick={onAbandon}
+            className="px-6 py-3 rounded-sm bg-white/10 hover:bg-white/20 text-white font-[family-name:var(--font-pixel)] text-xs transition-colors"
+          >
+            Voltar
+          </button>
+        </div>
       </div>
     );
   }
@@ -301,27 +297,27 @@ export function TurnBasedMatchFlow({ gameState, onMatchEnd }: TurnBasedMatchFlow
         />
       )}
 
-      {phase === 'turn_summary' && priorState && (
+      {phase === 'turn_summary' && (
         <TurnSummary
           segment={{
-            fromMinute: DECISION_TURNS[currentTurnNumber].minute,
-            toMinute:
-              currentTurnNumber < DECISION_TURNS.length - 1
-                ? DECISION_TURNS[currentTurnNumber + 1].minute
-                : 90,
+            ...turnMinutes(playedTurnNumber),
             events: segmentEvents,
-            homeScoreAtStart: priorState.homeScore - segmentEvents.filter((e) => e.type === 'goal' && e.team === 'home').length,
-            awayScoreAtStart: priorState.awayScore - segmentEvents.filter((e) => e.type === 'goal' && e.team === 'away').length,
-            homeScoreAtEnd: priorState.homeScore,
-            awayScoreAtEnd: priorState.awayScore,
+            homeScoreAtStart:
+              scoreAfterSegment.home -
+              segmentEvents.filter((e) => e.type === 'goal' && e.team === 'home').length,
+            awayScoreAtStart:
+              scoreAfterSegment.away -
+              segmentEvents.filter((e) => e.type === 'goal' && e.team === 'away').length,
+            homeScoreAtEnd: scoreAfterSegment.home,
+            awayScoreAtEnd: scoreAfterSegment.away,
           }}
           homeTeam={homeTeam}
           awayTeam={awayTeam}
           homeColor={homeTeamData?.primaryColor || '#EF4444'}
           awayColor={awayTeamData?.primaryColor || '#3B82F6'}
           segmentSummary={segmentSummary}
-          turnNumber={currentTurnNumber}
-          totalTurns={DECISION_TURNS.length}
+          turnNumber={playedTurnNumber}
+          totalTurns={totalTurns}
           onContinue={handleSummaryContinue}
         />
       )}

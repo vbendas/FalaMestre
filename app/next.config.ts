@@ -33,6 +33,9 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // PGlite loads its WASM and data files from disk, so it must stay external
+  // to the server build.
+  serverExternalPackages: ['@electric-sql/pglite'],
   turbopack: {
     root: path.resolve(__dirname),
   },

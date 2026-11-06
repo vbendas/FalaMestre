@@ -6,18 +6,22 @@ import { useEffect } from 'react';
 import { CrtCabinet } from '@/components/crt/CrtCabinet';
 import { GlassCard } from '@/components/crt/GlassCard';
 import { CrtButton } from '@/components/crt/CrtButton';
+import { useAuthMode } from '@/hooks/useAuthMode';
 
 export default function LoginPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  // With auth disabled there is no OAuth set up to sign in against, so the
+  // button could only fail. A dev player goes straight back to the game.
+  const { authDisabled } = useAuthMode(status === 'unauthenticated');
 
   useEffect(() => {
-    if (session) {
+    if (session || authDisabled) {
       router.push('/');
     }
-  }, [session, router]);
+  }, [session, authDisabled, router]);
 
-  if (status === 'loading') {
+  if (status === 'loading' || authDisabled === null || authDisabled) {
     return (
       <CrtCabinet>
         <div className="w-full h-full flex items-center justify-center">

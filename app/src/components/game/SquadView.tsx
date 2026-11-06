@@ -9,23 +9,33 @@ import { PlayerDetailModal } from '@/components/squad/PlayerDetailModal';
 import { SquadStats } from '@/components/squad/SquadStats';
 import { FormationSelector } from '@/components/squad/FormationSelector';
 import { SquadViewSkeleton } from '@/components/ui/SkeletonLoader';
-import { ViewContainer, GlassCard, PositionBadge, CrtButton } from '@/components/crt';
+import { ViewContainer, GlassCard, PositionBadge, CrtButton, ActionNotice } from '@/components/crt';
+import { useGuardedAction } from '@/hooks/useGuardedAction';
 
 const MotionGlassCard = motion(GlassCard);
 
 interface SquadViewProps {
   gameState: GameState;
   onViewChange: (view: ViewType) => void;
-  onTrainPlayer?: (playerId: string, focus: 'technical' | 'physical' | 'tactical' | 'rest') => Promise<void>;
+  /** Sends a training request. The reply is read here, not by the caller. */
+  onTrainPlayer?: (playerId: string, focus: 'technical' | 'physical' | 'tactical' | 'rest') => Promise<Response>;
   userId?: string | null;
   isLoading?: boolean;
+  /** Reloads the save from the server. Called after every training and formation reply. */
+  onRefreshSave?: () => void | Promise<void>;
 }
 
-export function SquadView({ gameState, onViewChange, onTrainPlayer, userId, isLoading = false }: SquadViewProps) {
+export function SquadView({ gameState, onViewChange, onTrainPlayer, userId, isLoading = false, onRefreshSave }: SquadViewProps) {
   const { squad, season, user } = gameState;
 
-  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+  // The id, not a copy of the player: after a session the save is reloaded
+  // and the modal must show the player as they now are, not as they were
+  // when the card was pressed.
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
+  const selectedPlayer: Player | null = squad.players.find((p) => p.id === selectedPlayerId) ?? null;
   const [showFormationSelector, setShowFormationSelector] = useState(false);
+  const training = useGuardedAction(onRefreshSave);
+  const formation = useGuardedAction(onRefreshSave);
   const [captainId, setCaptainId] = useState<string | null>(null);
   // Formation picked in this view, kept locally until the next gameState refresh.
   const [pickedFormation, setPickedFormation] = useState<string | null>(null);
@@ -54,20 +64,21 @@ export function SquadView({ gameState, onViewChange, onTrainPlayer, userId, isLo
   };
 
   const handlePlayerSelect = (player: Player) => {
-    setSelectedPlayer(player);
+    training.dismiss();
+    setSelectedPlayerId(player.id);
   };
 
+  // A session that is refused (the save changed under it, the player is
+  // injured, the budget is spent) is reported in the modal and the save is
+  // reloaded; one that goes through reports what the route said happened.
   const handleTrain = async (playerId: string, focus: 'technical' | 'physical' | 'tactical' | 'rest') => {
-    if (onTrainPlayer) {
-      await onTrainPlayer(playerId, focus);
-    }
+    if (!onTrainPlayer) return;
+    await training.run<{ message?: string }>(() => onTrainPlayer(playerId, focus), {
+      successMessage: (body) => body.message ?? null,
+    });
   };
 
-  const handleRest = async (playerId: string) => {
-    if (onTrainPlayer) {
-      await onTrainPlayer(playerId, 'rest');
-    }
-  };
+  const handleRest = (playerId: string) => handleTrain(playerId, 'rest');
 
   const handleSetCaptain = (playerId: string) => {
     setCaptainId(playerId);
@@ -75,25 +86,26 @@ export function SquadView({ gameState, onViewChange, onTrainPlayer, userId, isLo
 
   const handleFormationChange = async (formationId: string) => {
     if (!userId) return;
-
-    try {
-      const response = await fetch('/api/squad/formation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, formation: formationId }),
-      });
-
-      if (response.ok) {
-        setPickedFormation(formationId);
-        setShowFormationSelector(false);
+    // A refused change leaves the formation as the reloaded save has it and
+    // says so above the squad; the selector closes either way, since it
+    // closes itself on a pick.
+    await formation.run(
+      () =>
+        fetch('/api/squad/formation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, formation: formationId }),
+        }),
+      {
+        onSuccess: () => setPickedFormation(formationId),
+        successMessage: () => `Formação alterada para ${formationId}.`,
       }
-    } catch (error) {
-      console.error('Formation change failed:', error);
-    }
+    );
   };
 
   return (
     <ViewContainer className="pb-20 gap-3">
+      <ActionNotice notice={formation.notice} onDismiss={formation.dismiss} pending={formation.pending} />
       <SquadStats
         gameState={displayedGameState}
         onFormationClick={() => setShowFormationSelector(true)}
@@ -147,12 +159,18 @@ export function SquadView({ gameState, onViewChange, onTrainPlayer, userId, isLo
       <PlayerDetailModal
         player={selectedPlayer}
         isOpen={!!selectedPlayer}
-        onClose={() => setSelectedPlayer(null)}
+        onClose={() => {
+          training.dismiss();
+          setSelectedPlayerId(null);
+        }}
         gameState={gameState}
         onTrain={handleTrain}
         onRest={handleRest}
         onSetCaptain={handleSetCaptain}
         isCaptain={selectedPlayer ? captainId === selectedPlayer.id : false}
+        trainingNotice={
+          <ActionNotice notice={training.notice} onDismiss={training.dismiss} pending={training.pending} />
+        }
       />
 
       <FormationSelector

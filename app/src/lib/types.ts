@@ -236,6 +236,20 @@ export interface GameState {
     draws: number;
     losses: number;
     nextMatch: Match;
+    /**
+     * The score of every round banked, home side first, keyed by round. It
+     * is written in the same commit as the match, so the result a market is
+     * settled against can never be lost between the bank and the settlement
+     * (see src/lib/market-settlement.ts). Absent on saves from before it.
+     */
+    results?: Record<string, { homeScore: number; awayScore: number }>;
+    /**
+     * Which season of the save this is, from 1. A fixture is a season and a
+     * round, since every season reuses rounds 1 to 38. Absent means 1: the
+     * game has no rollover yet, and whatever starts a new season bumps this
+     * and resets the week (see seasonNumber in src/lib/constants.ts).
+     */
+    number?: number;
   };
   squad: Squad;
   stadium: Stadium;
@@ -260,6 +274,18 @@ export interface Message {
   content: string;
   timestamp: Date;
   actions?: string[];
+  /**
+   * Who actually answered: the live model, the built-in mock, or the mock
+   * standing in for a live model that failed ('fallback'). Stored with the
+   * message so a reload still shows which replies were not the real thing.
+   */
+  source?: 'model' | 'mock' | 'fallback';
+  /**
+   * False when the route answered but could not write the exchange to the
+   * save, so this message only exists on screen. Absent on anything read
+   * back from the save, which is saved by definition.
+   */
+  persisted?: boolean;
 }
 
 export interface Conversation {
@@ -388,7 +414,7 @@ export type InvestmentOption = 'A' | 'B' | 'C';
 export interface FanClubInvestment {
   id: string;
   userId: string;
-  option: InvestmentOption;
+  option: StoredInvestmentOption;
   amount: number;
   startDate: string;
   unlockDate: string;
@@ -408,16 +434,19 @@ export interface InvestmentYield {
   claimed: boolean;
   claimedAt?: string;
   expiryDate: string;
+  /** The UTC day this yield pays for; unique per investment. Null on old rows. */
+  yieldDate?: string | null;
+  /** Lost to the claim window. Set by the expiry sweep, never paid out. */
+  expired?: boolean;
 }
 
-export interface InvestmentTier {
-  option: InvestmentOption;
-  amount: number;
-  lockPeriodDays: number;
-  yieldPerDay: number;
-  moraleBoost: number;
-  revenueBoostPerMatch: number;
-}
+/**
+ * What `fan_club_investments.option` holds: a product id from the catalogue in
+ * lib/investments.ts, or one of the legacy 'A'/'B'/'C' tiers for rows written
+ * before the catalogue existed. Stored rows carry their own amount, yield and
+ * dates, so an old one still reads and pays off the row.
+ */
+export type StoredInvestmentOption = string;
 
 // =====================================================
 // TOURNAMENT TICKET TYPES

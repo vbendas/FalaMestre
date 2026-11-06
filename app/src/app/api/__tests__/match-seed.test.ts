@@ -34,9 +34,28 @@ vi.mock('@/db', () => ({
         findFirst: vi.fn(async () => ({ currentState: structuredClone(fixtureState) })),
       },
     },
-    update: () => ({ set: () => ({ where: async () => ({ rows: [] }) }) }),
+    // The guarded write chains `.returning()` and needs a row back to count
+    // as having won; one row at version 2 says every write here wins.
+    update: () => ({ set: () => ({ where: () => ({ returning: async () => [{ version: 2 }] }) }) }),
   },
 }));
+
+// A fixture is played under the seed its kickoff drew (fixture-kickoff.ts),
+// never the one in the body; the kickoff writes to tables this mocked
+// database does not have. The fake keeps its contract in memory and lets
+// these tests name the seed: each helper below makes the seed in the body
+// the fixture's kickoff seed, so "same seed" here means "same fixture seed".
+// That the route ignores the body's own seed is tested against the real
+// database in fixture-seed-integrity.test.ts.
+vi.mock('@/lib/fixture-kickoff', async () => (await import('@/test/fake-kickoff')).fakeKickoffModule);
+
+import { resetFakeKickoffs, seedFixtureFor } from '@/test/fake-kickoff';
+
+/** Kicks the fixture off afresh under the body's seed, or a drawn one. */
+function kickoffUnder(seed: unknown) {
+  if (typeof seed === 'string' || typeof seed === 'number') seedFixtureFor(USER_ID, seed);
+  else resetFakeKickoffs();
+}
 
 import { POST as matchPOST } from '../match/route';
 import { POST as decidePOST } from '../match/decide/route';
@@ -121,6 +140,7 @@ describe('POST /api/match seed', () => {
   const URL = 'http://localhost/api/match';
 
   async function play(body: Record<string, unknown>) {
+    kickoffUnder(body.seed);
     const response = await matchPOST(post(URL, { userId: USER_ID, ...body }));
     return { status: response.status, json: await response.json() };
   }
@@ -141,7 +161,8 @@ describe('POST /api/match seed', () => {
     const first = await play({ seed: 42 });
     const second = await play({ seed: 42 });
 
-    expect(first.json.seed).toBe(42);
+    // Fixture seeds are strings; an integer names the same one as its digits.
+    expect(first.json.seed).toBe('42');
     expect(first.json.matchScript._enhanced.movements.length).toBeGreaterThan(0);
     expect(stripIdentity(first.json.matchScript)).toEqual(stripIdentity(second.json.matchScript));
     expect(first.json.nextMatch.opponent).toBe(second.json.nextMatch.opponent);
@@ -219,6 +240,7 @@ describe('POST /api/match/decide seed', () => {
   }
 
   async function decide(extra: Record<string, unknown>) {
+    kickoffUnder(extra.seed);
     const response = await decidePOST(post(URL, decisionBody(extra)));
     return { status: response.status, json: await response.json() };
   }
@@ -228,24 +250,18 @@ describe('POST /api/match/decide seed', () => {
     const second = await decide({ seed: 'turn-seed' });
 
     expect(first.status).toBe(200);
-    expect(first.json.seed).toBe('turn-seed');
-    expect(second.json.seed).toBe('turn-seed');
     expect(stripIdentity(first.json)).toEqual(stripIdentity(second.json));
   });
 
-  it('reports a drawn seed when none is sent, and that seed replays', async () => {
+  it('never reports a seed: a turn’s seed would name the fixture’s', async () => {
     const original = await decide({});
     expect(original.status).toBe(200);
-    expect(original.json.seed).toMatch(SEED_PATTERN);
-
-    const replay = await decide({ seed: original.json.seed });
-    expect(stripIdentity(replay.json)).toEqual(stripIdentity(original.json));
+    expect(original.json.seed).toBeUndefined();
   });
 
   it('accepts an integer seed', async () => {
-    const { status, json } = await decide({ seed: 7 });
+    const { status } = await decide({ seed: 7 });
     expect(status).toBe(200);
-    expect(json.seed).toBe(7);
   });
 
   it.each(BAD_SEEDS)('rejects $label as a seed with 400', async ({ seed }) => {
@@ -262,6 +278,7 @@ describe('POST /api/match/stream seed', () => {
 
   /** Reads the whole SSE body and parses each `data:` line. */
   async function streamAll(body: Record<string, unknown>) {
+    kickoffUnder(body.seed);
     const response = await streamPOST(post(URL, { userId: USER_ID, ...body }));
     if (response.status !== 200) {
       return { status: response.status, json: await response.json(), events: [] as Array<Record<string, unknown>> };

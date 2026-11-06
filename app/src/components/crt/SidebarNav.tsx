@@ -10,6 +10,7 @@ import { NotificationBadge } from './NotificationBadge';
 
 const NAV_ITEMS: { key: ViewType; icon: string; label: string }[] = [
   { key: 'dashboard', icon: '⚽', label: 'JOGO' },
+  { key: 'chat', icon: '💬', label: 'MESTRE' },
   { key: 'squad', icon: '👥', label: 'ELENCO' },
   { key: 'transfers', icon: '🏪', label: 'MERCADO' },
   { key: 'standings', icon: '🏆', label: 'LIGA' },

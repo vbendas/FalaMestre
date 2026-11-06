@@ -1,0 +1,94 @@
+# Proves the betting tests still catch what they are there to catch.
+#
+# app/scripts/break-guarantees.mjs breaks each betting and fixture guarantee
+# on purpose, in a copy of the code, and requires the suites covering it to
+# go red. A guarantee whose tests have gone quiet (or whose break no longer
+# applies because the code moved) fails this workflow with an annotation
+# naming it, and the job summary lists every guarantee and what caught it.
+#
+# Not on every push: the full set is seventeen breaks, each running up to
+# six database suites, around twenty minutes on a laptop and longer on a
+# runner, which is more than the main CI job. So it runs
+#   - nightly, on main;
+#   - on pull requests that touch the betting code or the tests that guard
+#     it (the paths below);
+#   - by hand, from the Actions tab, with an optional list of break names.
+# The seventeen are spread over four parallel jobs (`--shard`), so a run
+# takes about the time of its slowest break, not the sum.
+#
+# Nothing here reaches a real database or a real model: the suites run on the
+# embedded Postgres in a temporary directory with the assistant in mock mode,
+# and the job references no secrets.
+
+name: Betting guarantees
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+    inputs:
+      breaks:
+        description: "Break names to run, space-separated (default: all; see `npm run test:guarantees -- --list`)"
+        required: false
+        default: ""
+  pull_request:
+    paths:
+      - "app/src/lib/market-settlement.ts"
+      - "app/src/lib/fixture-markets.ts"
+      - "app/src/lib/fixture-kickoff.ts"
+      - "app/src/lib/betting-repair.ts"
+      - "app/src/lib/match-replay.ts"
+      - "app/src/lib/save-store.ts"
+      - "app/src/app/api/predictions/**"
+      - "app/src/app/api/match/**"
+      - "app/src/app/api/__tests__/fixture-*.test.ts"
+      - "app/src/app/api/__tests__/bet-money-integrity.test.ts"
+      - "app/src/app/api/__tests__/market-settlement.test.ts"
+      - "app/src/app/api/__tests__/save-version-concurrency.test.ts"
+      - "app/src/test/journey.ts"
+      - "app/scripts/break-guarantees.mjs"
+      - ".github/workflows/betting-guarantees.yml"
+
+jobs:
+  break-and-check:
+    name: "Break guarantees (shard ${{ matrix.shard }} of 4)"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    env:
+      DATABASE_URL: ""
+      OPENROUTER_API_KEY: ""
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # A named break list (manual run) goes to every shard unsharded, since
+      # the person asked for exactly those; otherwise each shard takes every
+      # fourth break. An uncaught guarantee is an `::error` annotation with
+      # its name and a row in the job summary.
+      - name: Break each guarantee and require the suite to go red
+        run: |
+          if [ -n "${{ github.event.inputs.breaks }}" ]; then
+            if [ "${{ matrix.shard }}" = "0" ]; then
+              node scripts/break-guarantees.mjs ${{ github.event.inputs.breaks }}
+            else
+              echo "Named breaks run on shard 0 only."
+            fi
+          else
+            node scripts/break-guarantees.mjs --shard=${{ matrix.shard }}/4
+          fi

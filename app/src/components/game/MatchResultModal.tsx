@@ -19,8 +19,15 @@ interface MatchResultModalProps {
   isOpen: boolean;
   result: MatchResult | null;
   gameState: GameState;
+  /** The league points the match earned, as the server counted them. */
   pointsEarned: number;
-  pointsChange: number;
+  /**
+   * The fixture this result belongs to. Needed because the save has already
+   * moved on to next week's game by the time a banked match is shown, and
+   * because `homeScore`/`awayScore` are home-relative: an away match has to
+   * put the player's team on the right side of the score.
+   */
+  fixture?: { opponent: string; isHome: boolean } | null;
   onClose: () => void;
 }
 
@@ -207,15 +214,21 @@ export function MatchResultModal({
   result,
   gameState,
   pointsEarned,
-  pointsChange,
+  fixture,
   onClose
 }: MatchResultModalProps) {
   if (!isOpen || !result) return null;
 
   const { user, season } = gameState;
 
-  const homeTeam = user.team;
-  const awayTeam = season.nextMatch.opponent;
+  // With a fixture, the teams are ordered the way the score is: the player's
+  // own side at home, the opponent's when they played away. Without one we
+  // fall back to the old assumption — the player at home against whatever the
+  // save says is next.
+  const opponent = fixture?.opponent ?? season.nextMatch.opponent;
+  const playedAtHome = fixture ? fixture.isHome : true;
+  const homeTeam = playedAtHome ? user.team : opponent;
+  const awayTeam = playedAtHome ? opponent : user.team;
   const homeScore = result.homeScore;
   const awayScore = result.awayScore;
 
@@ -403,7 +416,7 @@ export function MatchResultModal({
                       <span className="text-white/80 font-[family-name:var(--font-pixel)] text-xs">Pontos</span>
                     </div>
                     <div className="text-2xl font-bold gold-glow-text font-[family-name:var(--font-pixel)]">
-                      +{pointsChange}
+                      +{pointsEarned}
                     </div>
                   </div>
 

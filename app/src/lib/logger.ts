@@ -33,6 +33,161 @@ const REQUEST_ID_HEADER = 'x-request-id';
 /** Guards against unbounded recursion and cycles when serialising fields. */
 const MAX_FIELD_DEPTH = 6;
 
+/**
+ * The own properties an Error may carry into the log besides name, message,
+ * stack and cause.
+ *
+ * A foreign error attaches whatever its library finds convenient, and that
+ * was shown to be a leak: a Postgres error carries the failing statement as
+ * `query` and its bind values as `params` — for a save write, the player's
+ * entire game state, measured at 25KB on one line — plus row values in
+ * `detail`. So unknown properties are dropped, and these survive because they
+ * distinguish one failure from another without quoting anyone's data: they
+ * are identifiers from the schema and the standard error taxonomies, not
+ * payload.
+ *
+ * A dropped property is still *named* in `errorFieldsDropped` (names only,
+ * never values), so a field we attach to our own errors cannot vanish without
+ * a trace — the line says what it is not showing.
+ */
+const ERROR_FIELD_ALLOWLIST = [
+  'code',
+  'status',
+  'statusCode',
+  'severity',
+  'constraint',
+  'table',
+  'schema',
+  'routine',
+] as const;
+
+/** An allowlisted field is an identifier, so a long value is not one. */
+const MAX_ERROR_FIELD_LENGTH = 200;
+
+/** How many dropped-field names are worth listing. */
+const MAX_DROPPED_FIELDS = 20;
+
+/**
+ * The environment variables whose values are secrets, and only those: the
+ * scrub matches these values wherever they appear in a line, not every
+ * setting (`LOG_LEVEL=info` must not redact the word "info").
+ */
+const SECRET_ENV_VARS = [
+  'OPENROUTER_API_KEY',
+  'NEXTAUTH_SECRET',
+  'GOOGLE_CLIENT_ID',
+  'GOOGLE_CLIENT_SECRET',
+  'CRON_SECRET',
+  'ADMIN_SECRET',
+  'DATABASE_URL',
+] as const;
+
+/**
+ * A secret shorter than this is not scrubbed: redacting a short common string
+ * would mangle unrelated text, and no real credential is this short.
+ */
+const MIN_SECRET_LENGTH = 8;
+
+type SecretToken = { value: string; label: string };
+
+let secretCacheKey = '';
+let secretCache: SecretToken[] = [];
+
+/**
+ * The secret values to scrub from every string the logger writes.
+ *
+ * Read from the environment on use and memoised on the joined values, so a
+ * test that sets a variable after the module loaded is still covered. For
+ * DATABASE_URL the password component is scrubbed on its own as well as the
+ * whole string, so a line quoting only part of the URL — the driver's
+ * "Connection string: …" message, a stack frame — still comes out clean.
+ */
+function secretTokens(): SecretToken[] {
+  const values = SECRET_ENV_VARS.map((name) => process.env[name] ?? '');
+  const key = values.join('\u0000');
+  if (key === secretCacheKey) return secretCache;
+
+  const tokens: SecretToken[] = [];
+  for (let i = 0; i < SECRET_ENV_VARS.length; i += 1) {
+    const name = SECRET_ENV_VARS[i];
+    const value = values[i];
+    if (value.length < MIN_SECRET_LENGTH) continue;
+    tokens.push({ value, label: name });
+    if (name === 'DATABASE_URL') {
+      // The password alone. `new URL` rejects some malformed strings, so fall
+      // back to the `scheme://user:password@` shape when it does.
+      let password = '';
+      try {
+        password = decodeURIComponent(new URL(value).password);
+      } catch {
+        const match = value.match(/\/\/[^:/@\s]+:([^@\s]+)@/);
+        password = match ? match[1] : '';
+      }
+      if (password.length >= MIN_SECRET_LENGTH) {
+        tokens.push({ value: password, label: 'DATABASE_URL_PASSWORD' });
+      }
+    }
+  }
+
+  secretCacheKey = key;
+  secretCache = tokens;
+  return tokens;
+}
+
+/** Replaces every occurrence of a known secret value in `text`. */
+function scrubSecrets(text: string): string {
+  let result = text;
+  for (const token of secretTokens()) {
+    if (result.includes(token.value)) {
+      result = result.split(token.value).join(`[redacted:${token.label}]`);
+    }
+  }
+  return result;
+}
+
+/**
+ * A payload string shorter than this is not scrubbed from an error's message
+ * or stack; removing short fragments would mangle the text for no gain.
+ */
+const MIN_PAYLOAD_SCRUB_LENGTH = 16;
+
+/** How many payload strings one error is worth collecting. */
+const MAX_PAYLOAD_STRINGS = 50;
+
+/**
+ * Collects the string atoms of a dropped error property, so the same payload
+ * can be removed from the error's message and stack.
+ *
+ * Dropping a property from the serialised fields is not enough on its own:
+ * drizzle's query error embeds the failing SQL and its bind values *as text*
+ * in its message — and therefore in its stack — so the save a dropped
+ * `params` refused to show was still right there in `stack`. Whatever the
+ * allowlist refuses as a field is scrubbed from the prose too.
+ */
+function collectPayloadStrings(value: unknown, out: string[], depth: number): void {
+  if (out.length >= MAX_PAYLOAD_STRINGS || value === null || value === undefined) return;
+  if (typeof value === 'string') {
+    if (value.length >= MIN_PAYLOAD_SCRUB_LENGTH) out.push(value);
+    return;
+  }
+  if (depth > 4 || typeof value !== 'object') return;
+  const items = Array.isArray(value) ? value : Object.values(value as Record<string, unknown>);
+  for (const item of items) {
+    collectPayloadStrings(item, out, depth + 1);
+  }
+}
+
+/** Removes every collected payload string from `text`. */
+function scrubPayload(text: string, payload: string[], label: string): string {
+  let result = text;
+  for (const value of payload) {
+    if (result.includes(value)) {
+      result = result.split(value).join(`[redacted:${label}]`);
+    }
+  }
+  return result;
+}
+
 export type LogFields = Record<string, unknown>;
 
 export type Logger = {
@@ -101,20 +256,50 @@ export function resolveRequestId(request?: { headers: Headers } | null): string 
  * would silently drop the only useful part of an error log line.
  */
 function serializeError(error: Error, depth: number): LogFields {
-  const result: LogFields = {
-    name: error.name,
-    message: error.message,
-  };
-  if (typeof error.stack === 'string') {
-    result.stack = error.stack;
+  // Own properties beyond the standard four pass only through the allowlist;
+  // everything else is dropped by name, and its string content is collected
+  // so the same payload cannot survive inside the message or the stack.
+  const result: LogFields = {};
+  const dropped: string[] = [];
+  const payloadByKey: Array<{ key: string; payload: string[] }> = [];
+
+  for (const key of Object.getOwnPropertyNames(error)) {
+    if (key === 'name' || key === 'message' || key === 'stack' || key === 'cause') continue;
+
+    const value = (error as unknown as LogFields)[key];
+    const allowed =
+      (ERROR_FIELD_ALLOWLIST as readonly string[]).includes(key) &&
+      ((typeof value === 'string' && value.length <= MAX_ERROR_FIELD_LENGTH) ||
+        typeof value === 'number' ||
+        typeof value === 'boolean');
+
+    if (allowed) {
+      result[key] = typeof value === 'string' ? scrubSecrets(value) : value;
+    } else if (value !== undefined) {
+      dropped.push(key);
+      const payload: string[] = [];
+      collectPayloadStrings(value, payload, 0);
+      if (payload.length > 0) payloadByKey.push({ key, payload });
+    }
+  }
+
+  let message = error.message;
+  let stack = typeof error.stack === 'string' ? error.stack : undefined;
+  for (const { key, payload } of payloadByKey) {
+    message = scrubPayload(message, payload, key);
+    if (stack !== undefined) stack = scrubPayload(stack, payload, key);
+  }
+
+  result.name = scrubSecrets(error.name);
+  result.message = scrubSecrets(message);
+  if (stack !== undefined) {
+    result.stack = scrubSecrets(stack);
   }
   if (error.cause !== undefined && depth < MAX_FIELD_DEPTH) {
     result.cause = serializeValue(error.cause, depth + 1, new WeakSet());
   }
-  // Preserve custom own properties such as `code` or `status`.
-  for (const key of Object.getOwnPropertyNames(error)) {
-    if (key === 'name' || key === 'message' || key === 'stack' || key === 'cause') continue;
-    result[key] = serializeValue((error as unknown as LogFields)[key], depth + 1, new WeakSet());
+  if (dropped.length > 0) {
+    result.errorFieldsDropped = dropped.slice(0, MAX_DROPPED_FIELDS);
   }
   return result;
 }
@@ -123,7 +308,8 @@ function serializeValue(value: unknown, depth: number, seen: WeakSet<object>): u
   if (value === null || value === undefined) return value;
 
   const type = typeof value;
-  if (type === 'string' || type === 'boolean') return value;
+  if (type === 'string') return scrubSecrets(value as string);
+  if (type === 'boolean') return value;
   if (type === 'number') return Number.isFinite(value as number) ? value : String(value);
   if (type === 'bigint') return (value as bigint).toString();
   if (type === 'function') return `[Function ${(value as () => void).name || 'anonymous'}]`;
@@ -200,7 +386,7 @@ function build(
       level,
       route,
       requestId,
-      message: typeof message === 'string' ? message : String(message),
+      message: scrubSecrets(typeof message === 'string' ? message : String(message)),
     };
 
     const merged = { ...boundFields, ...fields };

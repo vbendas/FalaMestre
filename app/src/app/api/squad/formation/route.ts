@@ -1,19 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/db';
-import { gameStates } from '@/db/schema';
-import { eq } from 'drizzle-orm';
 import { requireAuth, getAuthenticatedUser } from '@/lib/auth-helpers';
 import { FORMATIONS } from '@/lib/formations';
 import { withApiRoute, ApiContext } from '@/lib/api-route';
-
-interface FormationRequest {
-  userId?: string;
-  formation: string;
-}
+import { squadFormationRequestSchema } from '@/lib/validations';
+import { loadSave, commitSave, saveConflictResponse } from '@/lib/save-store';
 
 export const POST = withApiRoute('squad-formation', async (
   request: NextRequest,
-  { log, readJson }: ApiContext
+  { log, readBody }: ApiContext
 ) => {
   try {
     // Check authentication - returns 401 only if REQUIRE_AUTH=true and no session
@@ -26,15 +20,20 @@ export const POST = withApiRoute('squad-formation', async (
     const sessionUserId = await getAuthenticatedUser();
     
     // Parse and validate request
-    const bodyResult = await readJson<FormationRequest>();
+    const bodyResult = await readBody(squadFormationRequestSchema);
     if (!bodyResult.ok) {
       return bodyResult.response;
     }
-    const body = bodyResult.body;
 
-    const { userId, formation } = body;
+    const { userId, formation } = bodyResult.body;
 
-    // Determine userId: session takes priority, fallback to provided userId
+    // A body naming someone other than the session user is refused, not
+    // silently redirected to the session user's own save.
+    if (sessionUserId && userId && userId !== sessionUserId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    // Session user when signed in, body id as the auth-disabled dev fallback
     const targetUserId = sessionUserId || userId;
     
     if (!targetUserId) {
@@ -44,35 +43,26 @@ export const POST = withApiRoute('squad-formation', async (
       );
     }
 
-    // Validate formation
-    if (!formation || !FORMATIONS[formation]) {
-      return NextResponse.json(
-        { error: 'Invalid formation. Available: 4-3-3, 4-4-2, 4-5-1, 3-5-2, 3-4-3, 5-3-2' },
-        { status: 400 }
-      );
-    }
+    // Get user's game state, remembering the version it was read at
+    const save = await loadSave(targetUserId);
 
-    // Get user's game state
-    const gameStateRecord = await db.query.gameStates.findFirst({
-      where: eq(gameStates.userId, targetUserId),
-    });
-
-    if (!gameStateRecord) {
+    if (!save) {
       return NextResponse.json(
         { error: 'Game state not found' },
         { status: 404 }
       );
     }
 
-    const gameState = gameStateRecord.currentState;
+    const gameState = save.state;
     
     // Update formation
     gameState.squad.formation = formation;
 
-    // Update database
-    await db.update(gameStates)
-      .set({ currentState: gameState })
-      .where(eq(gameStates.userId, targetUserId));
+    const committed = await commitSave(targetUserId, gameState, save.version);
+    if (!committed.ok) {
+      log.warn('Formation change rejected: the save moved on while it was being processed', { formation });
+      return saveConflictResponse();
+    }
 
     return NextResponse.json({
       success: true,

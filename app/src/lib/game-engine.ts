@@ -1735,10 +1735,8 @@ export function simulateMatchWithNarrative(
     if (event.type === 'goal') {
       if (event.team === 'home') {
         homeScore++;
-        console.log('[DEBUG] Goal! Home team scores. Total homeScore:', homeScore);
       } else {
         awayScore++;
-        console.log('[DEBUG] Goal! Away team scores. Total awayScore:', awayScore);
       }
       allEvents.push(event);
     } else if (event.type === 'miss' || event.type === 'save' || event.type === 'pressure') {
@@ -1809,8 +1807,6 @@ export function simulateMatchWithNarrative(
   // Already calculated above before whistle commentary
 
   const winner = finalHomeScore > finalAwayScore ? homeTeam : finalAwayScore > finalHomeScore ? awayTeam : 'Empate';
-
-  console.log('[DEBUG] Final scores:', { homeScore: finalHomeScore, awayScore: finalAwayScore, goalEvents: allEvents.filter(e => e.type === 'goal').length });
 
   return { homeScore: finalHomeScore, awayScore: finalAwayScore, events: allEvents, winner, isHome };
 }

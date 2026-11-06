@@ -5,6 +5,10 @@
  * to prevent memory leaks and optimize application performance.
  */
 
+import { getLogger } from './request-context';
+
+const log = () => getLogger('memory');
+
 interface CleanupFunction {
   id: string;
   fn: () => void;
@@ -164,21 +168,23 @@ class MemoryManager {
     this.monitorInterval = setInterval(() => {
       const stats = this.getMemoryStats();
       if (stats) {
-        console.log('[Memory] Usage:', {
-          percentage: `${stats.percentage.toFixed(1)}%`,
-          heapUsed: `${(stats.heapUsed / 1024 / 1024).toFixed(2)} MB`,
-          heapTotal: `${(stats.heapTotal / 1024 / 1024).toFixed(2)} MB`,
+        log().debug('Memory usage', {
+          percentage: Number(stats.percentage.toFixed(1)),
+          heapUsedMb: Number((stats.heapUsed / 1024 / 1024).toFixed(2)),
+          heapTotalMb: Number((stats.heapTotal / 1024 / 1024).toFixed(2)),
         });
 
         // Auto-trigger cleanup if memory is critical
         if (stats.percentage > 90) {
-          console.warn('[Memory] Critical memory usage detected, triggering cleanup...');
+          log().warn('Critical memory usage, triggering cleanup', {
+            percentage: Number(stats.percentage.toFixed(1)),
+          });
           this.performCleanup();
         }
       }
     }, intervalMs);
 
-    console.log('[Memory] Monitoring started');
+    log().info('Memory monitoring started', { intervalMs });
   }
 
   /**
@@ -190,14 +196,14 @@ class MemoryManager {
       clearInterval(this.monitorInterval);
       this.monitorInterval = null;
     }
-    console.log('[Memory] Monitoring stopped');
+    log().info('Memory monitoring stopped');
   }
 
   /**
    * Perform cleanup of all tracked resources
    */
   performCleanup() {
-    console.log('[Memory] Performing cleanup...');
+    log().debug('Memory cleanup started');
     
     // Clear all timeouts
     this.timeouts.forEach(timeout => clearTimeout(timeout));
@@ -215,7 +221,7 @@ class MemoryManager {
       try {
         fn();
       } catch (error) {
-        console.error(`[Memory] Cleanup function ${id} failed:`, error);
+        log().error('Memory cleanup function failed', { cleanupId: id, error });
       }
     });
     
@@ -224,7 +230,7 @@ class MemoryManager {
       global.gc();
     }
     
-    console.log('[Memory] Cleanup completed');
+    log().debug('Memory cleanup completed');
   }
 
   /**

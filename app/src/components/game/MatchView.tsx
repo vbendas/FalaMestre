@@ -1,48 +1,37 @@
 'use client';
 
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { GameState, Match, MatchEvent, MatchScript, Player, DecisionOption } from '@/lib/types';
+import { GameState, MatchEvent, Player } from '@/lib/types';
+import { SEASON_LENGTH, isSeasonOver } from '@/lib/constants';
 import { motion } from 'framer-motion';
 import { getTeamData } from '@/lib/team-data';
 import Image from 'next/image';
-import { Home, Plane, Trophy, Swords, Glasses, TrendingUp, Users, Zap, Target } from 'lucide-react';
+import { Home, Plane, Trophy, Swords, TrendingUp, Users, Target } from 'lucide-react';
 import { TurnBasedMatchFlow } from './TurnBasedMatchFlow';
+import type { MatchSettlement } from '@/hooks/useTurnBasedMatch';
 
 import {
   GlassCard,
   CrtButton,
   ComparisonBar,
-  CoinDisplay,
   SectionTitle,
   ViewContainer,
 } from '@/components/crt';
 
 interface MatchViewProps {
   gameState: GameState;
-  isLoading: boolean;
-  onPlayMatch: () => void;
-  onPlayMatchWithResult?: () => Promise<{
-    result: {
-      homeScore: number;
-      awayScore: number;
-      winner: string;
-      events: MatchEvent[];
-    };
-    matchScript?: MatchScript;
-    pointsEarned: number;
-    pointsChange: number;
-    narration: string;
-    nextMatch: Match;
-    updatedGameState: GameState;
-  } | null>;
-  onShowMatchResult?: (result: { homeScore: number; awayScore: number; winner: string; events: MatchEvent[] }, pointsEarned: number, pointsChange: number) => void;
-}
-
-interface MatchResult {
-  homeScore: number;
-  awayScore: number;
-  winner: string;
-  events: MatchEvent[];
+  onShowMatchResult?: (
+    result: { homeScore: number; awayScore: number; winner: string; events: MatchEvent[] },
+    pointsEarned: number,
+    updatedState?: GameState,
+    fixture?: { opponent: string; isHome: boolean },
+  ) => void;
+  /**
+   * Re-reads the save. Called when the server refuses a match, because the
+   * refusal usually means this screen's copy of the save is out of date — and
+   * while it stays out of date, every further attempt is refused too.
+   */
+  onRefreshSave?: () => void | Promise<void>;
 }
 
 function MatchPreview({ homeTeam, awayTeam }: {
@@ -152,7 +141,7 @@ function WinProbability({ homeRating, awayRating, homeColor, awayColor }: {
   );
 }
 
-export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithResult, onShowMatchResult }: MatchViewProps) {
+export function MatchView({ gameState, onShowMatchResult, onRefreshSave }: MatchViewProps) {
   const { user, season, squad } = gameState;
   const { nextMatch } = season;
 
@@ -175,11 +164,7 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
   }, [nextMatch?.opponent]);
 
   const [isSimulating, setIsSimulating] = useState(false);
-  const [matchResult, setMatchResult] = useState<MatchResult | null>(null);
-  const [preMatchData, setPreMatchData] = useState<{ pointsEarned: number; pointsChange: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isHighlightMode, setIsHighlightMode] = useState(false);
-  const [highlightEvent, setHighlightEvent] = useState<MatchEvent | null>(null);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -188,33 +173,99 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
     };
   }, []);
 
+  // A new fixture means the last match is done with: drop what it left behind.
+  // Keyed on the week and opponent rather than the whole game state, so an
+  // unrelated update — money, squad — cannot wipe a "não contou" message while
+  // the player is still on the same fixture.
   useEffect(() => {
-    if (isSimulating) return;
-    setIsSimulating(false);
-    setMatchResult(null);
     setError(null);
-    setIsHighlightMode(false);
-    setHighlightEvent(null);
-  }, [gameState, isSimulating]);
+  }, [season.week, nextMatch?.opponent]);
 
   const handlePlayMatch = async () => {
     if (isSimulating) return;
     setError(null);
-    setPreMatchData({ pointsEarned: 50, pointsChange: 0 });
     setIsSimulating(true);
   };
 
+  /**
+   * The server has settled the match. A banked match shows the result modal
+   * with the points, earnings and game state finalize returned — no invented
+   * numbers. A rejected one shows nothing: the match flow stays on screen with
+   * its own "não contou" message, because a result modal here would look like
+   * progress that was saved.
+   */
   const handleMatchEnd = useCallback(
-    (result: { homeScore: number; awayScore: number; winner: string; events: MatchEvent[] }) => {
-      setMatchResult(result);
-      const points = preMatchData || { pointsEarned: 50, pointsChange: 0 };
-      if (onShowMatchResult) {
-        onShowMatchResult(result, points.pointsEarned, points.pointsChange);
+    (settlement: MatchSettlement) => {
+      if (settlement.status === 'rejected') {
+        setError(settlement.error);
+        // The save is the authority on what happened. Re-read it: if the
+        // match did count after all — a lost response, another tab — the
+        // screen moves to the next fixture instead of offering this one again
+        // and being refused for ever.
+        void onRefreshSave?.();
+        return;
       }
+
+      onShowMatchResult?.(
+        settlement.result,
+        // The league points this match actually moved, as the server counted
+        // them. The modal's headline and its caption both read this one figure.
+        settlement.pointsEarned,
+        settlement.updatedGameState,
+        { opponent: settlement.fixture.opponent, isHome: settlement.fixture.isHome },
+      );
       setIsSimulating(false);
     },
-    [preMatchData, onShowMatchResult],
+    [onShowMatchResult, onRefreshSave],
   );
+
+  // The season is over: there is no fixture to play, so the screen shows how
+  // it ended rather than a play button. The save still carries a placeholder
+  // in `nextMatch` ('Temporada Completa'), which used to render here as an
+  // ordinary opponent with JOGAR AGORA beside it — and the server would bank
+  // the match. Both ends read the same `isSeasonOver`.
+  if (isSeasonOver(season)) {
+    return (
+      <ViewContainer className="space-y-3">
+        <GlassCard glow className="p-6 text-center space-y-4">
+          <Trophy className="w-16 h-16 text-[#FFDF00] mx-auto" />
+          <div className="text-xl font-bold text-[#FFDF00] font-[family-name:var(--font-pixel)] gold-glow-text">
+            Temporada Encerrada
+          </div>
+          <p className="text-white/70 text-sm">
+            As {SEASON_LENGTH} rodadas da {season.league} terminaram. Não há mais partidas nesta
+            temporada.
+          </p>
+        </GlassCard>
+
+        <GlassCard className="p-4">
+          <SectionTitle>
+            <span className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-[#FFDF00]" />
+              Campanha de {user.team}
+            </span>
+          </SectionTitle>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {[
+              { label: 'Posição', value: `${season.position}º` },
+              { label: 'Pontos', value: season.points },
+              { label: 'Vitórias', value: season.wins },
+              { label: 'Empates', value: season.draws },
+              { label: 'Derrotas', value: season.losses },
+              { label: 'Jogos', value: gameState.teamStats?.matchesPlayed ?? 0 },
+            ].map((stat) => (
+              <div key={stat.label} className="bg-[rgba(0,0,0,0.3)] rounded-sm px-3 py-2 text-center">
+                <div className="text-lg font-bold text-white font-[family-name:var(--font-pixel)]">
+                  {stat.value}
+                </div>
+                <div className="text-[10px] text-white/50">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </GlassCard>
+      </ViewContainer>
+    );
+  }
 
   if (!nextMatch || !nextMatch.opponent) {
     return (
@@ -241,6 +292,7 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
       <TurnBasedMatchFlow
         gameState={gameState}
         onMatchEnd={handleMatchEnd}
+        onAbandon={() => setIsSimulating(false)}
       />
     );
   }
@@ -441,6 +493,17 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
         />
       </div>
 
+      {/* A match the server would not bank: say so, rather than let the
+          player assume the week moved on. */}
+      {error && (
+        <GlassCard className="p-4 border border-[#FF3333]/40">
+          <div className="text-[#FF3333] font-[family-name:var(--font-pixel)] text-xs mb-1">
+            A partida não contou
+          </div>
+          <p className="text-white/70 text-sm">{error}</p>
+        </GlassCard>
+      )}
+
       {/* Play Button */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -449,12 +512,12 @@ export function MatchView({ gameState, isLoading, onPlayMatch, onPlayMatchWithRe
       >
         <CrtButton
           variant="primary"
-          pulse={!isLoading && !isSimulating}
+          pulse={!isSimulating}
           onClick={handlePlayMatch}
-          disabled={isLoading || isSimulating}
+          disabled={isSimulating}
           className="w-full py-4 text-lg flex items-center justify-center gap-3"
         >
-          {isLoading || isSimulating ? (
+          {isSimulating ? (
             <div className="flex items-center gap-3">
               <motion.div
                 animate={{ rotate: 360 }}

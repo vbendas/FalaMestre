@@ -3,13 +3,14 @@
 import { useState } from 'react';
 import { formatMoney } from '@/lib/economy';
 import type { FanClubInvestment, InvestmentYield } from '@/lib/types';
-import { INVESTMENT_TIERS } from '@/lib/constants';
+import { INVESTMENT_PRODUCTS } from '@/lib/investments';
 
 interface FanClubInvestmentCardProps {
   userBalance: number;
   activeInvestments: FanClubInvestment[];
   pendingYields: InvestmentYield[];
-  onInvest: (option: 'A' | 'B' | 'C') => Promise<void>;
+  /** Takes a catalogue product id — the same id the route sells. */
+  onInvest: (productId: string) => Promise<void>;
   onClaimYields: () => Promise<void>;
 }
 
@@ -26,10 +27,10 @@ export function FanClubInvestmentCard({
 
   const [investingOption, setInvestingOption] = useState<string | null>(null);
 
-  const handleInvest = async (option: 'A' | 'B' | 'C') => {
-    setInvestingOption(option);
+  const handleInvest = async (productId: string) => {
+    setInvestingOption(productId);
     try {
-      await onInvest(option);
+      await onInvest(productId);
     } finally {
       setInvestingOption(null);
     }
@@ -78,15 +79,16 @@ export function FanClubInvestmentCard({
       <div className="space-y-3">
         <p className="text-white/70 text-sm">Escolha seu investimento:</p>
         
-        {(['A', 'B', 'C'] as const).map(option => {
-          const tier = INVESTMENT_TIERS[option];
-          const isAffordable = userBalance >= tier.amount;
-          const isInvesting = investingOption === option;
-          
+        {/* One catalogue, read here and priced by the route off the same
+            rows — this card used to sell three tiers of its own. */}
+        {INVESTMENT_PRODUCTS.map(product => {
+          const isAffordable = userBalance >= product.cost;
+          const isInvesting = investingOption === product.id;
+
           return (
             <button
-              key={option}
-              onClick={() => isAffordable && handleInvest(option)}
+              key={product.id}
+              onClick={() => isAffordable && handleInvest(product.id)}
               disabled={!isAffordable || isInvesting}
               className={`w-full p-4 rounded-lg border-2 transition-colors text-left ${
                 isAffordable 
@@ -96,23 +98,29 @@ export function FanClubInvestmentCard({
             >
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-yellow-400 font-bold text-lg">Opção {option}</p>
-                  <p className="text-white font-medium">{formatMoney(tier.amount)}</p>
+                  <p className="text-yellow-400 font-bold text-lg">{product.icon} {product.name}</p>
+                  <p className="text-white font-medium">{formatMoney(product.cost)}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-white/50 text-xs">{tier.lockPeriodDays} dias</p>
-                  <p className="text-green-400 font-bold">+{formatMoney(tier.yieldPerDay)}/dia</p>
+                  <p className="text-white/50 text-xs">{product.durationDays} dias</p>
+                  <p className="text-green-400 font-bold">
+                    {product.dailyYield > 0 ? `+${formatMoney(product.dailyYield)}/dia` : 'Sem rendimento'}
+                  </p>
                 </div>
               </div>
               
               <div className="grid grid-cols-2 gap-2 mt-3 text-sm">
                 <div className="bg-white/5 rounded p-2">
-                  <p className="text-white/50 text-xs">Bônus Moral</p>
-                  <p className="text-yellow-400">+{tier.moraleBoost}%</p>
+                  <p className="text-white/50 text-xs">Bônus Estratégico</p>
+                  <p className="text-yellow-400">
+                    {product.strategicBonus
+                      ? `+${product.strategicBonus.value}% ${product.strategicBonus.label}`
+                      : 'Nenhum'}
+                  </p>
                 </div>
                 <div className="bg-white/5 rounded p-2">
                   <p className="text-white/50 text-xs">Receita/Jogo</p>
-                  <p className="text-green-400">+{formatMoney(tier.revenueBoostPerMatch)}</p>
+                  <p className="text-green-400">+{formatMoney(product.revenueBoostPerMatch)}</p>
                 </div>
               </div>
               

@@ -3,7 +3,28 @@
  * Centralized configuration values to avoid magic numbers
  */
 
-import { MatchSettings, TierDivision, StaffSpecialty, InvestmentTier, PredictionType, TurnConfig, TurnMentality, TacticalInstruction, TacticalInstructionType } from './types';
+import { MatchSettings, TierDivision, StaffSpecialty, PredictionType, TurnConfig, TurnMentality, TacticalInstruction, TacticalInstructionType } from './types';
+
+/**
+ * Rounds in a Liga Mestre season.
+ *
+ * The round a save is on is `season.week`, so a save is waiting on its last
+ * fixture at week 38 and the season is over once the week passes it. Both the
+ * bookkeeping and the screens read this through `isSeasonOver` below rather
+ * than comparing the week to a literal, because the two have to agree: the
+ * server refuses a match the screen must not offer.
+ */
+export const SEASON_LENGTH = 38;
+
+/** True once every round has been played and there is no fixture left. */
+/** Which season of the save `season` is: 1 unless something started another. */
+export function seasonNumber(season: { number?: number }): number {
+  return season.number ?? 1;
+}
+
+export function isSeasonOver(season: { week: number }): boolean {
+  return season.week > SEASON_LENGTH;
+}
 
 // Match simulation constants
 export const MATCH_CONSTANTS = {
@@ -131,7 +152,9 @@ export const API_CONSTANTS = {
   MOCK_LATENCY_MAX: 800,
 } as const;
 
-// User ID format
+// Format of a locally generated game id. A signed-in player's save is keyed on
+// their session user id instead, which does not match this; validate ids against
+// USER_ID_PATTERN in validations.ts, which accepts both.
 export const USER_ID_FORMAT = {
   PREFIX: 'user',
   LENGTH: 9,
@@ -143,6 +166,13 @@ export const VALIDATION_LIMITS = {
   MESSAGE_MAX_LENGTH: 2000,
   USER_ID_MAX_LENGTH: 100,
 } as const;
+
+/**
+ * How many past messages travel with a chat turn. The save keeps the whole
+ * conversation — the screen shows all of it — but only the tail is replayed
+ * to the model, which is what a prompt costs money and context by.
+ */
+export const CONVERSATION_CONTEXT_MESSAGES = 20;
 
 // Event density configuration
 export const EVENT_DENSITY_CONFIG = {
@@ -421,32 +451,9 @@ export const PREDICTION_MARKET = {
 // FAN CLUB INVESTMENT CONSTANTS
 // =====================================================
 
-export const INVESTMENT_TIERS: Record<string, InvestmentTier> = {
-  A: {
-    option: 'A',
-    amount: 50000,
-    lockPeriodDays: 3,
-    yieldPerDay: 10000,
-    moraleBoost: 2,
-    revenueBoostPerMatch: 15000,
-  },
-  B: {
-    option: 'B',
-    amount: 100000,
-    lockPeriodDays: 7,
-    yieldPerDay: 25000,
-    moraleBoost: 5,
-    revenueBoostPerMatch: 30000,
-  },
-  C: {
-    option: 'C',
-    amount: 500000,
-    lockPeriodDays: 30,
-    yieldPerDay: 100000,
-    moraleBoost: 15,
-    revenueBoostPerMatch: 150000,
-  },
-} as const;
+// The investment products the game sells live in lib/investments.ts, which is
+// the one definition both the route and the screen read. The three tiers that
+// used to sit here were priced independently of the cards the player saw.
 
 export const INVESTMENT_CONFIG = {
   // Yield expiry in days (7 days as per spec)

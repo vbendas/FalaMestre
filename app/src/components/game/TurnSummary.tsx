@@ -42,22 +42,29 @@ export function TurnSummary({
       ? 'Fim do 1º Tempo'
       : `Minutos ${segment.fromMinute}'- ${segment.toMinute}'`;
 
+  // The countdown only counts; advancing is its own effect. Calling
+  // `onContinue` from inside the `setCountdown` updater, as this did, runs a
+  // parent's setState while React is rendering this component — which React
+  // warns about, and which leaves the ordering of the two up to React.
   useEffect(() => {
     if (!autoAdvance) return;
     const interval = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          onContinue();
-          return 0;
-        }
-        return prev - 1;
-      });
+      setCountdown((prev) => Math.max(0, prev - 1));
     }, 1000);
     return () => clearInterval(interval);
-  }, [autoAdvance, onContinue]);
+  }, [autoAdvance]);
+
+  useEffect(() => {
+    if (autoAdvance && countdown === 0) {
+      setAutoAdvance(false);
+      onContinue();
+    }
+  }, [autoAdvance, countdown, onContinue]);
 
   const handleContinue = () => {
+    // Guard the button against a click that lands after the countdown has
+    // already advanced: whichever happens first is the only one that counts.
+    if (!autoAdvance) return;
     setAutoAdvance(false);
     onContinue();
   };

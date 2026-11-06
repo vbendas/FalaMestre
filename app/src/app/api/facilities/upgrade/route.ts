@@ -1,24 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/db';
-import { gameStates } from '@/db/schema';
-import { eq } from 'drizzle-orm';
-import { GameState, Facilities } from '@/lib/types';
 import { FACILITY_UPGRADES } from '@/lib/constants';
 import { getAuthenticatedUser, requireAuth } from '@/lib/auth-helpers';
 import { withApiRoute, ApiContext } from '@/lib/api-route';
-
-type GameStateRecordShape = {
-  currentState: GameState;
-};
-
-interface FacilityUpgradeRequest {
-  userId: string;
-  facilityType: string;
-}
+import { facilityUpgradeRequestSchema } from '@/lib/validations';
+import { loadSave, commitSave, saveConflictResponse } from '@/lib/save-store';
 
 export const POST = withApiRoute('facilities-upgrade', async (
   request: NextRequest,
-  { log, readJson }: ApiContext
+  { log, readBody }: ApiContext
 ) => {
   try {
     const authError = await requireAuth();
@@ -26,33 +15,30 @@ export const POST = withApiRoute('facilities-upgrade', async (
 
     const sessionUserId = await getAuthenticatedUser();
 
-    const bodyResult = await readJson<FacilityUpgradeRequest>();
+    const bodyResult = await readBody(facilityUpgradeRequestSchema);
     if (!bodyResult.ok) {
       return bodyResult.response;
     }
-    const requestBody = bodyResult.body;
 
-    const { userId, facilityType } = requestBody;
+    const { userId, facilityType } = bodyResult.body;
 
     if (sessionUserId && userId !== sessionUserId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const gameStateRecord = await db.query.gameStates.findFirst({
-      where: eq(gameStates.userId, userId),
-    });
+    const save = await loadSave(userId);
 
-    if (!gameStateRecord) {
+    if (!save) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const gameState = (gameStateRecord as GameStateRecordShape).currentState;
-    const currentLevel = gameState.facilities[facilityType as keyof typeof gameState.facilities];
-    const facility = FACILITY_UPGRADES[facilityType as keyof typeof FACILITY_UPGRADES];
-
-    if (!facility) {
-      return NextResponse.json({ error: 'Invalid facility type' }, { status: 400 });
-    }
+    const gameState = save.state;
+    // `facilityType` came through the schema, so it names a facility that
+    // exists on both the save and the upgrade table; the lookups need no
+    // cast and the "invalid facility type" branch that used to follow them
+    // is now unreachable by construction.
+    const currentLevel = gameState.facilities[facilityType];
+    const facility = FACILITY_UPGRADES[facilityType];
 
     if (currentLevel >= facility.maxLevel) {
       return NextResponse.json({ error: 'Already at max level' }, { status: 400 });
@@ -69,16 +55,17 @@ export const POST = withApiRoute('facilities-upgrade', async (
     gameState.facilities = {
       ...gameState.facilities,
       [facilityType]: currentLevel + 1,
-    } as unknown as Facilities;
+    };
 
-    await db
-      .update(gameStates)
-      .set({ currentState: gameState, updatedAt: new Date() })
-      .where(eq(gameStates.userId, userId));
+    const committed = await commitSave(userId, gameState, save.version);
+    if (!committed.ok) {
+      log.warn('Facility upgrade rejected: the save moved on while it was being processed', { facilityType });
+      return saveConflictResponse();
+    }
 
     return NextResponse.json({
       success: true,
-      newFacilityLevel: gameState.facilities[facilityType as keyof typeof gameState.facilities],
+      newFacilityLevel: gameState.facilities[facilityType],
       newBalance: gameState.user.money,
     });
 

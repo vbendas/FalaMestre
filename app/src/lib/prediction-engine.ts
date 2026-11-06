@@ -28,7 +28,7 @@ export interface HeadToHeadRecord {
   totalMatches: number;
 }
 
-function calculateTeamPowerRating(squad: Squad): number {
+export function calculateTeamPowerRating(squad: Squad): number {
   const players = squad.players;
   if (players.length === 0) return 60;
   
@@ -144,22 +144,45 @@ export function calculateDynamicOdds(
   };
 }
 
+/** The two sides as the odds see them, when the caller knows the real squads. */
+export interface PredictionMatchup {
+  home: TeamPowerContext;
+  away: TeamPowerContext;
+  /** Morale of the home side, which scales its home advantage. */
+  homeMorale: number;
+}
+
+export interface CreatePredictionOptions {
+  /** Omitted, the odds are priced on placeholder ratings. */
+  matchup?: PredictionMatchup;
+  /**
+   * When betting closes. Omitted, it is PREDICTION_WINDOW_HOURS before the
+   * match date.
+   */
+  deadline?: Date;
+}
+
 export function createPrediction(
   matchId: string,
   homeTeam: string,
   awayTeam: string,
   type: PredictionType,
-  matchDate: Date
+  matchDate: Date,
+  { matchup, deadline: deadlineOverride }: CreatePredictionOptions = {}
 ): Prediction {
-  const odds = calculateDynamicOdds(
-    { teamName: homeTeam, averageRating: 75, lastFiveResults: ['W', 'W', 'D', 'W', 'L'], homeAdvantage: true, keyPlayersAvailable: 1 },
-    { teamName: awayTeam, averageRating: 72, lastFiveResults: ['W', 'L', 'W', 'D', 'L'], homeAdvantage: false, keyPlayersAvailable: 0.9 },
-    75
-  );
+  const odds = matchup
+    ? calculateDynamicOdds(matchup.home, matchup.away, matchup.homeMorale)
+    : calculateDynamicOdds(
+        { teamName: homeTeam, averageRating: 75, lastFiveResults: ['W', 'W', 'D', 'W', 'L'], homeAdvantage: true, keyPlayersAvailable: 1 },
+        { teamName: awayTeam, averageRating: 72, lastFiveResults: ['W', 'L', 'W', 'D', 'L'], homeAdvantage: false, keyPlayersAvailable: 0.9 },
+        75
+      );
   
   const entryCost = PREDICTION_MARKET.ENTRY_COSTS[type];
-  const deadline = new Date(matchDate);
-  deadline.setHours(deadline.getHours() - PREDICTION_MARKET.PREDICTION_WINDOW_HOURS);
+  const deadline = deadlineOverride ? new Date(deadlineOverride) : new Date(matchDate);
+  if (!deadlineOverride) {
+    deadline.setHours(deadline.getHours() - PREDICTION_MARKET.PREDICTION_WINDOW_HOURS);
+  }
   
   const prediction: Prediction = {
     id: generateId('pred'),

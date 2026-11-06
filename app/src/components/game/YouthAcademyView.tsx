@@ -11,20 +11,28 @@ import {
   PositionBadge,
   ProgressBar,
   ManagementLayout,
+  ActionNotice,
 } from '@/components/crt';
+import { useGuardedAction } from '@/hooks/useGuardedAction';
 
 interface YouthAcademyViewProps {
   gameState: GameState;
   userId: string;
   onViewChange: (view: ViewType) => void;
+  /** Reloads the save from the server. Called after every academy action's reply. */
+  onRefreshSave?: () => void | Promise<void>;
 }
 
-export function YouthAcademyView({ gameState, userId, onViewChange }: YouthAcademyViewProps) {
+export function YouthAcademyView({ gameState, userId, onViewChange, onRefreshSave }: YouthAcademyViewProps) {
   const { user, facilities, season } = gameState;
   const [players, setPlayers] = useState<YouthPlayer[]>([]);
-  const [loading, setLoading] = useState(false);
   const [weeksUntilIntake, setWeeksUntilIntake] = useState(4);
   const [focus, setFocus] = useState<TrainingFocus>(null);
+  // Every academy action is a write to the save; a refusal (the save changed
+  // under it) used to leave the prospect on screen with nothing said, which
+  // read as a button that did nothing. The hook reports it and reloads.
+  const action = useGuardedAction(onRefreshSave);
+  const loading = action.pending;
 
   useEffect(() => {
     const academy = gameState.youthAcademy;
@@ -36,73 +44,41 @@ export function YouthAcademyView({ gameState, userId, onViewChange }: YouthAcade
     }
   }, [gameState.youthAcademy, season.week]);
 
-  const handleGenerateIntake = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch(`/api/youth?userId=${userId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'generate' }),
-      });
+  const post = (body: Record<string, unknown>) =>
+    fetch(`/api/youth?userId=${userId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
 
-      if (response.ok) {
-        const data = await response.json();
-        setPlayers(data.players || []);
-        setWeeksUntilIntake(4);
-        window.location.reload();
-      }
-    } catch (error) {
-      console.error('Failed to generate intake:', error);
-    }
-    setLoading(false);
+  const handleGenerateIntake = async () => {
+    await action.run<{ players?: YouthPlayer[]; action?: string }>(() => post({ action: 'generate' }), {
+      onSuccess: (data) => setPlayers(data.players || []),
+      successMessage: (data) =>
+        data.action === 'intake_generated'
+          ? `Nova turma: ${data.players?.length ?? 0} jogadores chegaram à base.`
+          : null,
+    });
   };
 
   const handleSignPlayer = async (playerId: string) => {
-    try {
-      const response = await fetch(`/api/youth?userId=${userId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'sign', playerId }),
-      });
-
-      if (response.ok) {
-        setPlayers(prev => prev.filter(p => p.id !== playerId));
-      }
-    } catch (error) {
-      console.error('Failed to sign player:', error);
-    }
+    const name = players.find((p) => p.id === playerId)?.name ?? 'Jogador';
+    await action.run(() => post({ action: 'sign', playerId }), {
+      onSuccess: () => setPlayers((prev) => prev.filter((p) => p.id !== playerId)),
+      successMessage: () => `${name} promovido ao elenco principal.`,
+    });
   };
 
   const handleRejectPlayer = async (playerId: string) => {
-    try {
-      const response = await fetch(`/api/youth?userId=${userId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'reject', playerId }),
-      });
-
-      if (response.ok) {
-        setPlayers(prev => prev.filter(p => p.id !== playerId));
-      }
-    } catch (error) {
-      console.error('Failed to reject player:', error);
-    }
+    await action.run(() => post({ action: 'reject', playerId }), {
+      onSuccess: () => setPlayers((prev) => prev.filter((p) => p.id !== playerId)),
+    });
   };
 
   const handleSetFocus = async (newFocus: TrainingFocus) => {
-    try {
-      const response = await fetch(`/api/youth?userId=${userId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'set-focus', focus: newFocus }),
-      });
-
-      if (response.ok) {
-        setFocus(newFocus);
-      }
-    } catch (error) {
-      console.error('Failed to set focus:', error);
-    }
+    await action.run(() => post({ action: 'set-focus', focus: newFocus }), {
+      onSuccess: () => setFocus(newFocus),
+    });
   };
 
   const renderStars = (stars: number) => {
@@ -128,6 +104,8 @@ export function YouthAcademyView({ gameState, userId, onViewChange }: YouthAcade
       onBack={() => onViewChange('dashboard')}
     >
       <div className="space-y-3">
+        <ActionNotice notice={action.notice} onDismiss={action.dismiss} pending={action.pending} />
+
         {players.length === 0 && (
           <GlassCard className="p-4 text-center">
             <p className="text-white/70 text-xs font-[family-name:var(--font-pixel)] mb-2">

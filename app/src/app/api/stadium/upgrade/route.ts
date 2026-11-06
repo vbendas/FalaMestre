@@ -1,23 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/db';
-import { gameStates } from '@/db/schema';
-import { eq } from 'drizzle-orm';
-import { GameState } from '@/lib/types';
 import { STADIUM_UPGRADES } from '@/lib/constants';
 import { getAuthenticatedUser, requireAuth } from '@/lib/auth-helpers';
 import { withApiRoute, ApiContext } from '@/lib/api-route';
-
-type GameStateRecordShape = {
-  currentState: GameState;
-};
-
-interface StadiumUpgradeRequest {
-  userId: string;
-}
+import { stadiumUpgradeRequestSchema } from '@/lib/validations';
+import { loadSave, commitSave, saveConflictResponse } from '@/lib/save-store';
 
 export const POST = withApiRoute('stadium-upgrade', async (
   request: NextRequest,
-  { log, readJson }: ApiContext
+  { log, readBody }: ApiContext
 ) => {
   try {
     const authError = await requireAuth();
@@ -27,28 +17,25 @@ export const POST = withApiRoute('stadium-upgrade', async (
 
     const sessionUserId = await getAuthenticatedUser();
 
-    const bodyResult = await readJson<StadiumUpgradeRequest>();
+    const bodyResult = await readBody(stadiumUpgradeRequestSchema);
     if (!bodyResult.ok) {
       return bodyResult.response;
     }
-    const requestBody = bodyResult.body;
 
-    const { userId } = requestBody;
+    const { userId } = bodyResult.body;
 
     if (sessionUserId && userId !== sessionUserId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Get game state
-    const gameStateRecord = await db.query.gameStates.findFirst({
-      where: eq(gameStates.userId, userId),
-    });
+    // Get game state, remembering the version it was read at
+    const save = await loadSave(userId);
 
-    if (!gameStateRecord) {
+    if (!save) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const gameState = (gameStateRecord as GameStateRecordShape).currentState;
+    const gameState = save.state;
     const currentLevel = gameState.stadium.level;
 
     // Check if max level
@@ -71,14 +58,11 @@ export const POST = withApiRoute('stadium-upgrade', async (
     gameState.stadium.capacity = nextUpgrade.capacity;
     gameState.stadium.ticketPrice = nextUpgrade.ticketPrice;
 
-    // Update database
-    await db
-      .update(gameStates)
-      .set({
-        currentState: gameState,
-        updatedAt: new Date(),
-      })
-      .where(eq(gameStates.userId, userId));
+    const committed = await commitSave(userId, gameState, save.version);
+    if (!committed.ok) {
+      log.warn('Stadium upgrade rejected: the save moved on while it was being processed', { fromLevel: currentLevel });
+      return saveConflictResponse();
+    }
 
     return NextResponse.json({
       success: true,

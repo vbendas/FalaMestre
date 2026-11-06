@@ -11,11 +11,15 @@ import {
   CoinDisplay,
   ManagementLayout,
   SectionTitle,
+  ActionNotice,
 } from '@/components/crt';
+import { useGuardedAction } from '@/hooks/useGuardedAction';
 
 interface FacilitiesViewProps {
   gameState: GameState;
   onViewChange: (view: ViewType) => void;
+  /** Reloads the save from the server. Called after every upgrade reply. */
+  onRefreshSave?: () => void | Promise<void>;
 }
 
 const FACILITY_ICONS: Record<string, string> = {
@@ -32,8 +36,9 @@ const FACILITY_LABELS: Record<string, string> = {
   scoutOffice: 'Scout',
 };
 
-export function FacilitiesView({ gameState, onViewChange }: FacilitiesViewProps) {
+export function FacilitiesView({ gameState, onViewChange, onRefreshSave }: FacilitiesViewProps) {
   const { facilities, user } = gameState;
+  const action = useGuardedAction(onRefreshSave);
 
   const facilityTypes = Object.keys(FACILITY_UPGRADES) as Array<keyof typeof FACILITY_UPGRADES>;
 
@@ -50,22 +55,19 @@ export function FacilitiesView({ gameState, onViewChange }: FacilitiesViewProps)
 
     if ((user.money || 0) < cost) return;
 
-    try {
-      const response = await fetch('/api/facilities/upgrade', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user.id,
-          facilityType,
+    // Read the reply, reload the save, show a refusal (see StaffView).
+    await action.run<{ newFacilityLevel?: number }>(
+      () =>
+        fetch('/api/facilities/upgrade', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user.id, facilityType }),
         }),
-      });
-
-      if (response.ok) {
-        window.location.reload();
+      {
+        successMessage: (body) =>
+          `${FACILITY_LABELS[facilityType] ?? facilityType} agora no nível ${body.newFacilityLevel ?? currentLevel + 1}.`,
       }
-    } catch (error) {
-      console.error('Failed to upgrade facility:', error);
-    }
+    );
   };
 
   return (
@@ -76,6 +78,7 @@ export function FacilitiesView({ gameState, onViewChange }: FacilitiesViewProps)
       onBack={() => onViewChange('dashboard')}
     >
       <div className="space-y-3">
+        <ActionNotice notice={action.notice} onDismiss={action.dismiss} pending={action.pending} />
         <SectionTitle>Instalações do Clube</SectionTitle>
 
         {facilityTypes.map((facilityType) => {

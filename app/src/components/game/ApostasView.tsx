@@ -1,134 +1,160 @@
 'use client';
 
-import { useState } from 'react';
-import { GameState } from '@/lib/types';
+import { useCallback, useEffect, useState } from 'react';
+import { GameState, Prediction, PredictionOption } from '@/lib/types';
 import { formatMoney } from '@/lib/economy';
-import { GlassCard, CrtButton, CoinDisplay, SectionTitle, ViewContainer } from '@/components/crt';
+import { GlassCard, CrtButton, CoinDisplay, SectionTitle, ViewContainer, ActionNotice } from '@/components/crt';
+import { useGuardedAction } from '@/hooks/useGuardedAction';
 
 interface ApostasViewProps {
   gameState: GameState;
   userId: string;
   onViewChange: (view: string) => void;
+  /** Reloads the save from the server. Called after the bets are placed. */
+  onRefreshSave?: () => void | Promise<void>;
 }
 
-type PredictionType = 'resultado' | 'intervalo_final' | 'total_gols' | 'ambos_marcam' | 'primeiro_gol' | 'escantios' | 'cartoes' | 'placar_exato';
+/** The market labels the screen shows, by the type the server stores. */
+const MARKET_LABELS: Record<string, string> = {
+  win_draw_loss: 'Resultado Final',
+  first_scorer: 'Primeiro Gol',
+  clean_sheet: 'Não Sofre Gol',
+  score_range: 'Faixa de Placar',
+};
 
-interface PredictionOption {
+/** A bet as the board read returns it (see GET /api/predictions). */
+type PlacedBet = {
   id: string;
-  label: string;
-  odds: number;
-}
+  homeTeam: string | null;
+  awayTeam: string | null;
+  optionLabel: string;
+  amount: number;
+  potentialWin: number;
+  status: 'open' | 'in_play' | 'under_review' | 'won' | 'lost';
+  payout: number | null;
+  score: { homeScore: number; awayScore: number } | null;
+};
 
-interface MatchPrediction {
-  type: PredictionType;
-  label: string;
-  options: PredictionOption[];
-}
+const BET_STATUS_LABELS: Record<PlacedBet['status'], string> = {
+  open: 'Aberta',
+  in_play: 'Bola rolando',
+  under_review: 'Em análise',
+  won: 'Ganhou',
+  lost: 'Perdeu',
+};
 
-export function ApostasView({ gameState, userId, onViewChange }: ApostasViewProps) {
+/** One market selection: which prediction, which option, for how much. */
+type Selection = { predictionId: string; optionId: string; amount: number };
+
+export function ApostasView({ gameState, userId, onViewChange, onRefreshSave }: ApostasViewProps) {
   const nextMatch = gameState.season.nextMatch;
-  const [selectedBets, setSelectedBets] = useState<Map<string, { type: string; optionId: string; amount: number }>>(new Map());
+  const action = useGuardedAction(onRefreshSave);
+  const [selectedBets, setSelectedBets] = useState<Map<string, Selection>>(new Map());
   const [betAmount, setBetAmount] = useState(50000);
 
-  const allPredictionTypes: PredictionType[] = [
-    'resultado', 'intervalo_final', 'total_gols', 'ambos_marcam',
-    'primeiro_gol', 'escantios', 'cartoes', 'placar_exato'
-  ];
+  // The markets really open, from the server.
+  //
+  // They used to be a hardcoded list here, with ids made up on the spot
+  // ('resultado', 'home_win') and the prediction identified as
+  // `match-${week}`. `predictions.id` is a uuid column, so every bet the
+  // screen sent was refused — the route answered 400 before it ever looked
+  // at the market. Nothing can be bet on that the server does not know
+  // about, so the list comes from the server.
+  const [markets, setMarkets] = useState<Prediction[] | null>(null);
+  const [placedBets, setPlacedBets] = useState<PlacedBet[]>([]);
+  const [loadFailed, setLoadFailed] = useState(false);
 
-  const predictionLabels: Record<PredictionType, string> = {
-    resultado: 'Resultado Final',
-    intervalo_final: 'Intervalo/Final',
-    total_gols: 'Total de Gols',
-    ambos_marcam: 'Ambos Marcam',
-    primeiro_gol: 'Primeiro Gol',
-    escantios: 'Escantios Over/Under',
-    cartoes: 'Cartões Over/Under',
-    placar_exato: 'Placar Exato'
-  };
-
-  const activePredictions: MatchPrediction[] = [
-    {
-      type: 'resultado',
-      label: 'Resultado Final',
-      options: [
-        { id: 'home_win', label: 'Vitória', odds: 1.8 },
-        { id: 'draw', label: 'Empate', odds: 3.2 },
-        { id: 'away_win', label: 'Derrota', odds: 2.5 }
-      ]
-    },
-    {
-      type: 'total_gols',
-      label: 'Total de Gols',
-      options: [
-        { id: 'over_2.5', label: 'Over 2.5', odds: 1.7 },
-        { id: 'under_2.5', label: 'Under 2.5', odds: 2.1 }
-      ]
-    },
-    {
-      type: 'ambos_marcam',
-      label: 'Ambos Marcam',
-      options: [
-        { id: 'yes', label: 'Sim', odds: 1.6 },
-        { id: 'no', label: 'Não', odds: 2.4 }
-      ]
-    },
-    {
-      type: 'placar_exato',
-      label: 'Placar Exato',
-      options: [
-        { id: '1-0', label: '1-0', odds: 8.0 },
-        { id: '2-0', label: '2-0', odds: 10.0 },
-        { id: '2-1', label: '2-1', odds: 12.0 },
-        { id: '3-0', label: '3-0', odds: 15.0 }
-      ]
+  const loadMarkets = useCallback(async () => {
+    try {
+      const response = await fetch(
+        `/api/predictions?status=open&userId=${encodeURIComponent(userId)}`
+      );
+      if (!response.ok) throw new Error(String(response.status));
+      const data = (await response.json()) as { predictions?: Prediction[]; bets?: PlacedBet[] };
+      setMarkets(data.predictions ?? []);
+      setPlacedBets(data.bets ?? []);
+      setLoadFailed(false);
+    } catch {
+      setMarkets([]);
+      setLoadFailed(true);
     }
-  ];
+  }, [userId]);
 
-  const handleSelectBet = (type: string, optionId: string, odds: number) => {
+  useEffect(() => {
+    void loadMarkets();
+  }, [loadMarkets]);
+
+  // Keyed on the prediction, so a player backs at most one option per
+  // market — which is also the only way the server will take them.
+  const handleSelectBet = (predictionId: string, optionId: string) => {
     setSelectedBets(prev => {
       const newMap = new Map(prev);
-      if (newMap.has(type)) {
-        newMap.delete(type);
+      if (newMap.get(predictionId)?.optionId === optionId) {
+        newMap.delete(predictionId);
       } else {
-        newMap.set(type, { type, optionId, amount: betAmount });
+        newMap.set(predictionId, { predictionId, optionId, amount: betAmount });
       }
       return newMap;
     });
   };
 
+  // Used to announce success whatever the route answered, and never reload
+  // the balance it had just spent. Each bet's reply is read; the first one
+  // refused stops the run and is shown, with the balance reloaded, and the
+  // selection is only cleared once every bet was accepted.
   const handlePlaceBet = async () => {
     if (selectedBets.size === 0) return;
 
-    for (const [, bet] of selectedBets) {
-      try {
-        const response = await fetch('/api/predictions/bet', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            predictionId: `match-${gameState.season.week}`,
-            optionId: bet.optionId,
-            amount: bet.amount,
-            userId
+    const bets = Array.from(selectedBets.values());
+    let placed = 0;
+    for (const bet of bets) {
+      const ok = await action.run<{ newBalance?: number }>(
+        () =>
+          fetch('/api/predictions/bet', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              predictionId: bet.predictionId,
+              optionId: bet.optionId,
+              amount: bet.amount,
+              userId,
+            }),
           }),
-        });
-
-        const data = await response.json();
-        if (!response.ok) {
-          alert(data.error || 'Erro ao fazer aposta');
+        {
+          successMessage: () =>
+            placed + 1 === bets.length
+              ? `${bets.length} ${bets.length === 1 ? 'aposta realizada' : 'apostas realizadas'}.`
+              : null,
         }
-      } catch (error) {
-        console.error('Bet error:', error);
-      }
+      );
+      if (!ok) break;
+      placed += 1;
     }
 
-    alert(`Apostas realizadas com sucesso! ${selectedBets.size} apostas.`);
-    setSelectedBets(new Map());
+    if (placed === bets.length) {
+      setSelectedBets(new Map());
+    }
+    // The odds move with every bet taken, so the board is reread either way.
+    await loadMarkets();
   };
 
-  const totalPotentialWin = Array.from(selectedBets.values()).reduce((sum, bet) => sum + bet.amount * 1.8, 0);
+  /** Odds of the option backed in `selection`, or 1 if it has gone away. */
+  const oddsOf = (selection: Selection): number => {
+    const market = markets?.find(m => m.id === selection.predictionId);
+    const option = (market?.options as PredictionOption[] | undefined)?.find(
+      o => o.id === selection.optionId
+    );
+    return option?.odds ?? 1;
+  };
+
+  const totalPotentialWin = Array.from(selectedBets.values()).reduce(
+    (sum, bet) => sum + bet.amount * oddsOf(bet),
+    0
+  );
 
   return (
     <ViewContainer className="pb-24">
+      <ActionNotice notice={action.notice} onDismiss={action.dismiss} pending={action.pending} />
       <GlassCard glow className="p-4">
         <div className="flex items-center justify-between">
           <div>
@@ -147,16 +173,23 @@ export function ApostasView({ gameState, userId, onViewChange }: ApostasViewProp
           Próxima Partida - Rodada {gameState.season.week}
         </p>
         <div className="flex items-center justify-between mt-2">
+          {/* Home on the left, as the market lists it. The player's team used
+              to be labelled Casa whatever the fixture, so an away game showed
+              both sides at home. */}
           <div className="text-center flex-1">
-            <p className="text-white font-bold font-[family-name:var(--font-pixel)]">{gameState.user.team}</p>
+            <p className="text-white font-bold font-[family-name:var(--font-pixel)]">
+              {nextMatch.isHome ? gameState.user.team : nextMatch.opponent}
+            </p>
             <p className="text-[#00A859] text-xs font-[family-name:var(--font-pixel)]">Casa</p>
           </div>
           <div className="px-4">
             <p className="text-white/30 text-2xl font-[family-name:var(--font-pixel)]">VS</p>
           </div>
           <div className="text-center flex-1">
-            <p className="text-white font-bold font-[family-name:var(--font-pixel)]">{nextMatch.opponent}</p>
-            <p className="text-[#FF3333] text-xs font-[family-name:var(--font-pixel)]">{nextMatch.isHome ? 'Fora' : 'Casa'}</p>
+            <p className="text-white font-bold font-[family-name:var(--font-pixel)]">
+              {nextMatch.isHome ? nextMatch.opponent : gameState.user.team}
+            </p>
+            <p className="text-[#FF3333] text-xs font-[family-name:var(--font-pixel)]">Fora</p>
           </div>
         </div>
         <p className="text-white/50 text-xs text-center mt-2 font-[family-name:var(--font-pixel)]">{nextMatch.competition}</p>
@@ -180,16 +213,39 @@ export function ApostasView({ gameState, userId, onViewChange }: ApostasViewProp
 
       <SectionTitle>Mercados Disponíveis</SectionTitle>
 
-      {activePredictions.map(pred => (
-        <GlassCard key={pred.type} className="p-4">
-          <p className="text-[#FFDF00] font-bold mb-3 font-[family-name:var(--font-pixel)]">{pred.label}</p>
+      {markets === null && (
+        <GlassCard className="p-4">
+          <p className="text-white/50 text-sm text-center font-[family-name:var(--font-pixel)]">
+            Carregando mercados...
+          </p>
+        </GlassCard>
+      )}
+
+      {markets !== null && markets.length === 0 && (
+        <GlassCard className="p-4">
+          <p className="text-white/50 text-sm text-center font-[family-name:var(--font-pixel)]">
+            {loadFailed
+              ? 'Não foi possível carregar os mercados. Tente novamente mais tarde.'
+              : 'Nenhum mercado aberto no momento.'}
+          </p>
+        </GlassCard>
+      )}
+
+      {(markets ?? []).map(market => (
+        <GlassCard key={market.id} className="p-4">
+          <p className="text-[#FFDF00] font-bold mb-1 font-[family-name:var(--font-pixel)]">
+            {MARKET_LABELS[market.type] ?? market.type}
+          </p>
+          <p className="text-white/40 text-[0.6rem] mb-3 font-[family-name:var(--font-pixel)]">
+            {market.homeTeam} vs {market.awayTeam}
+          </p>
           <div className="grid grid-cols-3 gap-2">
-            {pred.options.map(opt => {
-              const isSelected = selectedBets.has(pred.type);
+            {(market.options as PredictionOption[]).map(opt => {
+              const isSelected = selectedBets.get(market.id)?.optionId === opt.id;
               return (
                 <CrtButton
                   key={opt.id}
-                  onClick={() => handleSelectBet(pred.type, opt.id, opt.odds)}
+                  onClick={() => handleSelectBet(market.id, opt.id)}
                   variant={isSelected ? 'control-active' : 'control'}
                   className="flex flex-col items-center gap-1 p-2"
                 >
@@ -201,6 +257,59 @@ export function ApostasView({ gameState, userId, onViewChange }: ApostasViewProp
           </div>
         </GlassCard>
       ))}
+
+      <SectionTitle>Minhas Apostas</SectionTitle>
+      {placedBets.length === 0 ? (
+        <GlassCard className="p-4">
+          <p className="text-white/50 text-sm text-center font-[family-name:var(--font-pixel)]">
+            Nenhuma aposta ainda.
+          </p>
+        </GlassCard>
+      ) : (
+        <GlassCard className="p-4">
+          {(['open', 'settled'] as const).map(group => {
+            const list = placedBets.filter(b =>
+              group === 'open' ? b.status === 'open' || b.status === 'in_play' || b.status === 'under_review' : b.status === 'won' || b.status === 'lost'
+            );
+            if (list.length === 0) return null;
+            return (
+              <div key={group} className="mb-3 last:mb-0">
+                <p className="text-white/50 text-xs uppercase mb-2 font-[family-name:var(--font-pixel)]">
+                  {group === 'open' ? 'Em aberto' : 'Liquidadas'}
+                </p>
+                <ul className="space-y-2">
+                  {list.map(bet => (
+                    <li
+                      key={bet.id}
+                      data-bet-status={bet.status}
+                      className="flex items-center justify-between gap-2 text-xs font-[family-name:var(--font-pixel)]"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-white truncate">
+                          {bet.homeTeam} {bet.score ? `${bet.score.homeScore} x ${bet.score.awayScore}` : 'vs'} {bet.awayTeam}
+                        </p>
+                        <p className="text-white/50">
+                          {bet.optionLabel} · {formatMoney(bet.amount)}
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className={bet.status === 'won' ? 'text-[#55e0a0]' : bet.status === 'lost' ? 'text-[#FF3333]' : 'text-[#FFDF00]'}>
+                          {BET_STATUS_LABELS[bet.status]}
+                        </p>
+                        <p className="text-white/70">
+                          {bet.payout === null
+                            ? `Retorno ${formatMoney(bet.potentialWin)}`
+                            : `Pagou ${formatMoney(bet.payout)}`}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
+        </GlassCard>
+      )}
 
       {selectedBets.size > 0 && (
         <div className="fixed bottom-20 left-0 right-0 bg-[#00381a]/95 p-4 border-t-2 border-[#FFDF00]/50 z-[90]">

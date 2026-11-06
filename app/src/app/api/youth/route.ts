@@ -1,20 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/db';
-import { gameStates } from '@/db/schema';
-import { eq } from 'drizzle-orm';
-import { GameState, YouthAcademy, YouthPlayer, TrainingFocus } from '@/lib/types';
+import { YouthAcademy, YouthPlayer } from '@/lib/types';
 import { generateYouthIntake } from '@/lib/youth-generator';
+import { loadInvestmentBonuses } from '@/lib/investment-bonuses-store';
+import { getAuthenticatedUser, requireAuth } from '@/lib/auth-helpers';
 import { withApiRoute, ApiContext } from '@/lib/api-route';
-
-type GameStateRecordShape = {
-  currentState: GameState;
-};
-
-interface YouthRequest {
-  action?: string;
-  playerId?: string;
-  focus: TrainingFocus;
-}
+import { youthRequestSchema } from '@/lib/validations';
+import { loadSave, commitSave, saveConflictResponse } from '@/lib/save-store';
 
 function initializeYouthAcademy(currentWeek: number): YouthAcademy {
   return {
@@ -30,23 +21,35 @@ export const GET = withApiRoute('youth', async (
   { log }: ApiContext
 ) => {
   try {
+    // Check authentication
+    const authError = await requireAuth();
+    if (authError) {
+      return authError;
+    }
+
+    const sessionUserId = await getAuthenticatedUser();
+
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
-    if (!userId) {
+    if (sessionUserId && userId && userId !== sessionUserId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const targetUserId = sessionUserId || userId;
+
+    if (!targetUserId) {
       return NextResponse.json({ error: 'userId required' }, { status: 400 });
     }
 
-    const gameStateRecord = await db.query.gameStates.findFirst({
-      where: eq(gameStates.userId, userId),
-    });
+    const save = await loadSave(targetUserId);
 
-    if (!gameStateRecord) {
+    if (!save) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const gameState = (gameStateRecord as GameStateRecordShape).currentState;
-    
+    const gameState = save.state;
+
     const youthAcademy = gameState.youthAcademy || initializeYouthAcademy(gameState.season.week);
     const weeksUntilIntake = youthAcademy.nextIntakeWeek - gameState.season.week;
 
@@ -64,34 +67,47 @@ export const GET = withApiRoute('youth', async (
 
 export const POST = withApiRoute('youth', async (
   request: NextRequest,
-  { log, readJson }: ApiContext
+  { log, readBody }: ApiContext
 ) => {
   try {
+    // Check authentication
+    const authError = await requireAuth();
+    if (authError) {
+      return authError;
+    }
+
+    const sessionUserId = await getAuthenticatedUser();
+
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
-    const bodyResult = await readJson<YouthRequest>();
+    if (sessionUserId && userId && userId !== sessionUserId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const targetUserId = sessionUserId || userId;
+
+    const bodyResult = await readBody(youthRequestSchema);
     if (!bodyResult.ok) {
       return bodyResult.response;
     }
-    const requestBody = bodyResult.body;
+    // Kept whole as well as destructured: `playerId` is only on a sign or a
+    // reject and `focus` only on a set-focus, and narrowing on `body.action`
+    // is what tells TypeScript which.
+    const body = bodyResult.body;
+    const action = body.action;
 
-    const action = requestBody.action;
-    const playerId = requestBody.playerId;
-
-    if (!userId) {
+    if (!targetUserId) {
       return NextResponse.json({ error: 'userId required' }, { status: 400 });
     }
 
-    const gameStateRecord = await db.query.gameStates.findFirst({
-      where: eq(gameStates.userId, userId),
-    });
+    const save = await loadSave(targetUserId);
 
-    if (!gameStateRecord) {
+    if (!save) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const gameState = (gameStateRecord as GameStateRecordShape).currentState;
+    const gameState = save.state;
     const yai = gameState.youthAcademy || initializeYouthAcademy(gameState.season.week);
     const academyLevel = gameState.facilities.youthAcademy;
     const scoutLevel = gameState.facilities.scoutOffice;
@@ -102,16 +118,23 @@ export const POST = withApiRoute('youth', async (
         (gameState.season.week >= yai.nextIntakeWeek || !yai.nextIntakeWeek);
 
       if (shouldGenerate) {
-        const newPlayers = generateYouthIntake(academyLevel, scoutLevel);
+        // An active `academia_base` investment is worth a better intake.
+        const bonuses = await loadInvestmentBonuses(targetUserId);
+        const newPlayers = generateYouthIntake(
+          academyLevel,
+          scoutLevel,
+          bonuses.youthQualityPercent
+        );
         yai.playersAvailable = newPlayers;
         yai.lastIntakeWeek = gameState.season.week;
         yai.nextIntakeWeek = gameState.season.week + 4;
         gameState.youthAcademy = yai;
 
-        await db
-          .update(gameStates)
-          .set({ currentState: gameState, updatedAt: new Date() })
-          .where(eq(gameStates.userId, userId));
+        const committed = await commitSave(targetUserId, gameState, save.version);
+        if (!committed.ok) {
+          log.warn('Youth action rejected: the save moved on while it was being processed', { action });
+          return saveConflictResponse();
+        }
 
         return NextResponse.json({
           success: true,
@@ -129,7 +152,8 @@ export const POST = withApiRoute('youth', async (
       }
     }
 
-    if (action === 'sign') {
+    if (body.action === 'sign') {
+      const playerId = body.playerId;
       const playerIndex = yai.playersAvailable.findIndex(p => p.id === playerId);
       if (playerIndex === -1) {
         return NextResponse.json({ error: 'Player not found' }, { status: 404 });
@@ -169,10 +193,11 @@ export const POST = withApiRoute('youth', async (
       yai.playersAvailable.splice(playerIndex, 1);
       gameState.youthAcademy = yai;
 
-      await db
-        .update(gameStates)
-        .set({ currentState: gameState, updatedAt: new Date() })
-        .where(eq(gameStates.userId, userId));
+      const committed = await commitSave(targetUserId, gameState, save.version);
+      if (!committed.ok) {
+        log.warn('Youth action rejected: the save moved on while it was being processed', { action });
+        return saveConflictResponse();
+      }
 
       return NextResponse.json({
         success: true,
@@ -182,8 +207,8 @@ export const POST = withApiRoute('youth', async (
       });
     }
 
-    if (action === 'reject') {
-      const playerIndex = yai.playersAvailable.findIndex(p => p.id === playerId);
+    if (body.action === 'reject') {
+      const playerIndex = yai.playersAvailable.findIndex(p => p.id === body.playerId);
       if (playerIndex === -1) {
         return NextResponse.json({ error: 'Player not found' }, { status: 404 });
       }
@@ -191,10 +216,11 @@ export const POST = withApiRoute('youth', async (
       yai.playersAvailable.splice(playerIndex, 1);
       gameState.youthAcademy = yai;
 
-      await db
-        .update(gameStates)
-        .set({ currentState: gameState, updatedAt: new Date() })
-        .where(eq(gameStates.userId, userId));
+      const committed = await commitSave(targetUserId, gameState, save.version);
+      if (!committed.ok) {
+        log.warn('Youth action rejected: the save moved on while it was being processed', { action });
+        return saveConflictResponse();
+      }
 
       return NextResponse.json({
         success: true,
@@ -203,21 +229,18 @@ export const POST = withApiRoute('youth', async (
       });
     }
 
-    if (action === 'set-focus') {
-      const focus = requestBody.focus;
-      const validFocuses = ['technical', 'physical', 'tactical'];
-      
-      if (focus !== null && !validFocuses.includes(focus)) {
-        return NextResponse.json({ error: 'Invalid focus' }, { status: 400 });
-      }
+    if (body.action === 'set-focus') {
+      // Checked by the schema, down to null meaning "clear it".
+      const focus = body.focus;
 
       yai.trainingFocus = focus;
       gameState.youthAcademy = yai;
 
-      await db
-        .update(gameStates)
-        .set({ currentState: gameState, updatedAt: new Date() })
-        .where(eq(gameStates.userId, userId));
+      const committed = await commitSave(targetUserId, gameState, save.version);
+      if (!committed.ok) {
+        log.warn('Youth action rejected: the save moved on while it was being processed', { action });
+        return saveConflictResponse();
+      }
 
       return NextResponse.json({
         success: true,
@@ -226,6 +249,8 @@ export const POST = withApiRoute('youth', async (
       });
     }
 
+    // Unreachable: the schema admits only the actions handled above, and
+    // 'generate' and 'intake' share the first branch.
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
 
   } catch (error) {

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useGameState } from '@/hooks/useGameState';
+import { GameState } from '@/lib/types';
 import {
   LoadingScreen,
   MatchResultModal,
@@ -19,6 +20,7 @@ import { InvestirView } from '@/components/game/InvestirView';
 import { CrtCabinet } from '@/components/crt/CrtCabinet';
 import { SidebarNav } from '@/components/crt/SidebarNav';
 import { DashboardView } from '@/components/game/DashboardView';
+import { ChatView } from '@/components/game/ChatView';
 import { SquadView } from '@/components/game/SquadView';
 import { MatchView } from '@/components/game/MatchView';
 
@@ -26,49 +28,49 @@ export default function Home() {
   const router = useRouter();
   const {
     gameState,
-    isLoading,
     userId,
     view,
     setView,
-    playMatch,
-    playMatchAndGetResult,
     showMatchResult,
     lastMatchResult,
     showMatchModal,
     closeMatchModal,
     isNewUser,
     hasCheckedUser,
+    requiresSignIn,
     updateGameState,
+    refreshGameState,
   } = useGameState();
 
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
-  const handleMoneyUpdate = useCallback((newBalance: number) => {
-    updateGameState(prev => ({
-      ...prev,
-      user: { ...prev.user, money: newBalance },
-    }));
+  // The chat reply carries the save the server read; adopting it keeps the
+  // other screens from showing a copy older than the conversation.
+  const handleServerGameState = useCallback((state: GameState) => {
+    updateGameState(() => state);
   }, [updateGameState]);
 
   useEffect(() => {
+    // Sign-in comes before anything else: with auth on, a signed-out player
+    // cannot load or create a save, so sending them to onboarding would only
+    // waste the time they spend designing a team.
+    if (requiresSignIn) {
+      router.push('/login');
+      return;
+    }
     if (hasCheckedUser && isNewUser) {
       router.push('/onboarding');
     }
-  }, [hasCheckedUser, isNewUser, router]);
+  }, [requiresSignIn, hasCheckedUser, isNewUser, router]);
 
-  const handleTrainPlayer = async (playerId: string, focus: 'technical' | 'physical' | 'tactical' | 'rest') => {
-    if (!userId) return;
-
-    try {
-      await fetch('/api/squad/train', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, playerId, focus }),
-      });
-    } catch (error) {
-      console.error('[Training] Network error:', error);
-    }
-  };
+  // The squad screen reads the reply (a refused session used to look like
+  // it worked) and reloads the save after it; this only sends the request.
+  const handleTrainPlayer = (playerId: string, focus: 'technical' | 'physical' | 'tactical' | 'rest') =>
+    fetch('/api/squad/train', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, playerId, focus }),
+    });
 
   if (!userId || (hasCheckedUser && isNewUser)) {
     return (
@@ -97,22 +99,30 @@ export default function Home() {
             />
           )}
 
+          {view === 'chat' && gameState && userId && (
+            <ChatView
+              gameState={gameState}
+              userId={userId}
+              onViewChange={setView}
+              onGameState={handleServerGameState}
+            />
+          )}
+
           {view === 'squad' && gameState && (
             <SquadView
               gameState={gameState}
               onViewChange={setView}
               onTrainPlayer={handleTrainPlayer}
               userId={userId}
+              onRefreshSave={refreshGameState}
             />
           )}
 
           {view === 'match' && gameState && (
             <MatchView
               gameState={gameState}
-              isLoading={isLoading}
-              onPlayMatch={playMatch}
-              onPlayMatchWithResult={playMatchAndGetResult}
               onShowMatchResult={showMatchResult}
+              onRefreshSave={refreshGameState}
             />
           )}
 
@@ -128,11 +138,11 @@ export default function Home() {
           )}
 
           {view === 'stadium' && gameState && (
-            <StadiumView gameState={gameState} onViewChange={setView} />
+            <StadiumView gameState={gameState} onViewChange={setView} onRefreshSave={refreshGameState} />
           )}
 
           {view === 'facilities' && gameState && (
-            <FacilitiesView gameState={gameState} onViewChange={setView} />
+            <FacilitiesView gameState={gameState} onViewChange={setView} onRefreshSave={refreshGameState} />
           )}
 
           {view === 'youth' && gameState && userId && (
@@ -140,6 +150,7 @@ export default function Home() {
               gameState={gameState}
               userId={userId}
               onViewChange={setView}
+              onRefreshSave={refreshGameState}
             />
           )}
 
@@ -148,6 +159,7 @@ export default function Home() {
               gameState={gameState}
               userId={userId}
               onViewChange={(v) => setView(v as any)}
+              onRefreshSave={refreshGameState}
             />
           )}
 
@@ -156,7 +168,7 @@ export default function Home() {
               gameState={gameState}
               userId={userId}
               onViewChange={(v) => setView(v as any)}
-              onMoneyUpdate={handleMoneyUpdate}
+              onRefreshSave={refreshGameState}
             />
           )}
 
@@ -165,6 +177,7 @@ export default function Home() {
               gameState={gameState}
               userId={userId}
               onViewChange={setView}
+              onRefreshSave={refreshGameState}
             />
           )}
 
@@ -184,7 +197,7 @@ export default function Home() {
           result={lastMatchResult?.result || null}
           gameState={gameState}
           pointsEarned={lastMatchResult?.pointsEarned || 0}
-          pointsChange={lastMatchResult?.pointsChange || 0}
+          fixture={lastMatchResult?.fixture ?? null}
           onClose={closeMatchModal}
         />
       )}

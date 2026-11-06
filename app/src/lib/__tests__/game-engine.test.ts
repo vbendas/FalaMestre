@@ -665,7 +665,12 @@ describe('Game Engine', () => {
       const second = withSeed('save-1', () => createInitialGameState('user_1', 'Leões do Norte'));
 
       expect(first.squad).toEqual(second.squad);
-      expect(first.season).toEqual(second.season);
+      // The fixture's `date` is wall-clock, not seeded: two calls either side
+      // of a millisecond boundary differ there and nowhere else.
+      expect({ ...first.season, nextMatch: { ...first.season.nextMatch, date: '' } }).toEqual({
+        ...second.season,
+        nextMatch: { ...second.season.nextMatch, date: '' },
+      });
     });
 
     it('produces different matches for different seeds', () => {

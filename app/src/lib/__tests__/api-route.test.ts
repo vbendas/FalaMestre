@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { NextRequest, NextResponse } from 'next/server';
 import { withApiRoute, type ApiContext } from '../api-route';
 import { DEFAULT_MAX_BODY_BYTES } from '../request-body';
+import { getLogger } from '../request-context';
 
 const URL = 'http://localhost/api/example';
 
@@ -116,6 +117,26 @@ describe('withApiRoute', () => {
       expect(parsedLines(logSpy)[0]).toMatchObject({ route: 'example', requestId: 'trace-abc-123' });
     });
 
+    it('lets library code reached from the handler log under the same request ID', async () => {
+      const wrapped = withApiRoute('example', async () => {
+        await Promise.resolve();
+        getLogger('db').info('from a module with no request in hand');
+        return new Response(null, { status: 204 });
+      });
+
+      await wrapped(post('{}', { 'x-request-id': 'trace-xyz-789' }));
+
+      expect(parsedLines(logSpy)).toEqual([
+        expect.objectContaining({ route: 'example', requestId: 'trace-xyz-789', scope: 'db' }),
+        expect.objectContaining({
+          route: 'example',
+          requestId: 'trace-xyz-789',
+          message: 'Request completed',
+          status: 204,
+        }),
+      ]);
+    });
+
     it('discards a malformed x-request-id in favour of a generated one', async () => {
       const wrapped = withApiRoute('example', async (_request, { log }) => {
         log.info('hello');
@@ -184,7 +205,9 @@ describe('withApiRoute', () => {
         level: 'warn',
         route: 'example',
         requestId: 'req-size',
-        message: 'Request body rejected: too large',
+        message: 'Request completed',
+        status: 413,
+        reason: 'body_too_large',
         maxBytes: DEFAULT_MAX_BODY_BYTES,
       });
     });
@@ -199,7 +222,9 @@ describe('withApiRoute', () => {
         level: 'warn',
         route: 'example',
         requestId: 'req-bad',
-        message: 'Request body rejected: invalid JSON',
+        message: 'Request completed',
+        status: 400,
+        reason: 'body_invalid_json',
       });
     });
 
@@ -217,7 +242,9 @@ describe('withApiRoute', () => {
         level: 'warn',
         route: 'example',
         requestId: 'req-shape',
-        message: 'Request body rejected: not a JSON object',
+        message: 'Request completed',
+        status: 400,
+        reason: 'body_not_object',
       });
     });
 
@@ -249,8 +276,8 @@ describe('withApiRoute', () => {
 
       expect(response.status).toBe(400);
       await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON' });
-      // The override only covers the malformed-JSON reply; the log line is unchanged.
-      expect(parsedLines(warnSpy)[0]).toMatchObject({ message: 'Request body rejected: invalid JSON' });
+      // The override only covers the malformed-JSON reply; the recorded reason is unchanged.
+      expect(parsedLines(warnSpy)[0]).toMatchObject({ reason: 'body_invalid_json' });
     });
 
     it('does not apply invalidJsonResponse to an oversized body', async () => {
