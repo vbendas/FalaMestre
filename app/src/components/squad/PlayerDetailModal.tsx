@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Dumbbell, Heart, Star, TrendingUp, TrendingDown, Minus, UserPlus, Zap, Info } from 'lucide-react';
 import { Player, GameState } from '@/lib/types';
@@ -14,6 +14,8 @@ interface PlayerDetailModalProps {
   onRest: (playerId: string) => void;
   onSetCaptain: (playerId: string) => void;
   isCaptain: boolean;
+  /** The outcome of the last training request, shown above the options. */
+  trainingNotice?: ReactNode;
 }
 
 const ATTRIBUTE_LABELS: Record<string, { label: string; short: string }> = {
@@ -108,6 +110,7 @@ export function PlayerDetailModal({
   onRest,
   onSetCaptain,
   isCaptain,
+  trainingNotice,
 }: PlayerDetailModalProps) {
   const [selectedTab, setSelectedTab] = useState<'stats' | 'training'>('stats');
   const [isTraining, setIsTraining] = useState(false);
@@ -380,6 +383,8 @@ export function PlayerDetailModal({
                         </motion.div>
                       )}
                     </AnimatePresence>
+
+                    {trainingNotice}
 
                     {/* Training Options */}
                     <div>

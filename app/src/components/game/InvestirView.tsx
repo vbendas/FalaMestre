@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { GameState } from '@/lib/types';
 import { formatMoney } from '@/lib/economy';
 import {
@@ -9,152 +9,142 @@ import {
   CrtButton,
   CoinDisplay,
   SectionTitle,
+  ActionNotice,
 } from '@/components/crt';
+import { useGuardedAction } from '@/hooks/useGuardedAction';
+import { INVESTMENT_PRODUCTS, type InvestmentProduct } from '@/lib/investments';
 
 interface InvestirViewProps {
   gameState: GameState;
   userId: string;
   onViewChange: (view: string) => void;
-  onMoneyUpdate: (newBalance: number) => void;
+  /** Reloads the save from the server. Called after every investment reply. */
+  onRefreshSave?: () => void | Promise<void>;
 }
 
-interface InvestmentType {
+// The catalogue is the definition of what exists, and the route prices a
+// purchase off the same rows. The list that used to sit here held seven
+// products but posted one of three server tiers, so five of the cards were
+// bought at a price no card showed.
+const INVESTMENT_TYPES = INVESTMENT_PRODUCTS;
+type InvestmentType = InvestmentProduct;
+
+/** One active investment, as /api/investment describes it. */
+interface ActiveInvestment {
   id: string;
+  option: string;
+  /** Named by the server, so a retired 'A' tier row reads as a club name. */
   name: string;
   icon: string;
-  cost: number;
-  dailyYield: number;
-  durationDays: number;
-  strategicBonusType: string;
-  strategicBonusValue: number;
-  description: string;
+  amount: number;
+  yieldPerDay: number;
+  unlockDate: string;
+  strategicBonus: { type: string; value: number; label: string } | null;
 }
 
-const INVESTMENT_TYPES: InvestmentType[] = [
-  {
-    id: 'clube_torcedores',
-    name: 'Clube de Torcedores',
-    icon: '💰',
-    cost: 50000,
-    dailyYield: 10000,
-    durationDays: 3,
-    strategicBonusType: 'morale',
-    strategicBonusValue: 2,
-    description: 'Investimento no clube de torcedores. Aumenta a moral do time em 2% e gera rendimento diário.'
-  },
-  {
-    id: 'marketing_digital',
-    name: 'Marketing Digital',
-    icon: '📱',
-    cost: 200000,
-    dailyYield: 0,
-    durationDays: 7,
-    strategicBonusType: 'ticket_sales',
-    strategicBonusValue: 15,
-    description: 'Campanha digital para atrair mais torcedores. Aumenta receita de bilheteria em 15%.'
-  },
-  {
-    id: 'social_media',
-    name: 'Campanha Redes Sociais',
-    icon: '📣',
-    cost: 150000,
-    dailyYield: 0,
-    durationDays: 14,
-    strategicBonusType: 'viral_events',
-    strategicBonusValue: 20,
-    description: 'Campanha viral nas redes sociais. Aumenta chances de eventos especiais em 20%.'
-  },
-  {
-    id: 'academia_base',
-    name: 'Academia de Base',
-    icon: '🌟',
-    cost: 300000,
-    dailyYield: 0,
-    durationDays: 30,
-    strategicBonusType: 'youth_quality',
-    strategicBonusValue: 20,
-    description: 'Investimento na academia de base. Melhora a qualidade dos jovems jogadores em 20%.'
-  },
-  {
-    id: 'staff_esportivo',
-    name: 'Staff Esportivo',
-    icon: '👔',
-    cost: 400000,
-    dailyYield: 0,
-    durationDays: 14,
-    strategicBonusType: 'training_speed',
-    strategicBonusValue: 20,
-    description: 'Contratar staff adicional. Aumenta velocidade de treinamento em 20%.'
-  },
-  {
-    id: 'scout_network',
-    name: 'Rede de Scouts',
-    icon: '🔍',
-    cost: 250000,
-    dailyYield: 0,
-    durationDays: 21,
-    strategicBonusType: 'player_discovery',
-    strategicBonusValue: 25,
-    description: 'Melhor rede de songadores. Aumenta qualidade de descobertas de jogadores em 25%.'
-  },
-  {
-    id: 'infraestrutura',
-    name: 'Infraestrutura',
-    icon: '🏟️',
-    cost: 500000,
-    dailyYield: 0,
-    durationDays: 30,
-    strategicBonusType: 'match_earnings',
-    strategicBonusValue: 30,
-    description: 'Melhorias na infraestrutura do estadio. Aumenta receita por jogo em 30%.'
-  }
-];
+interface Portfolio {
+  investments: ActiveInvestment[];
+  pendingYieldTotal: number;
+  pendingCount: number;
+}
 
-export function InvestirView({ gameState, userId, onViewChange, onMoneyUpdate }: InvestirViewProps) {
+const EMPTY_PORTFOLIO: Portfolio = { investments: [], pendingYieldTotal: 0, pendingCount: 0 };
+
+function formatDate(iso: string): string {
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? '—' : date.toLocaleDateString('pt-BR');
+}
+
+export function InvestirView({ gameState, userId, onViewChange, onRefreshSave }: InvestirViewProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [investing, setInvesting] = useState<string | null>(null);
+  // What the player owns. The screen used to hard-code an empty array here,
+  // so it reported no active investments however many had been bought, and
+  // the yields the daily cron generated had nowhere on screen to be claimed
+  // from — the only card with a claim button is never rendered.
+  const [portfolio, setPortfolio] = useState<Portfolio>(EMPTY_PORTFOLIO);
+  const [loadingPortfolio, setLoadingPortfolio] = useState(true);
+
+  const loadPortfolio = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/investment?userId=${encodeURIComponent(userId)}`);
+      if (!response.ok) return;
+      const body = await response.json();
+      setPortfolio({
+        investments: Array.isArray(body.investments) ? body.investments : [],
+        pendingYieldTotal: body.pendingYieldTotal ?? 0,
+        pendingCount: Array.isArray(body.pendingYields) ? body.pendingYields.length : 0,
+      });
+    } catch {
+      // Leave the last good list up rather than blanking the screen; the
+      // notice from an action is what tells the player something went wrong.
+    } finally {
+      setLoadingPortfolio(false);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    void loadPortfolio();
+  }, [loadPortfolio]);
+
+  // Both the save and the owned list are reloaded after every reply, so a
+  // purchase shows up in the list and a claim empties the yield box without
+  // the player navigating away and back.
+  const refreshAll = useCallback(async () => {
+    await onRefreshSave?.();
+    await loadPortfolio();
+  }, [onRefreshSave, loadPortfolio]);
+
+  // Read the reply, reload the save, show a refusal (see StaffView). This
+  // screen used to alert() with the reply's `error` label, so a refusal that
+  // named a field reached the player as 'Validation failed' and nothing else.
+  const action = useGuardedAction(refreshAll);
 
   const handleInvest = async (investment: InvestmentType) => {
-    if (gameState.user.money < investment.cost) {
-      alert('Saldo insuficiente!');
-      return;
-    }
+    if (gameState.user.money < investment.cost) return;
 
     setInvesting(investment.id);
-
     try {
-      const response = await fetch('/api/investment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          option: investment.id === 'clube_torcedores' ? 'A' : 
-                 investment.id === 'marketing_digital' ? 'B' : 'C',
-          userId
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        alert(`Investimento "${investment.name}" realizado!`);
-        if (data.newBalance !== undefined) {
-          onMoneyUpdate(data.newBalance);
-        }
-      } else {
-        alert(data.error || 'Erro ao investir');
-      }
-    } catch (error) {
-      console.error('Investment error:', error);
-      alert('Erro ao realizar investimento');
+      await action.run<{ newBalance?: number }>(
+        () =>
+          fetch('/api/investment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            // The card's own id. It used to be flattened onto one of three
+            // server tiers here, which is how a card could be bought at a
+            // price it did not print.
+            body: JSON.stringify({ option: investment.id, userId }),
+          }),
+        { successMessage: () => `Investimento "${investment.name}" realizado!` }
+      );
     } finally {
       setInvesting(null);
     }
   };
 
-  const activeInvestments: any[] = [];
+  const handleClaim = async () => {
+    await action.run<{ claimed?: number; expired?: number }>(
+      () =>
+        fetch('/api/investment/claim', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          // userId for dev with auth off, exactly as the purchase sends it;
+          // the route prefers the session when one exists.
+          body: JSON.stringify({ claimAll: true, userId }),
+        }),
+      {
+        successMessage: (body) =>
+          `Rendimento recebido: ${formatMoney(body.claimed ?? 0)}` +
+          (body.expired ? ` (${body.expired} expirado(s) e perdido(s))` : ''),
+      }
+    );
+  };
+
+  const { investments: activeInvestments, pendingYieldTotal, pendingCount } = portfolio;
 
   return (
     <ViewContainer className="pb-24">
+      <ActionNotice notice={action.notice} onDismiss={action.dismiss} pending={action.pending} />
       <GlassCard glow className="p-4 space-y-3">
         <h2 className="font-[family-name:var(--font-pixel)] text-[0.7rem] gold-glow-text">
           💰 INVESTIMENTOS
@@ -169,12 +159,37 @@ export function InvestirView({ gameState, userId, onViewChange, onMoneyUpdate }:
           </div>
           <div className="text-right">
             <div className="section-title">Investimentos Ativos</div>
-            <span className="font-[family-name:var(--font-pixel)] text-[0.6rem] text-[#FFDF00]">
-              {activeInvestments.length}
+            <span
+              className="font-[family-name:var(--font-pixel)] text-[0.6rem] text-[#FFDF00]"
+              data-testid="active-investment-count"
+            >
+              {loadingPortfolio ? '…' : activeInvestments.length}
             </span>
           </div>
         </div>
       </GlassCard>
+
+      {pendingYieldTotal > 0 && (
+        <GlassCard glow className="p-3 space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <div className="section-title">Rendimento a Receber</div>
+              <CoinDisplay amount={pendingYieldTotal} size="md" />
+              <p className="text-[0.5rem] text-[#55e0a0]/60 font-[family-name:var(--font-pixel)] mt-1">
+                {pendingCount} pagamento(s) acumulado(s)
+              </p>
+            </div>
+            <CrtButton
+              onClick={handleClaim}
+              disabled={action.pending}
+              variant="primary"
+              className="py-2 px-3 text-[0.55rem]"
+            >
+              {action.pending ? 'Recebendo...' : 'Receber Tudo'}
+            </CrtButton>
+          </div>
+        </GlassCard>
+      )}
 
       {activeInvestments.length > 0 && (
         <GlassCard className="p-3 space-y-2">
@@ -182,19 +197,24 @@ export function InvestirView({ gameState, userId, onViewChange, onMoneyUpdate }:
             Seus Investimentos Ativos
           </p>
           <div className="space-y-2">
-            {activeInvestments.map((inv, i) => (
-              <div key={i} className="frosted-card p-3 flex justify-between items-center">
+            {activeInvestments.map((inv) => (
+              <div key={inv.id} className="frosted-card p-3 flex justify-between items-center gap-2">
                 <div>
                   <p className="font-[family-name:var(--font-pixel)] text-[0.55rem] text-[#FFDF00]">
-                    {inv.name}
+                    {inv.icon} {inv.name}
                   </p>
-                  <p className="text-xs text-[#55e0a0]/60 font-[family-name:var(--font-pixel)]">
-                    {inv.daysRemaining} dias restantes
+                  <p className="text-[0.5rem] text-[#55e0a0]/60 font-[family-name:var(--font-pixel)]">
+                    Desbloqueio em {formatDate(inv.unlockDate)}
                   </p>
+                  {inv.strategicBonus && (
+                    <p className="text-[0.5rem] text-[#55e0a0]/60 font-[family-name:var(--font-pixel)]">
+                      +{inv.strategicBonus.value}% {inv.strategicBonus.label}
+                    </p>
+                  )}
                 </div>
                 <div className="text-right">
                   <span className="text-[0.5rem] text-[#00A859] font-[family-name:var(--font-pixel)]">
-                    +{formatMoney(inv.dailyYield)}/dia
+                    {inv.yieldPerDay > 0 ? `+${formatMoney(inv.yieldPerDay)}/dia` : 'Sem rendimento'}
                   </span>
                 </div>
               </div>
@@ -209,6 +229,7 @@ export function InvestirView({ gameState, userId, onViewChange, onMoneyUpdate }:
         {INVESTMENT_TYPES.map(investment => {
           const canAfford = gameState.user.money >= investment.cost;
           const isExpanded = expandedId === investment.id;
+          const bonus = investment.strategicBonus;
 
           return (
             <GlassCard
@@ -229,9 +250,14 @@ export function InvestirView({ gameState, userId, onViewChange, onMoneyUpdate }:
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-[family-name:var(--font-pixel)] text-[0.5rem] text-[#00A859]">
-                    +{investment.strategicBonusValue}%
-                  </p>
+                  {/* Only a bonus the game actually applies is printed here.
+                      Two cards used to advertise boosts to systems that do
+                      not exist (eventos especiais, descoberta de jogadores). */}
+                  {bonus && (
+                    <p className="font-[family-name:var(--font-pixel)] text-[0.5rem] text-[#00A859]">
+                      +{bonus.value}%
+                    </p>
+                  )}
                   <p className="text-[0.5rem] text-[#55e0a0]/50 font-[family-name:var(--font-pixel)]">
                     {investment.durationDays} dias
                   </p>
@@ -250,7 +276,7 @@ export function InvestirView({ gameState, userId, onViewChange, onMoneyUpdate }:
                         Rendimento Diário
                       </p>
                       <p className="text-[0.5rem] text-[#00A859] font-[family-name:var(--font-pixel)]">
-                        {investment.dailyYield > 0 ? formatMoney(investment.dailyYield) + '/dia' : 'N/A'}
+                        {investment.dailyYield > 0 ? formatMoney(investment.dailyYield) + '/dia' : 'Nenhum'}
                       </p>
                     </div>
                     <div className="frosted-card p-2">
@@ -258,7 +284,7 @@ export function InvestirView({ gameState, userId, onViewChange, onMoneyUpdate }:
                         Bônus Estratégico
                       </p>
                       <p className="text-[0.5rem] text-[#FFDF00] font-[family-name:var(--font-pixel)]">
-                        +{investment.strategicBonusValue}% {investment.strategicBonusType}
+                        {bonus ? `+${bonus.value}% ${bonus.label}` : 'Nenhum'}
                       </p>
                     </div>
                   </div>

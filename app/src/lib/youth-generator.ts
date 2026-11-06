@@ -51,9 +51,21 @@ function shuffleArray<T>(arr: T[]): T[] {
   return shuffled;
 }
 
+/**
+ * One youth prospect.
+ *
+ * `qualityPercent` is what an active `academia_base` investment is worth: it
+ * lifts both ends of the potential window and the ability the prospect starts
+ * at, which is what 'melhora a qualidade dos jovens' has to mean here. The
+ * ceilings (95 potential, 99 ability) still hold — the bonus makes a good
+ * intake likelier, it does not mint players the game could not otherwise
+ * produce. Defaults to zero so every caller without an investment is
+ * unchanged.
+ */
 export function generateYouthPlayer(
   academyLevel: number,
-  scoutLevel: number
+  scoutLevel: number,
+  qualityPercent: number = 0
 ): YouthPlayer {
   const position = randomElement(POSITIONS);
   
@@ -61,18 +73,19 @@ export function generateYouthPlayer(
   const baseMaxPotential = 85;
   
   const academyBonus = Math.min(academyLevel, 50) * 0.3;
-  const minPotential = Math.min(baseMinPotential + academyBonus, 90);
-  const maxPotential = Math.min(baseMaxPotential + academyBonus, 95);
+  const quality = 1 + qualityPercent / 100;
+  const minPotential = Math.min((baseMinPotential + academyBonus) * quality, 90);
+  const maxPotential = Math.min((baseMaxPotential + academyBonus) * quality, 95);
   
   const potential = randomBetween(
     Math.floor(minPotential),
     Math.floor(maxPotential)
   );
   
-  const currentAbility = randomBetween(
+  const currentAbility = Math.min(99, Math.round(randomBetween(
     ECONOMY_CONSTANTS.YOUTH_MIN_CURRENT_ABILITY,
     ECONOMY_CONSTANTS.YOUTH_MAX_CURRENT_ABILITY
-  );
+  ) * quality));
   
   const personalityTraitCount = randomBetween(2, 4);
   const shuffledTraits = shuffleArray(PERSONALITY_TRAITS);
@@ -100,7 +113,8 @@ export function generateYouthPlayer(
 
 export function generateYouthIntake(
   academyLevel: number,
-  scoutLevel: number
+  scoutLevel: number,
+  qualityPercent: number = 0
 ): YouthPlayer[] {
   const basePlayerCount = 3;
   const academyBonus = Math.floor(academyLevel / 10);
@@ -108,7 +122,7 @@ export function generateYouthIntake(
   
   const players: YouthPlayer[] = [];
   for (let i = 0; i < playerCount; i++) {
-    players.push(generateYouthPlayer(academyLevel, scoutLevel));
+    players.push(generateYouthPlayer(academyLevel, scoutLevel, qualityPercent));
   }
   
   return players.sort((a, b) => b.potential - a.potential);

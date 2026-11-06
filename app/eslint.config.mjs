@@ -16,6 +16,19 @@ const eslintConfig = defineConfig([
       "prefer-const": "warn",
     },
   },
+  {
+    // Server code logs through the structured logger (src/lib/logger.ts), so
+    // every line is JSON and carries the request ID. A plain console call
+    // anywhere under the API routes, the library or the storage layer would
+    // put an unstructured, uncorrelated line back into the log, so it fails
+    // the lint. Client components and hooks are not covered: their console
+    // output goes to the browser, not the server log.
+    files: ["src/app/api/**/*.ts", "src/lib/**/*.ts", "src/db/**/*.ts"],
+    ignores: ["src/lib/logger.ts", "**/__tests__/**", "**/*.test.ts"],
+    rules: {
+      "no-console": "error",
+    },
+  },
   globalIgnores([
     ".next/**",
     "out/**",

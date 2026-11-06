@@ -11,15 +11,20 @@ import {
   SectionTitle,
   CoinDisplay,
   ManagementLayout,
+  ActionNotice,
 } from '@/components/crt';
+import { useGuardedAction } from '@/hooks/useGuardedAction';
 
 interface StadiumViewProps {
   gameState: GameState;
   onViewChange: (view: ViewType) => void;
+  /** Reloads the save from the server. Called after every upgrade reply. */
+  onRefreshSave?: () => void | Promise<void>;
 }
 
-export function StadiumView({ gameState, onViewChange }: StadiumViewProps) {
+export function StadiumView({ gameState, onViewChange, onRefreshSave }: StadiumViewProps) {
   const { stadium, user, facilities } = gameState;
+  const action = useGuardedAction(onRefreshSave);
   const currentStadium = stadium.level >= STADIUM_UPGRADES.length - 1 
     ? STADIUM_UPGRADES[STADIUM_UPGRADES.length - 1]
     : STADIUM_UPGRADES[stadium.level];
@@ -34,19 +39,16 @@ export function StadiumView({ gameState, onViewChange }: StadiumViewProps) {
   const handleUpgrade = async () => {
     if (!canAffordUpgrade) return;
 
-    try {
-      const response = await fetch('/api/stadium/upgrade', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id }),
-      });
-
-      if (response.ok) {
-        window.location.reload();
-      }
-    } catch (error) {
-      console.error('Failed to upgrade stadium:', error);
-    }
+    // Read the reply, reload the save, show a refusal (see StaffView).
+    await action.run<{ newStadiumLevel?: number }>(
+      () =>
+        fetch('/api/stadium/upgrade', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user.id }),
+        }),
+      { successMessage: (body) => `Estádio ampliado para o nível ${body.newStadiumLevel ?? stadium.level + 1}.` }
+    );
   };
 
   const estimatedMatchRevenue = stadium.capacity > 0
@@ -65,6 +67,8 @@ export function StadiumView({ gameState, onViewChange }: StadiumViewProps) {
       money={user.money || 0}
       onBack={() => onViewChange('dashboard')}
     >
+      <ActionNotice notice={action.notice} onDismiss={action.dismiss} pending={action.pending} className="mb-3" />
+
       {/* Stadium Level Header */}
       <GlassCard className="p-3">
         <div className="flex items-center justify-between mb-2">

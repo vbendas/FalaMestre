@@ -5,50 +5,65 @@ import { createInitialGameState } from '@/lib/game-engine';
 import { GameState } from '@/lib/types';
 import { generateUserId } from '@/lib/utils';
 import { withApiRoute, ApiContext } from '@/lib/api-route';
-import { z } from 'zod';
-
-// Validation schema for team creation
-const teamCreationSchema = z.object({
-  teamName: z.string().min(3).max(30),
-  primaryColor: z.string().regex(/^#[0-9A-F]{6}$/i),
-  secondaryColor: z.string().regex(/^#[0-9A-F]{6}$/i),
-  badgeStyle: z.enum(['shield', 'circle', 'crest', 'diamond']),
-});
+import { getAuthenticatedSessionUser, requireAuth } from '@/lib/auth-helpers';
+import { eq } from 'drizzle-orm';
+import { teamCreationRequestSchema } from '@/lib/validations';
+import { openFixtureMarketAfterCommit } from '@/lib/fixture-markets';
 
 export const POST = withApiRoute('onboarding-create-team', async (
   request: NextRequest,
-  { log, readJson }: ApiContext
+  { log, readBody }: ApiContext
 ) => {
   try {
-    const bodyResult = await readJson();
+    // With auth on, a team created by an unsigned visitor could never be
+    // played — every other route wants a session — so onboarding wants one
+    // too. With AUTH_DISABLED=true (dev) this is a no-op and the local-id
+    // path below still runs.
+    const authError = await requireAuth();
+    if (authError) {
+      return authError;
+    }
+
+    const bodyResult = await readBody(teamCreationRequestSchema);
     if (!bodyResult.ok) {
       return bodyResult.response;
     }
-    const requestBody = bodyResult.body;
 
-    // Validate request
-    let validatedData;
-    try {
-      validatedData = teamCreationSchema.parse(requestBody);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const firstError = error.issues?.[0];
+    const { teamName, primaryColor, secondaryColor, badgeStyle } = bodyResult.body;
+
+    // A signed-in player's save belongs to their account, so it is keyed on the
+    // session user id. Only an anonymous player gets a generated local id, which
+    // is also the path taken when auth is disabled in dev.
+    const sessionUser = await getAuthenticatedSessionUser();
+    const userId = sessionUser?.id ?? generateUserId();
+
+    // The session user may already have a save (a second trip through
+    // onboarding, or two tabs). Keyed on userId, a second insert would be
+    // swallowed below and the player would be sent back to a team they did not
+    // just create, so answer with the save they already own instead.
+    if (sessionUser) {
+      let existing;
+      try {
+        existing = await db.query.gameStates.findFirst({
+          where: eq(gameStates.userId, userId),
+        });
+      } catch (lookupError) {
+        log.warn('Failed to check for an existing save, continuing', { error: lookupError });
+      }
+
+      if (existing) {
         return NextResponse.json(
           {
-            error: 'Validation failed',
-            message: firstError?.message || 'Invalid input',
-            field: firstError?.path?.join('.') || 'unknown',
+            success: true,
+            userId,
+            team: (existing as { team: string }).team,
+            alreadyExisted: true,
+            message: 'Você já tem um time.',
           },
-          { status: 400 }
+          { status: 200 }
         );
       }
-      throw error;
     }
-
-    const { teamName, primaryColor, secondaryColor, badgeStyle } = validatedData;
-
-    // Generate userId using consistent format matching validation regex
-    const userId = generateUserId();
 
     // Create initial game state with custom team name
     const gameState: GameState = createInitialGameState(userId, teamName);
@@ -74,7 +89,9 @@ export const POST = withApiRoute('onboarding-create-team', async (
       await db.insert(users).values({
         id: userId,
         username: teamName,
-        email: `${userId}@falamestre.local`,
+        // A signed-in player keeps their real account email; an anonymous one
+        // gets the placeholder the local id implies.
+        email: sessionUser?.email ?? `${userId}@falamestre.local`,
         onboardingCompleted: true,
         createdAt: new Date(),
       });
@@ -98,6 +115,9 @@ export const POST = withApiRoute('onboarding-create-team', async (
           pointsEarned: 0,
         },
       });
+
+      // Round 1's market, once there is a save for it to belong to.
+      await openFixtureMarketAfterCommit(userId, enhancedGameState);
     } catch (gameStateError) {
       log.warn('Failed to persist game state to DB, continuing with client-only mode', {
         error: gameStateError,

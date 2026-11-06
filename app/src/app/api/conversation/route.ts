@@ -1,17 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { gameStates, conversations, analyticsEvents } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { callAIMock, callAI } from '@/lib/ai-service';
-import { createInitialGameState } from '@/lib/game-engine';
 import { GameState, Message } from '@/lib/types';
-import { conversationRequestSchema } from '@/lib/validations';
+import { conversationRequestSchema, isValidUserId } from '@/lib/validations';
 import { generateMessageId } from '@/lib/utils';
-import { ZodError } from 'zod';
-import { checkRateLimit } from '@/lib/rate-limit';
-import { getAuthenticatedUser, requireAuth } from '@/lib/auth-helpers';
-import { readJsonBody } from '@/lib/request-body';
-import { createRequestLogger } from '@/lib/logger';
+import { getAuthenticatedUser } from '@/lib/auth-helpers';
+import { withApiRoute, type ApiContext } from '@/lib/api-route';
+import { CONVERSATION_CONTEXT_MESSAGES } from '@/lib/constants';
 
 type GameStateRecordShape = {
   currentState: GameState;
@@ -43,13 +40,30 @@ async function withTimeout<T>(
   });
 }
 
-export async function POST(request: NextRequest) {
-  const startTime = Date.now();
-  const log = createRequestLogger('conversation', request);
+/**
+ * How this route takes its body.
+ *
+ * `parseTimeoutMs`: a client that opens the request and then stalls would
+ * otherwise hold it open indefinitely, and this is one of the routes that
+ * goes on to run a simulation or call the model.
+ *
+ * `invalidJsonResponse`: with a timeout in play the route cannot tell a body
+ * that will not parse from one that never arrived, so it does not pretend to
+ * — one reply covers both, and the summary line's `cause` says which it was.
+ */
+const BODY_OPTIONS = {
+  parseTimeoutMs: 5000,
+  invalidJsonResponse: () =>
+    NextResponse.json({ error: 'Invalid JSON body or timeout' }, { status: 400 }),
+};
 
+export const POST = withApiRoute('conversation', handlePost, BODY_OPTIONS);
+
+async function handlePost(request: NextRequest, ctx: ApiContext) {
+  const { log } = ctx;
   try {
     // Check authentication - returns 401 only if REQUIRE_AUTH=true and no session
-    const authError = await requireAuth();
+    const authError = await ctx.requireAuth();
     if (authError) {
       return authError;
     }
@@ -57,63 +71,19 @@ export async function POST(request: NextRequest) {
     // Get authenticated user ID (or null if not using auth)
     const sessionUserId = await getAuthenticatedUser();
     
-    const rateLimit = checkRateLimit(request, 'conversation', 60, 60_000);
-    if (!rateLimit.ok) {
-      return NextResponse.json(
-        { error: 'Too many requests', retryAfter: rateLimit.retryAfterSeconds },
-        { status: 429, headers: { 'Retry-After': String(rateLimit.retryAfterSeconds) } }
-      );
+    const rateLimited = ctx.rateLimit('conversation', 60, 60_000);
+    if (rateLimited) {
+      return rateLimited;
     }
 
-    // Parse request body with a size limit and timeout protection
-    let requestBody;
-    try {
-      const bodyResult = await withTimeout(
-        readJsonBody(request),
-        5000,
-        'Request body parsing'
-      );
-      if (!bodyResult.ok) {
-        if (bodyResult.reason === 'too_large') {
-          log.warn('Request body rejected: too large');
-          return bodyResult.response;
-        }
-        if (bodyResult.reason === 'not_object') {
-          log.warn('Request body rejected: not a JSON object');
-          return bodyResult.response;
-        }
-        throw new Error(bodyResult.reason);
-      }
-      requestBody = bodyResult.body;
-    } catch (error) {
-      // Covers both a body that will not parse and the 5s parse timeout;
-      // the reply cannot tell them apart, so the log line carries the cause.
-      log.warn('Request body rejected: invalid JSON or timeout', { error });
-      return NextResponse.json(
-        { error: 'Invalid JSON body or timeout' },
-        { status: 400 }
-      );
+    // Body, body size, and shape, in one call: see ctx.readBody. The 5s
+    // parse timeout and the 'or timeout' wording are the route's options on
+    // withApiRoute at the bottom of this file.
+    const bodyResult = await ctx.readBody(conversationRequestSchema);
+    if (!bodyResult.ok) {
+      return bodyResult.response;
     }
-    
-    // Validate request body
-    let validatedData;
-    try {
-      validatedData = conversationRequestSchema.parse(requestBody);
-    } catch (error) {
-      if (error instanceof ZodError) {
-        const issues = error.issues || [];
-        const firstError = issues[0];
-        return NextResponse.json(
-          { 
-            error: 'Validation failed', 
-            message: firstError?.message || 'Invalid input',
-            field: firstError?.path?.join('.') || 'unknown'
-          },
-          { status: 400 }
-        );
-      }
-      throw error;
-    }
+    const validatedData = bodyResult.body;
     
     const { userId, message, useMock: requestUseMock } = validatedData;
     
@@ -156,38 +126,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let gameState: GameState;
-    let conversationHistory: Message[] = [];
-
+    // A message is never a reason to invent a save. This used to create one
+    // on the spot, named 'Dragões do Cerrado', for any id that asked —
+    // silently taking the place of the team the player was about to create
+    // in onboarding, with a club they never chose. A save is made in exactly
+    // one place, /api/onboarding/create-team, and a chat without one is an
+    // error the screen can act on.
     if (!gameStateRecord) {
-      // First time user - create default state with fictional team
-      gameState = createInitialGameState(userId, 'Dragões do Cerrado');
-      
-      // Insert initial game state
-      try {
-        await withTimeout(
-          db.insert(gameStates).values({
-            userId,
-            team: gameState.user.team,
-            currentState: gameState,
-            conversationHistory: [],
-            statistics: {},
-          }),
-          5000,
-          'Game state insert'
-        );
-      } catch (error) {
-        log.error('Failed to create game state', { error });
-        return NextResponse.json(
-          { error: 'Failed to create game state' },
-          { status: 503 }
-        );
-      }
-    } else {
-      const typedRecord = gameStateRecord as GameStateRecordShape;
-      gameState = typedRecord.currentState;
-      conversationHistory = typedRecord.conversationHistory || [];
+      log.warn('Conversation requested for a user with no save');
+      return NextResponse.json(
+        { error: 'No save for this user', code: 'no_save' },
+        { status: 404 }
+      );
     }
+
+    const typedRecord = gameStateRecord as GameStateRecordShape;
+    const gameState: GameState = typedRecord.currentState;
+    const conversationHistory: Message[] = typedRecord.conversationHistory || [];
+
+    // Only the tail of a long conversation is replayed to the assistant.
+    const aiContext = conversationHistory.slice(-CONVERSATION_CONTEXT_MESSAGES);
 
     // Call AI (mock or real) with timeout
     let aiResponse;
@@ -196,7 +154,7 @@ export async function POST(request: NextRequest) {
     if (useMock || !process.env.OPENROUTER_API_KEY) {
       try {
         aiResponse = await withTimeout(
-          callAIMock(message, gameState, conversationHistory),
+          callAIMock(message, gameState, aiContext),
           aiTimeout,
           'Mock AI call'
         );
@@ -210,18 +168,21 @@ export async function POST(request: NextRequest) {
     } else {
       try {
         aiResponse = await withTimeout(
-          callAI(message, gameState, conversationHistory),
+          callAI(message, gameState, aiContext),
           aiTimeout,
           'AI call'
         );
       } catch (error) {
         log.warn('AI call failed, falling back to mock', { error });
         try {
-          aiResponse = await withTimeout(
-            callAIMock(message, gameState, conversationHistory),
+          const fallback = await withTimeout(
+            callAIMock(message, gameState, aiContext),
             aiTimeout,
             'Fallback mock AI call'
           );
+          // The mock answered in the live model's place. The player is told,
+          // so a canned reply is not mistaken for the real assistant.
+          aiResponse = { ...fallback, source: 'fallback' as const };
         } catch (fallbackError) {
           log.error('Fallback AI call also failed', { error: fallbackError });
           return NextResponse.json(
@@ -246,27 +207,42 @@ export async function POST(request: NextRequest) {
       content: aiResponse.content,
       timestamp: new Date(),
       actions: aiResponse.actions,
+      source: aiResponse.source,
     };
 
-    const updatedHistory = [...conversationHistory, newUserMessage, newAIMessage];
-
-    // Update game state in database with timeout
+    // Append the two new messages to the stored history.
+    //
+    // Two things this deliberately does not do. It does not write
+    // `currentState` back: talking to the assistant never changes the game,
+    // and the state in hand was read before the AI call, so re-saving it
+    // would undo anything another route (a match being banked, a transfer)
+    // committed in between. And it does not send the whole array it just
+    // built: the append happens in the database, on whatever history is
+    // stored at that moment, so two messages sent at once both survive
+    // instead of the slower one erasing the other.
+    // Whether the two new messages actually reached the save. A reply the
+    // player can see but the save never kept is a reply that vanishes on
+    // reload, so the answer says which one this is.
+    let persisted = true;
     try {
       await withTimeout(
         db
           .update(gameStates)
           .set({
-            currentState: gameState,
-            conversationHistory: updatedHistory,
+            conversationHistory: sql`coalesce(${gameStates.conversationHistory}, '[]'::jsonb) || ${JSON.stringify(
+              [newUserMessage, newAIMessage]
+            )}::jsonb`,
             updatedAt: new Date(),
           })
           .where(eq(gameStates.userId, userId)),
         5000,
-        'Game state update'
+        'Conversation history update'
       );
     } catch (error) {
-      log.error('Failed to update game state', { error });
-      // Continue to return response even if update fails
+      persisted = false;
+      log.error('Failed to update conversation history', { error });
+      // The reply is still worth returning — the player asked for it — but it
+      // goes back flagged as unsaved rather than looking like history.
     }
 
     // Log conversation for analytics with timeout
@@ -307,10 +283,18 @@ export async function POST(request: NextRequest) {
             cost: aiResponse.cost,
             latency: aiResponse.latency,
             useMock,
+            source: aiResponse.source,
             messageLength: message.length,
+            persisted,
+            // These used to report the player's money as `points` and the
+            // round as `matchesPlayed`, which made every save look like it
+            // had played as many matches as weeks had passed. Both counters
+            // exist for real; these are them.
             gameContext: {
-              points: gameState.user.money,
-              matchesPlayed: gameState.season.week,
+              points: gameState.season.points,
+              money: gameState.user.money,
+              week: gameState.season.week,
+              matchesPlayed: gameState.teamStats?.matchesPlayed ?? 0,
               position: gameState.season.position,
               wins: gameState.season.wins,
               losses: gameState.season.losses,
@@ -326,20 +310,18 @@ export async function POST(request: NextRequest) {
       // Continue even if analytics fails
     }
 
-    const duration = Date.now() - startTime;
-    log.info('Request processed', { durationMs: duration });
-
     return NextResponse.json({
       response: aiResponse.content,
       actions: aiResponse.actions,
       intent: aiResponse.intent,
+      source: aiResponse.source,
+      persisted,
       cost: aiResponse.cost,
       latency: aiResponse.latency,
       gameState,
     });
   } catch (error) {
-    const duration = Date.now() - startTime;
-    log.error('API error', { durationMs: duration, error });
+    log.error('API error', { error });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -347,11 +329,18 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET(request: NextRequest) {
-  const startTime = Date.now();
-  const log = createRequestLogger('conversation', request);
+export const GET = withApiRoute('conversation', handleGet);
 
+async function handleGet(request: NextRequest, ctx: ApiContext) {
+  const { log } = ctx;
   try {
+    // The load is the first thing the client calls, and it used to answer a
+    // caller with no session at all with whatever save the id pointed at.
+    const authError = await ctx.requireAuth();
+    if (authError) {
+      return authError;
+    }
+
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
@@ -362,8 +351,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const userIdRegex = /^user_[a-z0-9]{9}$/;
-    if (!userIdRegex.test(userId)) {
+    // Accepts both a local game id and an auth provider's subject id; see
+    // USER_ID_PATTERN.
+    if (!isValidUserId(userId)) {
       return NextResponse.json(
         { error: 'Invalid userId format' },
         { status: 400 }
@@ -399,17 +389,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ exists: false });
     }
 
-    const duration = Date.now() - startTime;
-    log.info('GET request processed', { durationMs: duration });
-
     return NextResponse.json({
       exists: true,
       gameState: (gameStateRecord as GameStateRecordShape).currentState,
       conversationHistory: (gameStateRecord as GameStateRecordShape).conversationHistory,
     });
   } catch (error) {
-    const duration = Date.now() - startTime;
-    log.error('GET API error', { durationMs: duration, error });
+    log.error('GET API error', { error });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

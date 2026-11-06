@@ -1,26 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { tournamentTickets, gameStates } from '@/db/schema';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { getAuthenticatedUser, requireAuth } from '@/lib/auth-helpers';
 import { SPECIAL_TOURNAMENTS, TICKET_EARNING_METHODS } from '@/lib/constants';
 import { withApiRoute, ApiContext } from '@/lib/api-route';
+import { ticketEarnRequestSchema } from '@/lib/validations';
 
 export const GET = withApiRoute('tournaments-tickets', async (
   request: NextRequest,
   { log }: ApiContext
 ) => {
   try {
+    const authError = await requireAuth();
+    if (authError) {
+      return authError;
+    }
+
     const sessionUserId = await getAuthenticatedUser();
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
-    
+
     if (sessionUserId && userId && userId !== sessionUserId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
-    
-    const targetUserId = userId || sessionUserId;
-    
+
+    // Session first: a named id can only ever be the signed-in player's own.
+    const targetUserId = sessionUserId || userId;
+
     if (!targetUserId) {
       return NextResponse.json({ error: 'User ID required' }, { status: 400 });
     }
@@ -53,7 +60,7 @@ export const GET = withApiRoute('tournaments-tickets', async (
 // Earn a ticket (triggered by certain achievements)
 export const POST = withApiRoute('tournaments-tickets', async (
   request: NextRequest,
-  { log, readJson }: ApiContext
+  { log, readBody }: ApiContext
 ) => {
   try {
     const authError = await requireAuth();
@@ -66,26 +73,21 @@ export const POST = withApiRoute('tournaments-tickets', async (
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
     
-    const bodyResult = await readJson<{ method?: string }>();
+    const bodyResult = await readBody(ticketEarnRequestSchema);
     if (!bodyResult.ok) {
       return bodyResult.response;
     }
-    const body = bodyResult.body;
 
-    const { method } = body;
-    
-    if (!method || !TICKET_EARNING_METHODS[method as keyof typeof TICKET_EARNING_METHODS]) {
-      return NextResponse.json({ error: 'Invalid method' }, { status: 400 });
-    }
-    
-    const ticketConfig = TICKET_EARNING_METHODS[method as keyof typeof TICKET_EARNING_METHODS];
+    // The schema has already held `method` to the table's own keys, so the
+    // lookup cannot miss and needs no cast.
+    const ticketConfig = TICKET_EARNING_METHODS[bodyResult.body.method];
     
     // Insert ticket
     const ticket = await db.insert(tournamentTickets).values({
       userId: sessionUserId,
       tournamentId: 'pending', // Will be assigned when used
       earned: true,
-      earnedAt: new Date().toISOString(),
+      earnedAt: new Date(),
       used: false,
     }).returning();
     

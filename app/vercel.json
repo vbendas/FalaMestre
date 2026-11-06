@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/expire-yields",
       "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/predictions/settle",
+      "schedule": "30 * * * *"
     }
   ]
 }

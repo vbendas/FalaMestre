@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { ViewType } from '@/hooks/useGameState';
 import { motion } from 'framer-motion';
-import { Home, Users, Trophy, ArrowLeftRight, Table } from 'lucide-react';
+import { Home, Users, Trophy, ArrowLeftRight, Table, MessageSquare } from 'lucide-react';
 
 interface ViewTabsProps {
   view: ViewType;
@@ -13,6 +13,7 @@ interface ViewTabsProps {
 
 const tabs = [
   { id: 'dashboard' as ViewType, label: 'Início', icon: Home },
+  { id: 'chat' as ViewType, label: 'Mestre', icon: MessageSquare },
   { id: 'squad' as ViewType, label: 'Elenco', icon: Users },
   { id: 'match' as ViewType, label: 'Jogo', icon: Trophy },
   { id: 'transfers' as ViewType, label: 'Mercado', icon: ArrowLeftRight },

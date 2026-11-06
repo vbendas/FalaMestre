@@ -4,73 +4,49 @@ import { gameStates } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { simulateMatchWithNarrative, BRAZILIAN_TEAMS, generateSquad } from '@/lib/game-engine';
 import { MatchEvent } from '@/lib/types';
-import { checkRateLimit } from '@/lib/rate-limit';
-import { getAuthenticatedUser, requireAuth } from '@/lib/auth-helpers';
-import { readJsonBody } from '@/lib/request-body';
-import { createRequestLogger } from '@/lib/logger';
+import { getAuthenticatedUser } from '@/lib/auth-helpers';
+import { withApiRoute, type ApiContext } from '@/lib/api-route';
 import { pickTeam, rollOpponentMorale } from '@/lib/match-setup';
 import { generateSeed, withSeed } from '@/lib/rng';
-import { seedSchema } from '@/lib/validations';
-
-/** One message for every way a seed can be wrong; see seedSchema. */
-const SEED_MESSAGE =
-  'seed must be a token of 1-64 letters, digits or _ . : - , or an integer';
+import { loadInvestmentBonuses } from '@/lib/investment-bonuses-store';
+import { effectiveMorale } from '@/lib/investment-bonuses';
+import { matchStreamRequestSchema } from '@/lib/validations';
+import { isSeasonOver } from '@/lib/constants';
+import { kickOffFixture, type KickoffSetup } from '@/lib/fixture-kickoff';
 
 type GameStateRecordShape = {
   currentState: any;
 };
 
-export async function POST(request: NextRequest) {
-  const log = createRequestLogger('match-stream', request);
+export const POST = withApiRoute('match-stream', handlePost);
+
+async function handlePost(request: NextRequest, ctx: ApiContext) {
+  const { log } = ctx;
 
   try {
-    const authError = await requireAuth();
+    const authError = await ctx.requireAuth();
     if (authError) {
       return authError;
     }
     
     const sessionUserId = await getAuthenticatedUser();
     
-    const rateLimit = checkRateLimit(request, 'match_stream', 10, 60_000);
-    if (!rateLimit.ok) {
-      return NextResponse.json(
-        { error: 'Too many requests', retryAfter: rateLimit.retryAfterSeconds },
-        { status: 429, headers: { 'Retry-After': String(rateLimit.retryAfterSeconds) } }
-      );
+    const rateLimited = ctx.rateLimit('match_stream', 10, 60_000);
+    if (rateLimited) {
+      return rateLimited;
     }
 
-    const bodyResult = await readJsonBody(request);
+    // Body, body size, and shape, in one call: see ctx.readBody. No parse
+    // timeout here, unlike the other match routes, so a body that will not
+    // parse gets the plain 'Invalid JSON body' rather than the 'or timeout'
+    // wording — there is no timeout for it to have been.
+    const bodyResult = await ctx.readBody(matchStreamRequestSchema);
     if (!bodyResult.ok) {
-      if (bodyResult.reason === 'too_large') {
-        log.warn('Request body rejected: too large');
-      } else if (bodyResult.reason === 'not_object') {
-        log.warn('Request body rejected: not a JSON object');
-      } else {
-        log.warn('Request body rejected: invalid JSON');
-      }
-      // readJsonBody answers 413 for an oversized body, 400 for malformed
-      // JSON and 400 for valid JSON that is not an object. This route has no
-      // body-parse timeout, so the plain 'Invalid JSON body' message fits it
-      // better than the 'Invalid JSON body or timeout' wording used by the
-      // timeout-wrapped routes.
       return bodyResult.response;
     }
 
-    const { userId, opponent, seed: requestedSeed } = bodyResult.body as {
-      userId: string;
-      opponent?: string;
-      seed?: unknown;
-    };
-
-    if (requestedSeed !== undefined) {
-      if (!seedSchema.safeParse(requestedSeed).success) {
-        return NextResponse.json(
-          { error: 'Validation failed', message: SEED_MESSAGE, field: 'seed' },
-          { status: 400 }
-        );
-      }
-    }
-    const seed = requestedSeed !== undefined ? (requestedSeed as string | number) : generateSeed();
+    // `seed` in the body is accepted and ignored (see below).
+    const { userId, opponent } = bodyResult.body;
 
     if (sessionUserId && userId !== sessionUserId) {
       return NextResponse.json(
@@ -91,6 +67,48 @@ export async function POST(request: NextRequest) {
     }
 
     const gameState = (gameStateRecord as GameStateRecordShape).currentState;
+
+    // Loaded before the seeded block, which cannot span an await (rng.ts).
+    const bonuses = await loadInvestmentBonuses(userId);
+
+    // Streaming the fixture the save is waiting on is watching it be played:
+    // it kicks the fixture off as a full match, closing its market, and plays
+    // it under the fixture's seed and kickoff setup, so what it shows is what
+    // /api/match will bank. This route used to play the fixture under any
+    // seed sent, without closing anything: a free look at the full-time score
+    // of any seed, to bet on and then bank. A stream against any other
+    // opponent is an exhibition, under a fresh seed the server draws.
+    const fixture = gameState.season?.nextMatch;
+    const isFixture =
+      !isSeasonOver(gameState.season) && (!opponent || opponent === fixture?.opponent);
+    let seed: string;
+    let setup: KickoffSetup = {
+      formation: gameState.squad.formation || '4-3-3',
+      players: gameState.squad.players,
+      userMorale: effectiveMorale(gameState.squad.morale, bonuses),
+      matchSettings: gameState.user.matchSettings,
+    };
+    if (isFixture) {
+      let kicked;
+      try {
+        kicked = await kickOffFixture(userId, gameState.season, 'quick', setup);
+      } catch (error) {
+        log.error('Could not kick off the fixture; nothing was streamed', { error });
+        return NextResponse.json({ error: 'Could not start the match, try again' }, { status: 503 });
+      }
+      if (!kicked.ok) {
+        return NextResponse.json(
+          {
+            error: 'Fixture already kicked off',
+            message: 'This fixture is being played turn by turn.',
+          },
+          { status: 409 }
+        );
+      }
+      ({ seed, setup } = kicked.kickoff);
+    } else {
+      seed = generateSeed();
+    }
     
     // Opponent choice, opponent morale and the simulation are the stream's
     // random draws; one synchronous seeded block (withSeed cannot span an
@@ -105,10 +123,11 @@ export async function POST(request: NextRequest) {
       const isHome = gameState.season?.nextMatch?.isHome ?? true;
       const homeTeam = isHome ? gameState.user.team : opponentTeam;
       const awayTeam = isHome ? opponentTeam : gameState.user.team;
-      const homeSquad = isHome ? gameState.squad.players : opponentSquad;
-      const awaySquad = isHome ? opponentSquad : gameState.squad.players;
-      const homeMorale = isHome ? gameState.squad.morale : opponentMorale;
-      const awayMorale = isHome ? opponentMorale : gameState.squad.morale;
+      const homeSquad = isHome ? setup.players : opponentSquad;
+      const awaySquad = isHome ? opponentSquad : setup.players;
+      const userMorale = setup.userMorale;
+      const homeMorale = isHome ? userMorale : opponentMorale;
+      const awayMorale = isHome ? opponentMorale : userMorale;
 
       return simulateMatchWithNarrative(
         homeTeam,
@@ -118,7 +137,7 @@ export async function POST(request: NextRequest) {
         homeMorale,
         awayMorale,
         gameState.season?.week,
-        gameState.user.matchSettings,
+        setup.matchSettings,
         isHome
       );
     });

@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { GameState, Match, MatchEvent, MatchScript } from '@/lib/types';
-import { generateUserId } from '@/lib/utils';
+import { GameState, MatchEvent } from '@/lib/types';
+import { usePlayerId } from './usePlayerId';
 
-export type ViewType = 'dashboard' | 'squad' | 'match' | 'transfers' | 'standings' | 'stadium' | 'facilities' | 'youth' | 'staff' | 'apostas' | 'investir';
+export type ViewType = 'dashboard' | 'chat' | 'squad' | 'match' | 'transfers' | 'standings' | 'stadium' | 'facilities' | 'youth' | 'staff' | 'apostas' | 'investir';
 
 interface MatchResult {
   homeScore: number;
@@ -13,40 +13,46 @@ interface MatchResult {
   events: MatchEvent[];
 }
 
-interface MatchAPIResult {
-  result: {
-    homeScore: number;
-    awayScore: number;
-    winner: string;
-    events: MatchEvent[];
-  };
-  matchScript?: MatchScript;
-  pointsEarned: number;
-  pointsChange: number;
-  narration: string;
-  nextMatch: Match;
-  updatedGameState: GameState;
+/**
+ * The fixture a result belongs to. The modal needs it because the save moves
+ * on as soon as a match is banked: by the time the result is on screen,
+ * `season.nextMatch` is next week's game, not the one just played.
+ */
+interface PlayedFixture {
+  opponent: string;
+  isHome: boolean;
 }
 
 interface UseGameStateReturn {
   gameState: GameState | null;
   userId: string | null;
+  /** Auth is enforced and nobody is signed in: the caller sends them to /login. */
+  requiresSignIn: boolean;
   isNewUser: boolean;
   hasCheckedUser: boolean;
   view: ViewType;
   setView: (view: ViewType) => void;
-  playMatch: () => Promise<void>;
-  playMatchAndGetResult: () => Promise<MatchAPIResult | null>;
-  showMatchResult: (result: MatchResult, pointsEarned: number, pointsChange: number, updatedState?: GameState) => void;
-  lastMatchResult: { result: MatchResult; pointsEarned: number; pointsChange: number } | null;
+  /**
+   * Shows the result of a match the server has banked. The match screen calls
+   * this with what /api/match/finalize returned; nothing here plays a match.
+   */
+  showMatchResult: (
+    result: MatchResult,
+    pointsEarned: number,
+    updatedState?: GameState,
+    fixture?: PlayedFixture,
+  ) => void;
+  lastMatchResult: {
+    result: MatchResult;
+    pointsEarned: number;
+    fixture: PlayedFixture | null;
+  } | null;
   showMatchModal: boolean;
   closeMatchModal: () => void;
-  isLoading: boolean;
   updateGameState: (updater: (prev: GameState) => GameState) => void;
+  /** Re-reads the save from the server; see the implementation for why. */
+  refreshGameState: () => Promise<void>;
 }
-
-// Request timeout in milliseconds
-const REQUEST_TIMEOUT = 30000;
 
 /**
  * Wrapper for fetch with timeout and abort controller
@@ -72,16 +78,54 @@ async function fetchWithTimeout(
   }
 }
 
+/**
+ * Fills in the parts of a save that predate the features that use them, so an
+ * old save loads into the current screens. Applied wherever a save arrives
+ * from the server — the first load and every refresh.
+ */
+function withBackfills(state: GameState): GameState {
+  const gs = state as any;
+
+  // Ensure money exists
+  if (gs.user?.money === undefined) {
+    gs.user.money = 100000;
+  }
+
+  // Ensure new structures exist
+  if (!gs.stadium) {
+    gs.stadium = { level: 0, capacity: 0, amenities: 0, ticketPrice: 0, maintenanceLevel: 1 };
+  }
+  if (!gs.facilities) {
+    gs.facilities = { trainingCenter: 0, medicalCenter: 0, youthAcademy: 0, scoutOffice: 0 };
+  }
+  if (!gs.staff) {
+    gs.staff = { headCoach: null, scout: null, medicalStaff: null };
+  }
+  if (!gs.teamStats) {
+    gs.teamStats = { totalEarnings: 0, totalSpent: 0, matchesPlayed: 0, championshipsWon: 0, promotionCount: 0 };
+  }
+  if (!gs.youthAcademy) {
+    gs.youthAcademy = { nextIntakeWeek: 4, playersAvailable: [], trainingFocus: null, lastIntakeWeek: 0 };
+  }
+  if (!gs.season?.division) {
+    gs.season.division = 'Serie D';
+  }
+
+  return gs as GameState;
+}
+
 export function useGameState(): UseGameStateReturn {
-  const [isLoading, setIsLoading] = useState(false);
   const [gameState, setGameState] = useState<GameState | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
+  const { userId, requiresSignIn } = usePlayerId();
   const [isNewUser, setIsNewUser] = useState(true);
   const [hasCheckedUser, setHasCheckedUser] = useState(false);
   const [view, setView] = useState<ViewType>('dashboard');
-  const [lastMatchResult, setLastMatchResult] = useState<{ result: MatchResult; pointsEarned: number; pointsChange: number } | null>(null);
+  const [lastMatchResult, setLastMatchResult] = useState<{
+    result: MatchResult;
+    pointsEarned: number;
+    fixture: PlayedFixture | null;
+  } | null>(null);
   const [showMatchModal, setShowMatchModal] = useState(false);
-  const [cachedMatchResult, setCachedMatchResult] = useState<MatchAPIResult | null>(null);
   
   // Use refs to track mounted state and abort controllers
   const isMountedRef = useRef(true);
@@ -89,10 +133,7 @@ export function useGameState(): UseGameStateReturn {
   const isLoadingGameStateRef = useRef(false);
 
   const closeMatchModal = useCallback(() => {
-    console.log('[DEBUG closeMatchModal] Closing modal...');
     setShowMatchModal(false);
-    // Clear cached match result after modal is closed
-    setCachedMatchResult(null);
     setLastMatchResult(null);
   }, []);
 
@@ -117,26 +158,9 @@ export function useGameState(): UseGameStateReturn {
     };
   }, [cleanup]);
 
-  // Initialize user ID
-  useEffect(() => {
-    const justOnboarded = localStorage.getItem('falaMestreJustOnboarded') === 'true';
-    console.log('[useGameState] justOnboarded:', justOnboarded);
-    
-    let id = localStorage.getItem('falaMestreUserId');
-    if (!id) {
-      id = generateUserId();
-      localStorage.setItem('falaMestreUserId', id);
-      console.log('[useGameState] Generated new userId:', id);
-    } else {
-      console.log('[useGameState] Found existing userId:', id);
-    }
-    setUserId(id);
-    
-    // Clear the justOnboarded flag after reading
-    if (justOnboarded) {
-      localStorage.removeItem('falaMestreJustOnboarded');
-    }
-  }, []);
+  // The id saves are keyed on comes from usePlayerId: the session user when
+  // signed in, the local id otherwise. It stays null until the session settles,
+  // which holds the load below until there is a real id to load.
 
   // Load existing game state with proper cleanup and concurrency handling
   useEffect(() => {
@@ -166,34 +190,8 @@ export function useGameState(): UseGameStateReturn {
         if (!mounted) return;
         
         if (data.exists) {
-          // Migrate old gameState structure to new one
-          const gs = data.gameState as any;
-          
-          // Ensure money exists
-          if (gs.user?.money === undefined) {
-            gs.user.money = 100000;
-          }
-          
-          // Ensure new structures exist
-          if (!gs.stadium) {
-            gs.stadium = { level: 0, capacity: 0, amenities: 0, ticketPrice: 0, maintenanceLevel: 1 };
-          }
-          if (!gs.facilities) {
-            gs.facilities = { trainingCenter: 0, medicalCenter: 0, youthAcademy: 0, scoutOffice: 0 };
-          }
-          if (!gs.staff) {
-            gs.staff = { headCoach: null, scout: null, medicalStaff: null };
-          }
-          if (!gs.teamStats) {
-            gs.teamStats = { totalEarnings: 0, totalSpent: 0, matchesPlayed: 0, championshipsWon: 0, promotionCount: 0 };
-          }
-          if (!gs.youthAcademy) {
-            gs.youthAcademy = { nextIntakeWeek: 4, playersAvailable: [], trainingFocus: null, lastIntakeWeek: 0 };
-          }
-          if (!gs.season?.division) {
-            gs.season.division = 'Serie D';
-          }
-          
+          const gs = withBackfills(data.gameState);
+
           setGameState(gs);
           setIsNewUser(false);
           
@@ -209,6 +207,8 @@ export function useGameState(): UseGameStateReturn {
           // If this is a fresh onboarded user and gameState doesn't exist yet,
           // wait and retry (database might not have committed yet)
           const justOnboarded = localStorage.getItem('falaMestreJustOnboarded') === 'true';
+          // One retry per onboarding, so the flag is spent as soon as it is read.
+          localStorage.removeItem('falaMestreJustOnboarded');
           if (justOnboarded) {
             console.log('[useGameState] GameState not found, retrying for onboarded user...');
             await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s
@@ -261,91 +261,40 @@ export function useGameState(): UseGameStateReturn {
     };
   }, [userId]);
 
-  // Core function to play match and return result data
-  const playMatchAndGetResult = useCallback(async (): Promise<MatchAPIResult | null> => {
-    if (!userId) return null;
-    setIsLoading(true);
-
-    // Clear any existing cache at start of new match
-    console.log('[DEBUG playMatchAndGetResult] Clearing old cache, fetching new result');
-    setCachedMatchResult(null);
-
-    // Create abort controller for this request
-    const controller = new AbortController();
-    abortControllersRef.current.push(controller);
-
+  /**
+   * Re-reads the save from the server.
+   *
+   * The match screen calls this whenever a finalize is refused: the client's
+   * copy may be behind the save — the match may in fact have been banked, by
+   * this tab or another — and without a re-read the screen keeps offering the
+   * same fixture and every further attempt is refused for the same reason.
+   */
+  const refreshGameState = useCallback(async () => {
+    if (!userId) return;
     try {
       const response = await fetchWithTimeout(
-        '/api/match',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId }),
-          signal: controller.signal,
-        },
-        REQUEST_TIMEOUT
+        `/api/conversation?userId=${userId}`,
+        {},
+        10000
       );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      if (!isMountedRef.current) return null;
-
+      if (!response.ok) return;
       const data = await response.json();
-      
-      console.log('[DEBUG playMatchAndGetResult] API returned:', data);
-      console.log('[DEBUG playMatchAndGetResult] result.homeScore:', data?.result?.homeScore, 'result.awayScore:', data?.result?.awayScore);
-      
-      // Cache the result so playMatch can reuse it instead of making a new API call
-      setCachedMatchResult(data as MatchAPIResult);
-      
-      return data as MatchAPIResult;
+      if (!isMountedRef.current || !data?.exists) return;
+      setGameState(withBackfills(data.gameState));
     } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        console.log('[useGameState] Play match aborted');
-        return null;
-      }
-      console.error('[useGameState] Failed to play match:', error);
-      return null;
-    } finally {
-      if (isMountedRef.current) {
-        setIsLoading(false);
-      }
-      // Remove this controller from the list
-      const index = abortControllersRef.current.indexOf(controller);
-      if (index > -1) {
-        abortControllersRef.current.splice(index, 1);
-      }
+      // A refresh that fails leaves the screen as it was; the player can
+      // reload. Nothing here is worth interrupting them for.
+      console.error('[useGameState] Failed to refresh game state:', error);
     }
   }, [userId]);
 
-  // Wrapper that handles UI updates after match
-  const playMatch = useCallback(async () => {
-    // Always fetch a new result when user explicitly clicks "Jogar"
-    // This ensures fresh match data instead of showing cached stats
-    let data = await playMatchAndGetResult();
-    
-    console.log('[DEBUG playMatch] Final data used:', data);
-    console.log('[DEBUG playMatch] result.homeScore:', data?.result?.homeScore, 'result.awayScore:', data?.result?.awayScore);
-    
-    if (!data || !isMountedRef.current) return;
-
-    // Store match result for modal
-    console.log('[DEBUG playMatch] Setting lastMatchResult:', data.result);
-    console.log('[DEBUG playMatch] Setting showMatchModal to true');
-    setLastMatchResult({
-      result: data.result,
-      pointsEarned: data.pointsEarned,
-      pointsChange: data.pointsChange
-    });
-    setShowMatchModal(true);
-
-    setGameState(data.updatedGameState);
-  }, [playMatchAndGetResult, cachedMatchResult]);
-
-  const showMatchResult = useCallback((result: MatchResult, pointsEarned: number, pointsChange: number, updatedState?: GameState) => {
-    setLastMatchResult({ result, pointsEarned, pointsChange });
+  const showMatchResult = useCallback((
+    result: MatchResult,
+    pointsEarned: number,
+    updatedState?: GameState,
+    fixture?: PlayedFixture,
+  ) => {
+    setLastMatchResult({ result, pointsEarned, fixture: fixture ?? null });
     setShowMatchModal(true);
     if (updatedState) setGameState(updatedState);
   }, []);
@@ -353,17 +302,16 @@ export function useGameState(): UseGameStateReturn {
   return {
     gameState,
     userId,
+    requiresSignIn,
     isNewUser,
     hasCheckedUser,
     view,
     setView,
-    playMatch,
-    playMatchAndGetResult,
     showMatchResult,
     lastMatchResult,
     showMatchModal,
     closeMatchModal,
-    isLoading,
     updateGameState: (updater) => setGameState(prev => prev ? updater(prev) : prev),
+    refreshGameState,
   };
 }

@@ -17,3 +17,4 @@ export { CrtCabinet } from './CrtCabinet';
 export { SidebarNav } from './SidebarNav';
 export { ViewContainer } from './ViewContainer';
 export { ManagementLayout } from './ManagementLayout';
+export { ActionNotice } from './ActionNotice';

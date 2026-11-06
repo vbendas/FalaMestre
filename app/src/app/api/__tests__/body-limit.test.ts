@@ -4,10 +4,13 @@ import { NextRequest } from 'next/server';
 import { DEFAULT_MAX_BODY_BYTES } from '@/lib/request-body';
 
 // Auth is checked before the body is read on most routes; stub it so these
-// tests exercise the body-size path rather than the 401 branch. Routes that
-// also insist on a signed-in user before the body (investment-claim,
-// predictions-settle, tournaments-tickets) set `session` below, which the
-// test applies to getAuthenticatedUser before calling the handler.
+// tests exercise the body-size path rather than the 401 branch. requireAuth
+// returning null is what lets the routes that only call it (staff, youth,
+// investment, predictions-bet and the rest) reach their body check with
+// nobody signed in. Routes that also insist on a signed-in user before the
+// body (investment-claim, predictions-settle, tournaments-tickets) set
+// `session` below, which the test applies to getAuthenticatedUser before
+// calling the handler.
 vi.mock('@/lib/auth-helpers', () => ({
   requireAuth: vi.fn(async () => null),
   getAuthenticatedUser: vi.fn(async () => null),
@@ -44,6 +47,7 @@ import { getAuthenticatedUser } from '@/lib/auth-helpers';
 import { POST as conversationPOST } from '../conversation/route';
 import { POST as matchPOST } from '../match/route';
 import { POST as matchDecidePOST } from '../match/decide/route';
+import { POST as matchFinalizePOST } from '../match/finalize/route';
 import { POST as matchStreamPOST } from '../match/stream/route';
 import { POST as dailyRewardPOST } from '../daily-reward/route';
 import { POST as facilitiesUpgradePOST } from '../facilities/upgrade/route';
@@ -105,15 +109,38 @@ function signIn(session: string | null) {
   vi.mocked(getAuthenticatedUser).mockResolvedValue(session);
 }
 
-/** The four routes wired by hand before the wrapper existed. */
-const HAND_WIRED_ROUTES: BodyRoute[] = [
+/**
+ * The routes that give up on a body that stalls (`parseTimeoutMs`).
+ *
+ * They used to be the hand-wired ones — each carried its own copy of the
+ * parse-with-a-timeout block, which is why they were grouped apart here.
+ * They read their body through the wrapper like everything else now; what
+ * still sets them apart is the timeout and the reply that goes with it,
+ * since a stalled body and an unparseable one cannot be told apart in a
+ * reply. They are the routes that go on to simulate a match or call the
+ * model, which is why they are the ones unwilling to wait.
+ */
+const TIMEOUT_WRAPPED_ROUTES: BodyRoute[] = [
   { name: 'conversation', url: 'http://localhost/api/conversation', handler: conversationPOST },
   { name: 'match', url: 'http://localhost/api/match', handler: matchPOST },
   { name: 'match-decide', url: 'http://localhost/api/match/decide', handler: matchDecidePOST },
+  { name: 'match-finalize', url: 'http://localhost/api/match/finalize', handler: matchFinalizePOST },
+];
+
+/** match-stream reads its body plainly, so it keeps the plain reply. */
+const MATCH_STREAM_ROUTES: BodyRoute[] = [
   { name: 'match-stream', url: 'http://localhost/api/match/stream', handler: matchStreamPOST },
 ];
 
-/** Every route whose body now comes through withApiRoute's readJson. */
+const HAND_WIRED_ROUTES: BodyRoute[] = [...TIMEOUT_WRAPPED_ROUTES, ...MATCH_STREAM_ROUTES];
+const MATCH_STREAM_ROUTE = MATCH_STREAM_ROUTES[0];
+
+/**
+ * Every route that reads its body under the wrapper's default settings: no
+ * parse timeout, so the plain `Invalid JSON body` for one that will not
+ * parse. Together with the four above and match-stream, that is every route
+ * in the app that takes a body — there is no third way of reading one left.
+ */
 const WRAPPED_ROUTES: BodyRoute[] = [
   { name: 'daily-reward', url: 'http://localhost/api/daily-reward', handler: dailyRewardPOST },
   { name: 'facilities-upgrade', url: 'http://localhost/api/facilities/upgrade', handler: facilitiesUpgradePOST },
@@ -162,8 +189,13 @@ const LOGGER_ONLY_ROUTES: Array<{ name: string; method: string; url: string; han
   { name: 'cron-daily-yield', method: 'GET', url: 'http://localhost/api/cron/daily-yield', handler: cronDailyYieldGET, headers: { authorization: `Bearer ${CRON_SECRET}` } },
   { name: 'cron-expire-yields', method: 'GET', url: 'http://localhost/api/cron/expire-yields', handler: cronExpireYieldsGET, headers: { authorization: `Bearer ${CRON_SECRET}` } },
   { name: 'investment', method: 'GET', url: `http://localhost/api/investment?userId=${SESSION_USER}`, handler: investmentGET },
-  { name: 'predictions', method: 'GET', url: 'http://localhost/api/predictions', handler: predictionsGET },
-  { name: 'squad-migrate', method: 'GET', url: 'http://localhost/api/squad/migrate', handler: squadMigrateGET },
+  // With a player: markets are per player, and without one the route has no
+  // board to read and never reaches the database.
+  { name: 'predictions', method: 'GET', url: `http://localhost/api/predictions?userId=${SESSION_USER}`, handler: predictionsGET },
+  // The batch migration rewrites every saved game state, so it is gated on the
+  // cron or admin secret; without the header it stops at 403 and never reaches
+  // the database line this test reads.
+  { name: 'squad-migrate', method: 'GET', url: 'http://localhost/api/squad/migrate', handler: squadMigrateGET, headers: { authorization: `Bearer ${CRON_SECRET}` } },
   { name: 'tournaments-tickets', method: 'GET', url: `http://localhost/api/tournaments/tickets?userId=${SESSION_USER}`, handler: ticketsGET },
   { name: 'youth', method: 'GET', url: `http://localhost/api/youth?userId=${SESSION_USER}`, handler: youthGET },
 ];
@@ -175,8 +207,8 @@ describe('request bodies on API routes', () => {
   let previousCronSecret: string | undefined;
 
   beforeEach(() => {
-    // The routes log a warn line for a rejected body; capture it and keep
-    // test output clean.
+    // A rejected body ends the request, so it comes back on the request's
+    // one summary line, at warn. Capture it and keep test output clean.
     warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
@@ -195,10 +227,13 @@ describe('request bodies on API routes', () => {
   });
 
   it('covers every route that reads a body through the wrapper', () => {
-    // 17 route files call readJson; the two cron routes and the plain
-    // predictions route only take the logger. Keep this list honest.
+    // 17 routes read a body on the wrapper's defaults, 5 more set their own
+    // options; the two cron routes and the plain predictions route only take
+    // the logger. Keep these lists honest.
     expect(WRAPPED_ROUTES).toHaveLength(17);
     expect(new Set(WRAPPED_ROUTES.map((r) => r.name)).size).toBe(17);
+    expect(ALL_BODY_ROUTES).toHaveLength(22);
+    expect(new Set(ALL_BODY_ROUTES.map((r) => r.name)).size).toBe(22);
   });
 
   describe('oversized bodies', () => {
@@ -246,7 +281,9 @@ describe('request bodies on API routes', () => {
         expect(parsed).toMatchObject({
           level: 'warn',
           route: route.name,
-          message: 'Request body rejected: too large',
+          message: 'Request completed',
+          status: 413,
+          reason: 'body_too_large',
         });
         expect(typeof parsed.requestId).toBe('string');
         expect(parsed.requestId.length).toBeGreaterThan(0);
@@ -263,11 +300,12 @@ describe('request bodies on API routes', () => {
   });
 
   describe('malformed bodies', () => {
-    // The hand-wired conversation, match and match-decide routes wrap body
-    // parsing in a timeout and reply 'Invalid JSON body or timeout' without
-    // logging; they are covered by their own tests. match-stream and every
-    // wrapped route answer with the plain reply they had before.
-    const MALFORMED_ROUTES = [HAND_WIRED_ROUTES[3], ...WRAPPED_ROUTES.filter((r) => !r.malformedReply)];
+    // The hand-wired conversation, match, match-decide and match-finalize
+    // routes wrap body parsing in a timeout and reply 'Invalid JSON body or
+    // timeout' without logging; they are covered by their own tests.
+    // match-stream and every wrapped route answer with the plain reply they
+    // had before.
+    const MALFORMED_ROUTES = [MATCH_STREAM_ROUTE, ...WRAPPED_ROUTES.filter((r) => !r.malformedReply)];
 
     it.each(MALFORMED_ROUTES)('$name still answers a malformed body with its 400 reply', async (route) => {
       signIn(route.session ?? null);
@@ -278,10 +316,10 @@ describe('request bodies on API routes', () => {
       await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body' });
     });
 
-    // conversation, match and match-decide wrap body parsing in a timeout and
-    // cannot tell a malformed body from a slow one, so they keep their own
-    // 'or timeout' reply; the log line is what names the cause.
-    const TIMEOUT_WRAPPED = HAND_WIRED_ROUTES.slice(0, 3);
+    // conversation, match, match-decide and match-finalize wrap body parsing
+    // in a timeout and cannot tell a malformed body from a slow one, so they
+    // keep their own 'or timeout' reply; the log line is what names the cause.
+    const TIMEOUT_WRAPPED = TIMEOUT_WRAPPED_ROUTES;
 
     it.each(TIMEOUT_WRAPPED)('$name answers a malformed body with its own 400 reply', async (route) => {
       signIn(route.session ?? null);
@@ -302,8 +340,14 @@ describe('request bodies on API routes', () => {
         level: 'warn',
         route: route.name,
         requestId: 'trace-malformed',
-        message: 'Request body rejected: invalid JSON or timeout',
+        message: 'Request completed',
+        status: 400,
+        reason: 'body_invalid_json_or_timeout',
+        cause: 'invalid_json',
       });
+      // A body that will not parse is routine; the line says why without
+      // carrying a stack trace.
+      expect(JSON.parse(warnSpy.mock.calls[0][0] as string).error).toBeUndefined();
     });
 
     it('insights keeps its own wording for a malformed body', async () => {
@@ -325,7 +369,9 @@ describe('request bodies on API routes', () => {
         expect(parsed).toMatchObject({
           level: 'warn',
           route: route.name,
-          message: 'Request body rejected: invalid JSON',
+          message: 'Request completed',
+          status: 400,
+          reason: 'body_invalid_json',
         });
         expect(typeof parsed.requestId).toBe('string');
         expect(parsed.requestId.length).toBeGreaterThan(0);
@@ -365,7 +411,9 @@ describe('request bodies on API routes', () => {
       expect(parsed).toMatchObject({
         level: 'warn',
         route: route.name,
-        message: 'Request body rejected: not a JSON object',
+        message: 'Request completed',
+        status: 400,
+        reason: 'body_not_object',
       });
       expect(typeof parsed.requestId).toBe('string');
       expect(parsed.requestId.length).toBeGreaterThan(0);
@@ -373,10 +421,14 @@ describe('request bodies on API routes', () => {
   });
 
   describe('routes that reach the body only after their own checks', () => {
-    it('investment-claim stops at 401 with nobody signed in, so the body test signs a user in', async () => {
+    it('investment-claim caps the body before resolving who is claiming', async () => {
+      // It used to demand a session before reading the body (and so stopped
+      // at 401 here); it now resolves the player the way the purchase route
+      // does — session first, body userId for dev with auth off — which
+      // means the body, and therefore the cap, comes first.
       signIn(null);
       const response = await investmentClaimPOST(postRequest(WRAPPED_ROUTES[4], oversizedBody()));
-      expect(response.status).toBe(401);
+      expect(response.status).toBe(413);
     });
 
     it('predictions-settle stops at 403 without the cron or admin secret', async () => {

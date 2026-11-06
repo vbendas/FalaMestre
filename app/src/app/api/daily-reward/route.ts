@@ -1,25 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/db';
-import { gameStates } from '@/db/schema';
-import { eq } from 'drizzle-orm';
-import { GameState } from '@/lib/types';
 import { getDailyRewardAmount } from '@/lib/economy';
 import { getAuthenticatedUser, requireAuth } from '@/lib/auth-helpers';
 import { withApiRoute, ApiContext } from '@/lib/api-route';
-
-type GameStateRecordShape = {
-  currentState: GameState;
-};
-
-interface DailyRewardRequest {
-  userId: string;
-  lastClaimDate?: string;
-  currentStreak?: number;
-}
+import { dailyRewardRequestSchema } from '@/lib/validations';
+import { loadSave, commitSave, saveConflictResponse } from '@/lib/save-store';
 
 export const POST = withApiRoute('daily-reward', async (
   request: NextRequest,
-  { log, readJson }: ApiContext
+  { log, readBody }: ApiContext
 ) => {
   try {
     const authError = await requireAuth();
@@ -29,7 +17,7 @@ export const POST = withApiRoute('daily-reward', async (
 
     const sessionUserId = await getAuthenticatedUser();
 
-    const bodyResult = await readJson<DailyRewardRequest>();
+    const bodyResult = await readBody(dailyRewardRequestSchema);
     if (!bodyResult.ok) {
       return bodyResult.response;
     }
@@ -41,20 +29,14 @@ export const POST = withApiRoute('daily-reward', async (
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    if (process.env.AUTH_DISABLED !== 'true' && !sessionUserId && !userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
-    }
+    // Get game state, remembering the version it was read at
+    const save = await loadSave(userId);
 
-    // Get game state
-    const gameStateRecord = await db.query.gameStates.findFirst({
-      where: eq(gameStates.userId, userId),
-    });
-
-    if (!gameStateRecord) {
+    if (!save) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const gameState = (gameStateRecord as GameStateRecordShape).currentState;
+    const gameState = save.state;
     
     // Get current streak (default to day 1)
     const today = new Date();
@@ -77,14 +59,11 @@ export const POST = withApiRoute('daily-reward', async (
     gameState.user.money += rewardAmount;
     gameState.teamStats.totalEarnings += rewardAmount;
 
-    // Update database
-    await db
-      .update(gameStates)
-      .set({
-        currentState: gameState,
-        updatedAt: new Date(),
-      })
-      .where(eq(gameStates.userId, userId));
+    const committed = await commitSave(userId, gameState, save.version);
+    if (!committed.ok) {
+      log.warn('Daily reward rejected: the save moved on while it was being processed', { dayOfCycle });
+      return saveConflictResponse();
+    }
 
     return NextResponse.json({
       success: true,

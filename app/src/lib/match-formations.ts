@@ -1,3 +1,5 @@
+import { getLogger } from './request-context';
+
 export type Formation = '4-3-3' | '4-4-2' | '4-5-1' | '3-5-2' | '3-4-3' | '5-3-2';
 
 export interface PlayerPosition {
@@ -138,13 +140,16 @@ export function mapPlayersToFormation(
   
   // SAFETY CHECK: If formation lookup fails, default to 4-3-3
   if (!basePositions || !Array.isArray(basePositions) || basePositions.length === 0) {
-    console.error(`[Formation] ⚠️ Formation "${formation}" not found or invalid, defaulting to 4-3-3`);
+    getLogger('match-formations').warn('Formation not found, defaulting to 4-3-3', { formation });
     return mapPlayersToFormation('4-3-3', players);
   }
   
   // Validation: Ensure we have exactly 11 positions
   if (basePositions.length !== 11) {
-    console.error(`[Formation] ❌ Formation "${formation}" has ${basePositions.length} positions (expected 11), defaulting to 4-3-3`);
+    getLogger('match-formations').warn('Formation does not have 11 positions, defaulting to 4-3-3', {
+      formation,
+      positions: basePositions.length,
+    });
     return mapPlayersToFormation('4-3-3', players);
   }
   
@@ -239,11 +244,10 @@ export function mapPlayersToFormation(
     }
   });
   
-  console.log('[Formation] Mapped players to formation:', {
+  getLogger('match-formations').debug('Mapped players to formation', {
     formation,
     playerCount: players.length,
     mappedCount: mappedPositions.length,
-    positions: mappedPositions.map(p => ({ id: p.id, name: p.playerName, role: p.role }))
   });
   
   return mappedPositions;
@@ -401,7 +405,7 @@ export function getDynamicPlayerPositions(
 
 export function normalizeFormation(formation: string | undefined | null): Formation {
   if (!formation) {
-    console.warn('[Formation] Empty formation provided, defaulting to 4-3-3');
+    getLogger('match-formations').warn('Empty formation, defaulting to 4-3-3');
     return '4-3-3';
   }
   
@@ -427,11 +431,11 @@ export function normalizeFormation(formation: string | undefined | null): Format
   // Try to map from cleaned version
   const normalized = formationMap[cleaned];
   if (normalized) {
-    console.log(`[Formation] Normalized "${formation}" → "${normalized}"`);
+    getLogger('match-formations').debug('Normalized formation', { formation, normalized });
     return normalized;
   }
   
   // Fallback to default
-  console.warn(`[Formation] Unknown formation "${formation}", defaulting to 4-3-3`);
+  getLogger('match-formations').warn('Unknown formation, defaulting to 4-3-3', { formation });
   return '4-3-3';
 }

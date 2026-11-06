@@ -13,9 +13,16 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "db:check": "node scripts/check-migrations.mjs",
+    "check:bodies": "node scripts/check-route-bodies.mjs",
+    "check:investments": "node scripts/check-investment-tests.mjs",
+    "test:e2e": "playwright test",
+    "test:guarantees": "node scripts/break-guarantees.mjs",
+    "repair:betting": "node scripts/repair-betting.mjs"
   },
   "dependencies": {
+    "@electric-sql/pglite": "^0.5.13",
     "@neondatabase/serverless": "^1.0.2",
     "@radix-ui/react-scroll-area": "^1.2.10",
     "@radix-ui/react-slot": "^1.2.4",

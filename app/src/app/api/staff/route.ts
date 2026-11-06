@@ -1,21 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/db';
-import { gameStates } from '@/db/schema';
-import { eq } from 'drizzle-orm';
-import { GameState, StaffMember, StaffRole, StaffSpecialty } from '@/lib/types';
+import { StaffMember, StaffRole, StaffSpecialty } from '@/lib/types';
 import { STAFF_WAGES } from '@/lib/constants';
+import { getAuthenticatedUser, requireAuth } from '@/lib/auth-helpers';
 import { withApiRoute, ApiContext } from '@/lib/api-route';
-
-type GameStateRecordShape = {
-  currentState: GameState;
-};
-
-interface StaffRequest {
-  userId: string;
-  action: string;
-  role: StaffRole;
-  tier: 'rookie' | 'professional' | 'elite';
-}
+import { staffRequestSchema } from '@/lib/validations';
+import { loadSave, commitSave, saveConflictResponse } from '@/lib/save-store';
 
 const STAFF_NAMES = {
   headCoach: [
@@ -30,6 +19,13 @@ const STAFF_NAMES = {
     'Dr. Ricardo', 'Dr. Marcelo', 'Dr. Bruno', 'Dr. Gabriel',
     'Dr. Pedro', 'Dr. Rodrigo', 'Dr. Luiz', 'Dr. Rafael',
   ],
+};
+
+/** What hiring at each tier costs. Keyed by tier, so a tier cannot be missed. */
+const HIRE_COST: Record<'rookie' | 'professional' | 'elite', number> = {
+  rookie: 50_000,
+  professional: 200_000,
+  elite: 1_000_000,
 };
 
 function randomElement<T>(arr: T[]): T {
@@ -64,54 +60,64 @@ function generateStaffMember(role: StaffRole, tier: 'rookie' | 'professional' | 
 
 export const POST = withApiRoute('staff', async (
   request: NextRequest,
-  { log, readJson }: ApiContext
+  { log, readBody }: ApiContext
 ) => {
   try {
-    const bodyResult = await readJson<StaffRequest>();
+    // Check authentication
+    const authError = await requireAuth();
+    if (authError) {
+      return authError;
+    }
+
+    const sessionUserId = await getAuthenticatedUser();
+
+    const bodyResult = await readBody(staffRequestSchema);
     if (!bodyResult.ok) {
       return bodyResult.response;
     }
-    const requestBody = bodyResult.body;
 
-    const { userId, action, role, tier } = requestBody;
+    // Kept whole as well as destructured: `tier` is only on a hire, and
+    // narrowing on `body.action` is what tells TypeScript that.
+    const body = bodyResult.body;
+    const { userId, action, role } = body;
 
-    if (!userId) {
+    if (sessionUserId && userId && userId !== sessionUserId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const targetUserId = sessionUserId || userId;
+
+    if (!targetUserId) {
       return NextResponse.json({ error: 'userId required' }, { status: 400 });
     }
 
-    const gameStateRecord = await db.query.gameStates.findFirst({
-      where: eq(gameStates.userId, userId),
-    });
+    const save = await loadSave(targetUserId);
 
-    if (!gameStateRecord) {
+    if (!save) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const gameState = (gameStateRecord as GameStateRecordShape).currentState;
-    
-    const hireCost = tier === 'rookie' ? 50000 : tier === 'professional' ? 200000 : 1000000;
-    const wageMultiplier = tier === 'rookie' ? 1 : tier === 'professional' ? 3 : 8;
+    const gameState = save.state;
 
-    if (action === 'hire') {
+    if (body.action === 'hire') {
+      const { tier } = body;
+      const hireCost = HIRE_COST[tier];
+
       if (gameState.user.money < hireCost) {
         return NextResponse.json({ error: 'Insufficient funds' }, { status: 400 });
       }
 
-      const validRoles: StaffRole[] = ['headCoach', 'scout', 'medicalStaff'];
-      if (!validRoles.includes(role)) {
-        return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
-      }
-
       const staffMember = generateStaffMember(role, tier);
-      
+
       gameState.user.money -= hireCost;
       gameState.teamStats.totalSpent += hireCost;
       (gameState.staff as any)[role] = staffMember;
 
-      await db
-        .update(gameStates)
-        .set({ currentState: gameState, updatedAt: new Date() })
-        .where(eq(gameStates.userId, userId));
+      const committed = await commitSave(targetUserId, gameState, save.version);
+      if (!committed.ok) {
+        log.warn('Staff action rejected: the save moved on while it was being processed', { action, role });
+        return saveConflictResponse();
+      }
 
       return NextResponse.json({
         success: true,
@@ -122,12 +128,9 @@ export const POST = withApiRoute('staff', async (
       });
     }
 
-    if (action === 'fire') {
-      const validRoles: StaffRole[] = ['headCoach', 'scout', 'medicalStaff'];
-      if (!validRoles.includes(role)) {
-        return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
-      }
-
+    // Only 'fire' is left: the schema admits exactly these two actions, so
+    // there is no third case to fall through to.
+    {
       const staffAny = gameState.staff as any;
       if (!staffAny[role]) {
         return NextResponse.json({ error: 'No staff in that role' }, { status: 400 });
@@ -135,10 +138,11 @@ export const POST = withApiRoute('staff', async (
 
       staffAny[role] = null;
 
-      await db
-        .update(gameStates)
-        .set({ currentState: gameState, updatedAt: new Date() })
-        .where(eq(gameStates.userId, userId));
+      const committed = await commitSave(targetUserId, gameState, save.version);
+      if (!committed.ok) {
+        log.warn('Staff action rejected: the save moved on while it was being processed', { action, role });
+        return saveConflictResponse();
+      }
 
       return NextResponse.json({
         success: true,
@@ -147,8 +151,6 @@ export const POST = withApiRoute('staff', async (
         newBalance: gameState.user.money,
       });
     }
-
-    return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
 
   } catch (error) {
     log.error('Error', { error });

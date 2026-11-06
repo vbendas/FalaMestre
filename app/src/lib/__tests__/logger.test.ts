@@ -288,6 +288,65 @@ describe('logger', () => {
       expect(sink.only().error).toMatchObject({ name: 'AppError', message: 'custom' });
     });
 
+    it('drops a foreign error\'s unknown own properties and names what it dropped', () => {
+      const sink = collector();
+      const logger = createRequestLogger('match', null, { write: sink.write });
+      // The shape of a Postgres error: the failing statement and its bind
+      // values ride along as own properties, and for a save write the params
+      // are the player's whole game state.
+      const error = Object.assign(new Error('duplicate key value violates unique constraint'), {
+        code: '23505',
+        severity: 'ERROR',
+        constraint: 'game_states_pkey',
+        table: 'game_states',
+        detail: 'Key (user_id)=(u1) already exists.',
+        query: "insert into game_states values ('u1', 'SAVE-CONTENT-SENTINEL')",
+        params: ['u1', { money: 999999, note: 'SAVE-CONTENT-SENTINEL' }],
+      });
+
+      logger.error('API error', { error });
+
+      const parsed = sink.only();
+      // The identifiers survive…
+      expect(parsed.error).toMatchObject({
+        code: '23505',
+        severity: 'ERROR',
+        constraint: 'game_states_pkey',
+        table: 'game_states',
+      });
+      // …the payload does not, and the line never carries the save.
+      expect(parsed.error.query).toBeUndefined();
+      expect(parsed.error.params).toBeUndefined();
+      expect(parsed.error.detail).toBeUndefined();
+      expect(sink.lines[0].line).not.toContain('SAVE-CONTENT-SENTINEL');
+      // What was dropped is named, so a field we attach to our own errors
+      // cannot vanish without a trace.
+      expect(parsed.error.errorFieldsDropped).toEqual(
+        expect.arrayContaining(['detail', 'query', 'params'])
+      );
+      expect(parsed.error.errorFieldsDropped).not.toContain('code');
+    });
+
+    it('refuses an allowlisted field whose value is not identifier-sized', () => {
+      const sink = collector();
+      const logger = createRequestLogger('match', null, { write: sink.write });
+      const error = Object.assign(new Error('boom'), {
+        // Allowlisted name, but the value is payload smuggled under it.
+        code: 'x'.repeat(5000),
+        table: { rows: ['SAVE-CONTENT-SENTINEL'] },
+      });
+
+      logger.error('API error', { error });
+
+      const parsed = sink.only();
+      expect(parsed.error.code).toBeUndefined();
+      expect(parsed.error.table).toBeUndefined();
+      expect(sink.lines[0].line).not.toContain('SAVE-CONTENT-SENTINEL');
+      expect(parsed.error.errorFieldsDropped).toEqual(
+        expect.arrayContaining(['code', 'table'])
+      );
+    });
+
     it('still logs a non-Error thrown value', () => {
       const sink = collector();
       const logger = createRequestLogger('match', null, { write: sink.write });
@@ -295,6 +354,74 @@ describe('logger', () => {
       logger.error('failed', { error: 'just a string' });
 
       expect(sink.only().error).toBe('just a string');
+    });
+  });
+
+  describe('secret scrubbing', () => {
+    const PASSWORD = 'SCRUB-DB-PASSWORD-8814';
+    const KEY = 'sk-or-SCRUB-API-KEY-5531';
+    const saved: Record<string, string | undefined> = {};
+
+    beforeEach(() => {
+      for (const name of ['OPENROUTER_API_KEY', 'DATABASE_URL', 'LOG_LEVEL'] as const) {
+        saved[name] = process.env[name];
+      }
+      process.env.OPENROUTER_API_KEY = KEY;
+      process.env.DATABASE_URL = `postgres://app:${PASSWORD}@db.example.test:5432/game`;
+    });
+
+    afterEach(() => {
+      for (const [name, value] of Object.entries(saved)) {
+        if (value === undefined) delete process.env[name];
+        else process.env[name] = value;
+      }
+    });
+
+    it('scrubs a known secret wherever it appears: message, fields, error message and stack', () => {
+      const sink = collector();
+      const logger = createRequestLogger('db', null, { write: sink.write });
+      const error = new Error(`Connection string: "postgres://app:${PASSWORD}@db.example.test:5432/game"`);
+
+      logger.error(`upstream said ${KEY}`, {
+        error,
+        detailText: `retried with ${KEY} twice`,
+        nested: { urls: [process.env.DATABASE_URL] },
+        // The password on its own, the way a stack frame or a driver message
+        // can quote part of the URL rather than all of it.
+        fragment: `auth failed for ${PASSWORD}`,
+      });
+
+      const line = sink.lines[0].line;
+      expect(line).not.toContain(PASSWORD);
+      expect(line).not.toContain(KEY);
+      const parsed = sink.only();
+      expect(parsed.error.message).toContain('[redacted:DATABASE_URL');
+      expect(parsed.message).toContain('[redacted:OPENROUTER_API_KEY]');
+      expect(parsed.nested.urls[0]).toContain('[redacted:DATABASE_URL]');
+      expect(parsed.fragment).toContain('[redacted:DATABASE_URL_PASSWORD]');
+    });
+
+    it('matches only the values that are secrets, not every setting', () => {
+      process.env.LOG_LEVEL = 'info';
+      const sink = collector();
+      const logger = createRequestLogger('db', null, { write: sink.write });
+
+      logger.error('info-level retry gave no info', { note: 'more info in the dashboard' });
+
+      // The word "info" survives everywhere: only SECRET_ENV_VARS are scrubbed.
+      expect(sink.only().message).toBe('info-level retry gave no info');
+      expect(sink.only().note).toBe('more info in the dashboard');
+    });
+
+    it('leaves a short value alone rather than mangling text', () => {
+      process.env.CRON_SECRET = 'abc';
+      const sink = collector();
+      const logger = createRequestLogger('db', null, { write: sink.write });
+
+      logger.error('the abcdef case', {});
+
+      expect(sink.only().message).toBe('the abcdef case');
+      delete process.env.CRON_SECRET;
     });
   });
 

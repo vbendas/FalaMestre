@@ -1,24 +1,51 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/db';
-import { gameStates } from '@/db/schema';
-import { eq } from 'drizzle-orm';
-import { simulateMatchWithNarrative, BRAZILIAN_TEAMS, generateSquad } from '@/lib/game-engine';
-import { callAIMock, callAI } from '@/lib/ai-service';
-import { GameState, MatchEvent } from '@/lib/types';
-import { matchRequestSchema } from '@/lib/validations';
-import { ZodError } from 'zod';
-import { checkRateLimit } from '@/lib/rate-limit';
-import { getAuthenticatedUser, requireAuth } from '@/lib/auth-helpers';
-import { generateMatchScript, generateEnhancedMatchScript } from '@/lib/matchScriptGenerator';
-import { calculateMatchEarnings, calculateWeeklyStaffWages } from '@/lib/economy';
-import { readJsonBody } from '@/lib/request-body';
-import { createRequestLogger } from '@/lib/logger';
-import { pickNextFixture, rollOpponentMorale, simulateRivalStandings } from '@/lib/match-setup';
-import { generateSeed, withSeed } from '@/lib/rng';
+/**
+ * POST /api/match — a whole match in one request, simulated and banked here.
+ *
+ * **Nothing in the game calls this.** A match the player watches is played
+ * turn by turn against /api/match/decide and banked by /api/match/finalize,
+ * which replays those turns from their seed; this route runs its own
+ * simulation instead, so pointing the screen at it would throw away the
+ * decisions the player made. The client's `playMatch` wrapper was removed
+ * along with the props that carried it.
+ *
+ * It is kept, rather than deleted, for three reasons:
+ *
+ *  - It is where the engine's determinism is tested end to end.
+ *    `match-seed.test.ts` and `match-seed-concurrency.test.ts` replay this
+ *    route for a seed and compare whole responses, including the narration
+ *    and the visual script, and overlap differently-seeded requests at the
+ *    database and AI awaits. Deleting the route would delete that coverage,
+ *    which is the reason the seeded match mode is trustworthy.
+ *  - It is the only path that produces the AI narration (`callAI`) and the
+ *    enhanced match script the 3D match view is meant to play back. Finalize
+ *    deliberately does neither: it is a save, not a show.
+ *  - It is a complete, headless "simulate this fixture" endpoint, which is
+ *    what a cron-run league, a bot opponent or a PvP fixture would want.
+ *
+ * If it stays uncalled and the 3D view never returns, it should go; whatever
+ * is still wanted from it would then move into `match-replay.ts` with its
+ * tests. Until then, treat it as the engine's reference implementation and
+ * keep its bookkeeping shared with finalize (`applyMatchOutcome`) rather than
+ * letting the two drift.
+ */
 
-type GameStateRecordShape = {
-  currentState: GameState;
-};
+import { NextRequest, NextResponse } from 'next/server';
+import { simulateMatchWithNarrative, generateSquad } from '@/lib/game-engine';
+import { callAIMock, callAI } from '@/lib/ai-service';
+import { SEASON_LENGTH, isSeasonOver } from '@/lib/constants';
+import { matchRequestSchema } from '@/lib/validations';
+import { getAuthenticatedUser } from '@/lib/auth-helpers';
+import { generateMatchScript, generateEnhancedMatchScript } from '@/lib/matchScriptGenerator';
+import { withApiRoute, type ApiContext } from '@/lib/api-route';
+import { applyMatchOutcome } from '@/lib/match-bookkeeping';
+import { loadInvestmentBonuses } from '@/lib/investment-bonuses-store';
+import { effectiveMorale } from '@/lib/investment-bonuses';
+import { rollOpponentMorale } from '@/lib/match-setup';
+import { withSeed } from '@/lib/rng';
+import { loadSave, commitSave, saveConflictResponse } from '@/lib/save-store';
+import { openFixtureMarketAfterCommit, recordRoundResult } from '@/lib/fixture-markets';
+import { kickOffFixture } from '@/lib/fixture-kickoff';
+import { settlePlayedFixtureAfterCommit } from '@/lib/market-settlement';
 
 /**
  * Wrapper for async operations with timeout and cleanup
@@ -45,13 +72,31 @@ async function withTimeout<T>(
   });
 }
 
-export async function POST(request: NextRequest) {
-  const startTime = Date.now();
-  const log = createRequestLogger('match', request);
+/**
+ * How this route takes its body.
+ *
+ * `parseTimeoutMs`: a client that opens the request and then stalls would
+ * otherwise hold it open indefinitely, and this is one of the routes that
+ * goes on to run a simulation or call the model.
+ *
+ * `invalidJsonResponse`: with a timeout in play the route cannot tell a body
+ * that will not parse from one that never arrived, so it does not pretend to
+ * — one reply covers both, and the summary line's `cause` says which it was.
+ */
+const BODY_OPTIONS = {
+  parseTimeoutMs: 5000,
+  invalidJsonResponse: () =>
+    NextResponse.json({ error: 'Invalid JSON body or timeout' }, { status: 400 }),
+};
+
+export const POST = withApiRoute('match', handlePost, BODY_OPTIONS);
+
+async function handlePost(request: NextRequest, ctx: ApiContext) {
+  const { log } = ctx;
   
   try {
     // Check authentication - returns 401 only if REQUIRE_AUTH=true and no session
-    const authError = await requireAuth();
+    const authError = await ctx.requireAuth();
     if (authError) {
       return authError;
     }
@@ -59,68 +104,24 @@ export async function POST(request: NextRequest) {
     // Get authenticated user ID (or null if not using auth)
     const sessionUserId = await getAuthenticatedUser();
     
-    const rateLimit = checkRateLimit(request, 'match', 30, 60_000);
-    if (!rateLimit.ok) {
-      return NextResponse.json(
-        { error: 'Too many requests', retryAfter: rateLimit.retryAfterSeconds },
-        { status: 429, headers: { 'Retry-After': String(rateLimit.retryAfterSeconds) } }
-      );
+    const rateLimited = ctx.rateLimit('match', 30, 60_000);
+    if (rateLimited) {
+      return rateLimited;
     }
 
-    // Parse request body with a size limit and timeout protection
-    let requestBody;
-    try {
-      const bodyResult = await withTimeout(
-        readJsonBody(request),
-        5000,
-        'Request body parsing'
-      );
-      if (!bodyResult.ok) {
-        if (bodyResult.reason === 'too_large') {
-          log.warn('Request body rejected: too large');
-          return bodyResult.response;
-        }
-        if (bodyResult.reason === 'not_object') {
-          log.warn('Request body rejected: not a JSON object');
-          return bodyResult.response;
-        }
-        throw new Error(bodyResult.reason);
-      }
-      requestBody = bodyResult.body;
-    } catch (error) {
-      // Covers both a body that will not parse and the 5s parse timeout;
-      // the reply cannot tell them apart, so the log line carries the cause.
-      log.warn('Request body rejected: invalid JSON or timeout', { error });
-      return NextResponse.json(
-        { error: 'Invalid JSON body or timeout' },
-        { status: 400 }
-      );
+    // Body, body size, and shape, in one call: see ctx.readBody. The 5s
+    // parse timeout and the 'or timeout' wording are the route's options on
+    // withApiRoute at the bottom of this file.
+    const bodyResult = await ctx.readBody(matchRequestSchema);
+    if (!bodyResult.ok) {
+      return bodyResult.response;
     }
-    
-    // Validate request body
-    let validatedData;
-    try {
-      validatedData = matchRequestSchema.parse(requestBody);
-    } catch (error) {
-      if (error instanceof ZodError) {
-        const issues = error.issues || [];
-        const firstError = issues[0];
-        return NextResponse.json(
-          { 
-            error: 'Validation failed', 
-            message: firstError?.message || 'Invalid input',
-            field: firstError?.path?.join('.') || 'unknown'
-          },
-          { status: 400 }
-        );
-      }
-      throw error;
-    }
+    const validatedData = bodyResult.body;
     
     const { userId } = validatedData;
-    // The seed the caller sent, or a fresh one. Either way it is reported back
-    // so the same request can be replayed.
-    const seed = validatedData.seed ?? generateSeed();
+    // `seed` in the body is accepted and ignored: the fixture is played under
+    // the seed the server drew at kickoff (fixture-kickoff.ts), which the
+    // reply reports once the match has been banked.
 
     // Ensure user can only access their own data
     if (sessionUserId && userId !== sessionUserId) {
@@ -138,16 +139,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get game state with timeout
-    let gameStateRecord;
+    // Get game state with timeout, remembering the version it was read at:
+    // this route holds the save across the AI call below, the widest window
+    // any route has, and the write at the end is guarded on that version.
+    let save;
     try {
-      gameStateRecord = await withTimeout(
-        db.query.gameStates.findFirst({
-          where: eq(gameStates.userId, userId),
-        }),
-        5000,
-        'Game state fetch'
-      );
+      save = await withTimeout(loadSave(userId), 5000, 'Game state fetch');
     } catch (error) {
       log.error('Failed to fetch game state', { error });
       return NextResponse.json(
@@ -156,15 +153,63 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!gameStateRecord) {
+    if (!save) {
       return NextResponse.json(
         { error: 'User not found. Please start a new game.' },
         { status: 404 }
       );
     }
 
-    const gameState = (gameStateRecord as GameStateRecordShape).currentState;
+    const gameState = save.state;
     const match = gameState.season.nextMatch;
+
+    // No fixture left once the season is over. This route banks a match too,
+    // through the same bookkeeping, so without the check the 'Temporada
+    // Completa' placeholder could be played for ever (see finalize).
+    if (isSeasonOver(gameState.season)) {
+      log.warn('Match rejected: the season is over', { week: gameState.season.week });
+      return NextResponse.json(
+        {
+          error: 'Season complete',
+          message: `The season ended after ${SEASON_LENGTH} rounds. There is no fixture left to play.`,
+          week: gameState.season.week,
+        },
+        { status: 409 }
+      );
+    }
+
+    // What the player's active investments are worth to this match: morale
+    // behind the team, and the gate and prize the bookkeeping banks. Loaded
+    // before the seeded block, which cannot span an await (see rng.ts).
+    const bonuses = await loadInvestmentBonuses(userId);
+
+    // Kickoff: fixes the fixture's seed (the server's) and the setup it is
+    // played from, and closes its market, before the match is simulated. A
+    // stream of this fixture kicked it off the same way, so what it showed is
+    // what is banked here. See fixture-kickoff.ts.
+    let kicked;
+    try {
+      kicked = await kickOffFixture(userId, gameState.season, 'quick', {
+        formation: gameState.squad.formation || '4-3-3',
+        players: gameState.squad.players,
+        userMorale: effectiveMorale(gameState.squad.morale, bonuses),
+        matchSettings: gameState.user.matchSettings,
+      });
+    } catch (error) {
+      log.error('Could not kick off the fixture; the match was not played', { error });
+      return NextResponse.json({ error: 'Failed to save match' }, { status: 503 });
+    }
+    if (!kicked.ok) {
+      log.warn('Match rejected: the fixture is being played turn by turn', { week: gameState.season.week });
+      return NextResponse.json(
+        {
+          error: 'Fixture already kicked off',
+          message: 'This fixture is being played turn by turn; bank it with /api/match/finalize.',
+        },
+        { status: 409 }
+      );
+    }
+    const { seed, setup } = kicked.kickoff;
 
     // Every random draw for this match — opponent morale, the simulation, the
     // filler table, the next fixture and the visual script — happens inside
@@ -181,10 +226,11 @@ export async function POST(request: NextRequest) {
       // Swap teams based on isHome
       const homeTeam = isHome ? gameState.user.team : opponentTeam;
       const awayTeam = isHome ? opponentTeam : gameState.user.team;
-      const homeSquad = isHome ? gameState.squad.players : opponentSquad;
-      const awaySquad = isHome ? opponentSquad : gameState.squad.players;
-      const homeMorale = isHome ? gameState.squad.morale : opponentMorale;
-      const awayMorale = isHome ? opponentMorale : gameState.squad.morale;
+      const homeSquad = isHome ? setup.players : opponentSquad;
+      const awaySquad = isHome ? opponentSquad : setup.players;
+      const userMorale = setup.userMorale;
+      const homeMorale = isHome ? userMorale : opponentMorale;
+      const awayMorale = isHome ? opponentMorale : userMorale;
 
       const result = simulateMatchWithNarrative(
         homeTeam,
@@ -194,123 +240,27 @@ export async function POST(request: NextRequest) {
         homeMorale,
         awayMorale,
         gameState.season.week,
-        gameState.user.matchSettings,
+        setup.matchSettings,
         isHome
       );
 
-      // Update game state
-      const pointsEarned = result.winner === gameState.user.team ? 3 : result.winner === 'Empate' ? 1 : 0;
-    
-      // Determine match result for earnings
-      let matchResult: 'win' | 'draw' | 'loss' = 'loss';
-      if (result.winner === gameState.user.team) matchResult = 'win';
-      else if (result.winner === 'Empate') matchResult = 'draw';
-    
-      // Ensure stadium exists for old game states
-      if (!gameState.stadium) {
-        gameState.stadium = { level: 0, capacity: 0, amenities: 0, ticketPrice: 0, maintenanceLevel: 1 };
-      }
-    
-      // Ensure division exists for old game states
-      if (!gameState.season.division) {
-        gameState.season.division = 'Serie D';
-      }
-    
-      // Calculate money earned from match
-      const matchEarnings = calculateMatchEarnings(
-        gameState.season.division,
-        matchResult,
-        match.isHome,
-        gameState.stadium
-      );
-
-      // Update win/draw/loss record
-      if (result.winner === gameState.user.team) {
-        gameState.season.wins++;
-      } else if (result.winner === 'Empate') {
-        gameState.season.draws++;
-      } else {
-        gameState.season.losses++;
-      }
-
-      gameState.season.week++;
-      gameState.season.points += pointsEarned;
-    
-      // Update club money with match earnings
-      gameState.user.money = (gameState.user.money || 0) + matchEarnings;
-    
-      // Ensure staff exists for old game states
-      if (!gameState.staff) {
-        gameState.staff = { headCoach: null, scout: null, medicalStaff: null };
-      }
-    
-      // Calculate and deduct weekly staff wages
-      const weeklyWages = calculateWeeklyStaffWages(gameState.staff);
-      if (weeklyWages > 0) {
-        gameState.user.money -= weeklyWages;
-        if (gameState.teamStats) {
-          gameState.teamStats.totalSpent += weeklyWages;
-        }
-      }
-    
-      // Ensure teamStats exists for old game states
-      if (!gameState.teamStats) {
-        gameState.teamStats = { totalEarnings: 0, totalSpent: 0, matchesPlayed: 0, championshipsWon: 0, promotionCount: 0 };
-      }
-    
-      // Update team stats
-      gameState.teamStats.totalEarnings += matchEarnings;
-      gameState.teamStats.matchesPlayed += 1;
-    
-      gameState.squad.morale = Math.max(30, Math.min(100, gameState.squad.morale + (pointsEarned * 5 - 5)));
-
-      // Calculate realistic league position based on points and other teams' performance
-      // Simulate other 19 teams' performance
-      const otherTeams = BRAZILIAN_TEAMS.filter(t => t.name !== gameState.user.team);
-      const simulatedStandings = simulateRivalStandings(otherTeams, gameState.season.week);
-
-      // Add user's team and sort by points
-      const allStandings = [
-        ...simulatedStandings,
-        { name: gameState.user.team, points: gameState.season.points }
-      ].sort((a, b) => b.points - a.points);
-
-      // Find user's position
-      const userPosition = allStandings.findIndex(t => t.name === gameState.user.team) + 1;
-      gameState.season.position = userPosition;
-
-      // Check if season is complete (38 rounds in Liga Mestre)
-      const isSeasonEnd = gameState.season.week > 38;
-
-      if (isSeasonEnd) {
-        // Season complete - generate summary instead of next match
-        gameState.season.nextMatch = {
-          opponent: 'Temporada Completa',
-          isHome: false,
-          date: new Date().toISOString(),
-          competition: 'Fim da Temporada',
-        };
-        gameState.context.availableActions = ['view_final_standings', 'new_season'];
-      } else {
-        // Generate next match - filter out user's team and current opponent to avoid self-play
-        const fixture = pickNextFixture(BRAZILIAN_TEAMS, gameState.user.team, opponentTeam);
-        gameState.season.nextMatch = {
-          opponent: fixture.opponent,
-          isHome: fixture.isHome,
-          date: new Date().toISOString(),
-          competition: 'Liga Mestre',
-        };
-      }
-
-      gameState.context.lastAction = 'match_completed';
-      gameState.context.narrative.lastEvent = `Jogo contra ${opponentTeam}: ${result.homeScore}x${result.awayScore}`;
-      gameState.context.narrative.momentum = result.winner === gameState.user.team ? 'home' : result.winner === 'Empate' ? 'neutral' : 'away';
+      // Post-match bookkeeping — points, record, earnings, wages, morale,
+      // position and next week's fixture. Shared with /api/match/finalize so a
+      // match the player watched settles the same way this one does; it draws
+      // from the seeded stream for the rival table and the next fixture, so it
+      // runs here, inside the seeded block.
+      const { pointsEarned, matchResult, matchEarnings } = applyMatchOutcome(gameState, {
+        opponentTeam,
+        bonuses,
+        isHome: match.isHome,
+        outcome: result,
+      });
 
       const matchId = `${gameState.user.team}-${gameState.season.week}-${Date.now()}`;
     
       const homeTeamData = {
         name: homeTeam,
-        formation: (gameState.squad.formation as string) || '4-3-3',
+        formation: setup.formation,
         players: homeSquad.map((p: any, idx: number) => ({
           id: p.id || `home-${idx}`,
           name: p.name,
@@ -335,7 +285,7 @@ export async function POST(request: NextRequest) {
       // Create Squad objects for enhanced script generation
       const homeSquadObj = {
         players: homeSquad,
-        formation: (gameState.squad.formation as string) || '4-3-3',
+        formation: setup.formation,
         morale: homeMorale,
         fitness: 75,
         weeklyTrainingBudget: 15,
@@ -378,6 +328,11 @@ export async function POST(request: NextRequest) {
       return { opponentTeam, result, pointsEarned, matchResult, matchEarnings, matchScript };
     });
     const { opponentTeam, result, pointsEarned, matchResult, matchEarnings, matchScript } = played;
+
+    // The score goes into the save with the match, for the market to be
+    // settled against (see market-settlement.ts). The bookkeeping has moved
+    // the week on, so the round just played is the one before it.
+    recordRoundResult(gameState, gameState.season.week - 1, result);
 
     // Generate AI narration for the match
     // A stream of its own, derived from the match seed: the narration replays
@@ -434,26 +389,43 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Update database with timeout
+    // Save, but only if nothing else wrote the save while the match was
+    // being simulated and narrated. Anything that landed meanwhile (a
+    // training session, a transfer, a finalize from another tab) would
+    // otherwise be erased by this write; instead this match is refused, as a
+    // finalize that loses its race is, and the caller reloads.
+    //
+    // A write that fails outright is reported too. This used to answer 200
+    // with the match's result after a failed write, so the player was shown a
+    // banked match that was never saved.
+    let committed;
     try {
-      await withTimeout(
-        db
-          .update(gameStates)
-          .set({
-            currentState: gameState,
-            updatedAt: new Date(),
-          })
-          .where(eq(gameStates.userId, userId)),
+      committed = await withTimeout(
+        commitSave(userId, gameState, save.version),
         5000,
         'Game state update'
       );
     } catch (error) {
-      log.error('Failed to update game state', { error });
-      // Continue to return response even if update fails
+      log.error('Failed to save match', { error });
+      return NextResponse.json(
+        { error: 'Failed to save match' },
+        { status: 503 }
+      );
     }
 
-    const duration = Date.now() - startTime;
-    log.info('Request processed', { durationMs: duration });
+    if (!committed.ok) {
+      log.warn('Match rejected: the save moved on while the match was being played', {
+        week: gameState.season.week - 1,
+      });
+      return saveConflictResponse();
+    }
+
+    // The next fixture's market, exactly as finalize opens it. Out here, after
+    // the seeded block and the commit: pricing it draws an opponent squad,
+    // which inside the block would shift every seeded draw after it. The
+    // market on the match just played is paid out first, as finalize does.
+    await settlePlayedFixtureAfterCommit(userId, gameState);
+    await openFixtureMarketAfterCommit(userId, gameState);
 
     return NextResponse.json({
       result: {
@@ -478,8 +450,7 @@ export async function POST(request: NextRequest) {
       updatedGameState: gameState,
     });
   } catch (error) {
-    const duration = Date.now() - startTime;
-    log.error('API error', { durationMs: duration, error });
+    log.error('API error', { error });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

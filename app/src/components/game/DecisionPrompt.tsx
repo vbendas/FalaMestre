@@ -93,27 +93,33 @@ export function DecisionPrompt({
     }
   }, [selectedOption, onDecision]);
 
+  // The clock only counts. It used to flip `hasTimedOut` from inside the
+  // `setTimeRemaining` updater, which React may run while rendering; the flag
+  // now follows the clock in its own effect, where the order is plain.
   useEffect(() => {
     if (selectedOption || hasTimedOut) return;
     const interval = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          setHasTimedOut(true);
-          return 0;
-        }
-        return prev - 1;
-      });
+      setTimeRemaining((prev) => Math.max(0, prev - 1));
     }, 1000);
     return () => clearInterval(interval);
   }, [selectedOption, hasTimedOut]);
 
   useEffect(() => {
-    if (hasTimedOut) {
+    if (timeRemaining === 0 && !selectedOption) {
+      setHasTimedOut(true);
+    }
+  }, [timeRemaining, selectedOption]);
+
+  // A decision and a timeout are the same turn, so only one of them is ever
+  // reported. A click can land in the same batch as the clock reaching zero —
+  // both flags end up set — and without the `!selectedOption` guard this
+  // component called `onDecision` and then `onTimeout` for one prompt.
+  useEffect(() => {
+    if (hasTimedOut && !selectedOption) {
       const timeout = setTimeout(() => onTimeout(), 600);
       return () => clearTimeout(timeout);
     }
-  }, [hasTimedOut, onTimeout]);
+  }, [hasTimedOut, selectedOption, onTimeout]);
 
   const isPulsing = timeRemaining <= 10;
   const defaultOption = turn.defaultOption;
