@@ -244,7 +244,6 @@ async function settleBet(
             when ${wonSql} and exists (select 1 from ${gameStates} where ${gameStates.userId} = ${userBets.userId})
             then ${userBets.potentialWin} else 0 end
       where ${userBets.id} = ${betId}::uuid
-        and coalesce(${userBets.settled}, false) = false
         and ${claimCondition}
       returning ${userBets.userId} as user_id, ${userBets.payout} as payout
     ),
